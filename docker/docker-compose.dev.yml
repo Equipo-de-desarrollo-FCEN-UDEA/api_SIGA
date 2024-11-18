@@ -1,21 +1,21 @@
-version: '3.9'
+# version: '3.9'
 
 services:
-    postgres-db:
-        container_name: 'postgres-db'
-        image: postgres:17.0
-        build:
-            context: ../config_db
-            dockerfile: Dockerfile
-        volumes:
-            - ../db/postgres:/var/lib/postgresql/data
-        ports:
-            - "5434:5432"
-        environment:
-            - POSTGRES_USER=postgres
-            - POSTGRES_PASSWORD=postgres
-        networks:
-            - siga-fcen
+    # postgres-db:
+    #     container_name: 'postgres-db'
+    #     image: postgres:17.0
+    #     build:
+    #         context: ../config_db
+    #         dockerfile: Dockerfile
+    #     volumes:
+    #         - ../db/postgres:/var/lib/postgresql/data
+    #     ports:
+    #         - "5434:5432"
+    #     environment:
+    #         - POSTGRES_USER=postgres
+    #         - POSTGRES_PASSWORD=postgres
+    #     networks:
+    #         - siga-fcen
 
     mongo-db:
         container_name: 'mongo-db'
@@ -38,8 +38,8 @@ services:
             - "6379:6379"
         networks:
             - siga-fcen
-        depends_on:
-            - postgres-db
+        # depends_on:
+        #     - postgres-db
 
     celery_worker:
         container_name: "celery_worker"
@@ -99,7 +99,6 @@ services:
         networks:
             - siga-fcen
         depends_on:
-            - postgres-db
             - mongo-db
         restart: on-failure
     

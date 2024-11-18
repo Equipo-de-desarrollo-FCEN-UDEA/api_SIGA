@@ -12,4 +12,4 @@ class Vote(LinkModel):
     # relations
     voting = relationship("Voting", back_populates="votes")
     user = relationship("User", back_populates="votes")
-    vote_type = relationship("VoteType", back_populates="votes")
+    vote_type = relationship("VoteType", back_populates="votes", lazy="joined")

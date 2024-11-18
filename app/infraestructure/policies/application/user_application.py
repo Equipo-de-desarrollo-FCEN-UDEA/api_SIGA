@@ -38,7 +38,7 @@ async def create_voting(*, academic_unit_id, user_application_id, db_postgres, d
     )
 
     voting_create = voting_svc.create(obj_in=voting_to_create, db=db_postgres)
-    id = uuid4()
+    id = voting_create.id
     status = VotingStatus(
         result="PENDIENTE",
         date=datetime.now(),
@@ -47,7 +47,7 @@ async def create_voting(*, academic_unit_id, user_application_id, db_postgres, d
     print(f"GUARDAR: {status}")
 
     voting_info_to_create = VotingInfoCreate(
-        id_postgres = UUID(str(id)),
+        id_postgres = id,
         statuses = [status]
     )
     await voting_info_svc.create(obj_in= VotingInfo(**dict(voting_info_to_create)), db=db_mongo)

@@ -16,3 +16,9 @@ class VoteTypeUpdate(BaseModel):
 
 class VoteTypeInDB(VoteTypeBase):
     id: UUID
+
+class VoteType(BaseModel):
+    name: str
+
+    class Config:
+        from_attributes = True

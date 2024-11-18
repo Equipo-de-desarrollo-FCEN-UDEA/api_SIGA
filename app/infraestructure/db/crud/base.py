@@ -35,7 +35,10 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
     def get(self, *, id: UUID, db: Session) -> ModelType:
         with db:
-            return db.query(self.model).filter(self.model.id == id).first()
+            response = db.query(self.model).get(id)
+            if not response:
+                raise HTTPException(status_code=404, detail="Object not found")
+            return response
 
     def get_multi(
         self,
