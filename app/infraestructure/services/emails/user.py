@@ -17,7 +17,7 @@ _my_email = settings.smtp_user_email
 
 _my_pwd = settings.smtp_user_password._secret_value
 
-env = Environment(loader=FileSystemLoader(templatesdir))
+env = Environment(autoescape=True)  # Compliant
 
 
 @celery_app.task
