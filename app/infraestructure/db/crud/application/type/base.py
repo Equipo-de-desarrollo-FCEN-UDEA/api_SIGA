@@ -57,7 +57,7 @@ class ApplicationTypeBaseCrud(CRUDBase[ModelType, CreateSchemaType, UpdateSchema
     
     async def add_status(self, db_mongo, *, new_status: UserApplicationStatus, user_application_id) -> None:
         try: 
-            resultado = await db_mongo.get_collection(self.model).update_one(
+            await db_mongo.get_collection(self.model).update_one(
                 {"_id": user_application_id},
                 {"$push": {"status": new_status.model_dump()}}
             )

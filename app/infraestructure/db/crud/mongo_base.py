@@ -1,6 +1,8 @@
 from typing import Generic, TypeVar, Type
 from uuid import UUID
 
+from app.core.exceptions import ODMError
+
 from odmantic import Model, ObjectId
 from odmantic.session import AIOSession
 from pydantic import BaseModel
@@ -19,9 +21,10 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchema]):
 
     async def get(self, db: AIOSession,
                   *, id: UUID) -> ModelType:
-        print(f"ID: {id}")
-
-        return await db.find_one(self.model, self.model.id_postgres == id)
+        response = await db.find_one(self.model, self.model.id == id)
+        if response is None:
+            raise ODMError(f"{ModelType} Not found")
+        return response
     
     async def get_multi (
                     self,
@@ -41,7 +44,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchema]):
         try:
             return await db.save(obj_in)
         except Exception as e:
-            raise e
+            raise ODMError(str(e))
 
     async def update(
         self,

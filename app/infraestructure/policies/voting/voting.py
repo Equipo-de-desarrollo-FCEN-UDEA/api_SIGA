@@ -16,8 +16,6 @@ async def get_application_in_mongo(*,
 
     if application_type == 'MOVILIDAD':
         mobility = {"mobility": await mobility_svc.get(id=user_application_id, db=db)}
-        if mobility is None:
-            raise ValueError(f"La solicitud de movilidad con id {user_application_id} no existe")
         info_voting = {"info_voting": await voting_info_svc.get(id=voting_id, db=db)}
         voting['user_application'].update(mobility)
         voting.update(info_voting)

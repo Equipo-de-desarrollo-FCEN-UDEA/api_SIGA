@@ -43,9 +43,6 @@ class Settings(BaseSettings):
     mongo_url:str
     mongo_db:str
 
-    #: Postgres database url
-    database_url:str
-
     ## Redis
     redis_url:str
     redis_backend:str
