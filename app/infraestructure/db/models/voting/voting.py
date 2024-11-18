@@ -10,4 +10,4 @@ class Voting(BaseModel):
     # relations
     academic_unit = relationship("AcademicUnit", back_populates="votings", lazy="joined")
     user_application = relationship("UserApplication", back_populates="votings", lazy="joined")
-    votes = relationship("Vote", back_populates="voting")
+    votes = relationship("Vote", back_populates="voting", lazy="joined")

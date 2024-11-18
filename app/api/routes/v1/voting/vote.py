@@ -20,4 +20,4 @@ async def create_vote(*,
     ) -> JSONResponse:
     new_vote.user_id = current_user.id
     vote = vote_svc.create(obj_in=new_vote, db=db_postgres)
-    return JSONResponse(content={"message": "vote register successfully", "vote": vote}, status_code=201)
+    return JSONResponse(content={"message": "vote register successfully"}, status_code=201)
