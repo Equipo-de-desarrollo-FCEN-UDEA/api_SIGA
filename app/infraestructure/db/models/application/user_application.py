@@ -8,7 +8,7 @@ class UserApplication(BaseModel):
     application_id = Column(Uuid, ForeignKey("application.id"), nullable=False)
 
     # relations
-    user = relationship("User", back_populates="user_applications")
-    application = relationship("Application", back_populates="user_applications")
+    user = relationship("User", back_populates="user_applications", lazy="joined")
+    application = relationship("Application", back_populates="user_applications", lazy="joined")
     user_application_academic_units = relationship("UserApplicationAcademicUnit", back_populates="user_application")
     votings = relationship("Voting", back_populates="user_application")

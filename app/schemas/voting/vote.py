@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from uuid import UUID
 
 from app.schemas.utils.base_model import GeneralResponse
-from app.protocols.db.models.voting.vote import VoteType
+from app.schemas.voting.vote_type import VoteType
 
 class VoteBase(BaseModel):
     voting_id: UUID
@@ -18,3 +18,9 @@ class VoteUpdate(BaseModel):
     voting_id: UUID | None
     user_id: UUID | None
     vote_type_id: UUID | None
+
+class Vote(BaseModel):
+    vote_type: VoteType
+
+    class Config:
+        from_attributes = True

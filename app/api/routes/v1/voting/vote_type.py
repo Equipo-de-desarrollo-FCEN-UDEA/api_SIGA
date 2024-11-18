@@ -20,3 +20,6 @@ async def create_voting_type(*,
     vote_type = vote_type_svc.create(obj_in=new_vote_type, db=db_postgres)
     return vote_type
 
+@router.get("", response_model=List[VoteTypeInDB])
+async def get_all_voting_types(*, db_postgres = Depends(get_db)) -> List[VoteTypeInDB]:
+    return vote_type_svc.get_multi(db=db_postgres)
