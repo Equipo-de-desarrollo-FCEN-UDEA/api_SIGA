@@ -1,6 +1,8 @@
 from typing import Generic, TypeVar, Type
 from uuid import UUID
 
+from app.core.exceptions import ODMError
+
 from odmantic import Model, ObjectId
 from odmantic.session import AIOSession
 from pydantic import BaseModel
@@ -41,7 +43,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchema]):
         try:
             return await db.save(obj_in)
         except Exception as e:
-            raise e
+            raise ODMError(str(e))
 
     async def update(
         self,
