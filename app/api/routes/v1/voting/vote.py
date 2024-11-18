@@ -19,5 +19,5 @@ async def create_vote(*,
         current_user: Annotated[User, Security(get_current_active_user, scopes=["votante"])] = None
     ) -> JSONResponse:
     new_vote.user_id = current_user.id
-    vote = vote_svc.create(obj_in=new_vote, db=db_postgres)
+    vote_svc.create(obj_in=new_vote, db=db_postgres)
     return JSONResponse(content={"message": "vote register successfully"}, status_code=201)
