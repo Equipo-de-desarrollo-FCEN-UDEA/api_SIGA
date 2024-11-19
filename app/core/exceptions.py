@@ -3,6 +3,11 @@ class ORMError(Exception):
     Any exception captured from the orm
     """
 
+class ODMError(Exception):
+    """
+    Any exception captured from the odm
+    """
+
 
 class NoObserverRegister(Exception):
     """
