@@ -10,3 +10,6 @@ class JWT(Protocol):
 
     def decode_access_token(self, token: str) -> TokenPayload:
         ...
+
+    def email_token(self, email: str) -> str:
+        ...

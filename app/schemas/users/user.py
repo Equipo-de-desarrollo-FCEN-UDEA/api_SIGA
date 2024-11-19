@@ -14,7 +14,7 @@ class UserBase(BaseModel):
     identification_type: IdentificationType
     identification_number: str
     phone: str | None
-    is_active: bool = True
+    is_active: bool = False
 
 
 class UserCreate(UserBase):
@@ -22,9 +22,16 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(BaseModel):
-    email: str | None
-    names: str | None
-    last_name: str | None
+    email: str | None = None
+    name: str | None = None
+    last_name: str | None = None
+    is_active: bool | None = None
+    phone: str | None = None
+    identification_type: IdentificationType | None = None
+    identification_number: str | None = None
+
+    class Config:
+        from_attributes = True
 
 class UserCreateInDB(UserBase):
     hashed_password: str

@@ -27,6 +27,11 @@ class JWTService:
         return self.observer.create_access_token(
             data, timedelta(hours=expires) if expires else None
         )
+    
+    def email_token(self, email: str) -> str:
+        if not self.observer:
+            raise NoObserverRegister(self.__class__.__name__)
+        return self.observer.email_token(email)
 
     def decode_access_token(self, token: str) -> TokenPayload:
         if not self.observer:

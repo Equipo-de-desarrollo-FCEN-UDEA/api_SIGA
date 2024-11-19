@@ -7,6 +7,7 @@ from app.core.settings.base import AppEnv, BaseAppSettings
 from app.core.settings import DevelopAppSettings
 
 from pydantic_settings import BaseSettings
+from pydantic import SecretStr
 
 
 environments: Dict[AppEnv, Type[AppSettings]] = {
@@ -35,7 +36,11 @@ class Settings(BaseSettings):
 
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080
 
-    SECRET_KEY: str 
+    # App
+    APP_DOMAIN: str
+
+    ## JWT
+    SECRET_KEY: str
 
     ALGORITHM: str = "HS256"
 
@@ -46,6 +51,14 @@ class Settings(BaseSettings):
     ## Redis
     redis_url:str
     redis_backend:str
+
+    # SMTP
+    smtp_user_email: str
+    smtp_user_password: SecretStr
+    smtp_host_email: str
+    smtp_port_email: int
+    smtp_from_email: str
+
 
 
 
