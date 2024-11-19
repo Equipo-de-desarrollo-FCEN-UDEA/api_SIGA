@@ -41,5 +41,12 @@ def confirm_email(to_name: str, token: str, email):
     #     smtp.login(_my_email, _my_pwd)
     #     smtp.send_message(msg)
 
-    with smtplib.SMTP('172.19.0.101', port=25) as smtp:
-        smtp.send_message(msg=msg, from_addr=_my_email, to_addrs=email)
+    with smtplib.SMTP(
+        settings.smtp_domain_email,
+        port=settings.smtp_port_email,
+    ) as smtp:
+        smtp.send_message(
+            msg=msg,
+            from_addr=_my_email,
+            to_addrs=email,
+        )

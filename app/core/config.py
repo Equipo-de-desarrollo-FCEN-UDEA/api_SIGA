@@ -1,21 +1,20 @@
+from __future__ import annotations
+
 from functools import lru_cache
-from locale import setlocale, LC_TIME
-from typing import Any, Dict, List, Type
 
-from app.core.settings.app import AppSettings
-from app.core.settings.base import AppEnv, BaseAppSettings
-from app.core.settings import DevelopAppSettings
-
-from pydantic_settings import BaseSettings
 from pydantic import SecretStr
+from pydantic_settings import BaseSettings
+
+from app.core.settings import DevelopAppSettings
+from app.core.settings.app import AppSettings
+from app.core.settings.base import AppEnv
 
 
-environments: Dict[AppEnv, Type[AppSettings]] = {
-    AppEnv.Develop: DevelopAppSettings
+environments: dict[AppEnv, type[AppSettings]] = {
+    AppEnv.Develop: DevelopAppSettings,
     # AppEnv.Production: ProductionAppSettings,
     # AppEnv.Testing: TestingAppSettings
 }
-
 
 
 class Settings(BaseSettings):
@@ -24,13 +23,13 @@ class Settings(BaseSettings):
     """
 
     #: The application name
-    APP_NAME: str = "auth fcen database Api"
+    APP_NAME: str = 'auth fcen database Api'
     #: The application version
-    APP_VERSION: str = "0.0.1"
+    APP_VERSION: str = '0.0.1'
     #: The application debug mode
     DEBUG: bool = False
     #: The application api version
-    API_V1_STR: str = "/api/v1"
+    API_V1_STR: str = '/api/v1'
 
     DATABASE_URL: str
 
@@ -39,30 +38,29 @@ class Settings(BaseSettings):
     # App
     APP_DOMAIN: str
 
-    ## JWT
+    # JWT
     SECRET_KEY: str
 
-    ALGORITHM: str = "HS256"
+    ALGORITHM: str = 'HS256'
 
-    ## Mongo
-    mongo_url:str
-    mongo_db:str
+    # Mongo
+    mongo_url: str
+    mongo_db: str
 
-    ## Redis
-    redis_url:str
-    redis_backend:str
+    # Redis
+    redis_url: str
+    redis_backend: str
 
     # SMTP
     smtp_user_email: str
     smtp_user_password: SecretStr
     smtp_host_email: str
-    smtp_port_email: int
     smtp_from_email: str
+    smtp_domain_email: str
+    smtp_port_email: int
 
 
-
-
-@lru_cache()
+@lru_cache
 def get_settings() -> BaseSettings:
     """Get the settings for the application."""
     return Settings()
