@@ -63,6 +63,9 @@ class Settings(BaseSettings):
     redis_url: str
     redis_backend: str
 
+    # URLs front
+    URL_LAB: str
+
 
 @lru_cache
 def get_settings() -> BaseSettings:
