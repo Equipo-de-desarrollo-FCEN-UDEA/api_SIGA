@@ -17,6 +17,7 @@ from app.services.users.user import user_svc
 
 
 router = APIRouter()
+user_model = User
 
 
 @router.post('/access-token', response_model=None)

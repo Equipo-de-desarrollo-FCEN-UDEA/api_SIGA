@@ -24,6 +24,10 @@ class JWT:
             algorithm=settings.ALGORITHM,
         )
         return token
+    
+    def email_token(self, email: str) -> str:
+        data = {"sub": email}
+        return self.create_access_token(data, expires_delta=timedelta(hours=24))
 
     def decode_access_token(self, token: str) -> TokenPayload:
         try:

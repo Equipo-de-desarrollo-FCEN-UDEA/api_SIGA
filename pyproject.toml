@@ -25,6 +25,7 @@ odmantic = "^1.0.2"
 pydantic-settings = "^2.5.2"
 celery = "^5.2.3"
 redis = "^4.3.3"
+jinja2 = "^3.1.4"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -33,6 +34,7 @@ autopep8 = "^2.0.1"
 black = "^23.1.0"
 flower = "^1.2.0"
 flake8 = "^6.0.0"
+pre-commit = "^4.0.1"
 
 
 
