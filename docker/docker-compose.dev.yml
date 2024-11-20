@@ -1,22 +1,24 @@
-version: '3.9'
+# version: '3.9'
 
 services:
-    postgres-db-auth:
-        build:
-            context: ../config_db
-            dockerfile: Dockerfile
-        volumes:
-            - ../db/postgres:/var/lib/postgresql/data
-        ports:
-            - "5434:5432"
-        environment:
-            - POSTGRES_USER=postgres
-            - POSTGRES_PASSWORD=postgres
-        networks:
-            - auth-network
+    # postgres-db:
+    #     container_name: 'postgres-db'
+    #     image: postgres:17.0
+    #     build:
+    #         context: ../config_db
+    #         dockerfile: Dockerfile
+    #     volumes:
+    #         - ../db/postgres:/var/lib/postgresql/data
+    #     ports:
+    #         - "5434:5432"
+    #     environment:
+    #         - POSTGRES_USER=postgres
+    #         - POSTGRES_PASSWORD=postgres
+    #     networks:
+    #         - siga-fcen
 
-    mongo-db-auth:
-        container_name: 'mongo-db-auth'
+    mongo-db:
+        container_name: 'mongo-db'
         image: mongo:4.4
         restart: always
         ports:
@@ -25,11 +27,64 @@ services:
             - MONGO_INITDB_ROOT_USERNAME=root
             - MONGO_INITDB_ROOT_PASSWORD=root
         networks:
-            - auth-network
+            - siga-fcen
         volumes:
             - ../db/mongo-data:/data/db
 
-    backend-auth:
+    redis:
+        container_name: 'redis'
+        image: redis:latest
+        ports:
+            - "6379:6379"
+        networks:
+            - siga-fcen
+        # depends_on:
+        #     - postgres-db
+
+    celery_worker:
+        container_name: "celery_worker"
+        build:
+            context: ..
+            dockerfile: docker/Dockerfile.dev
+        command: celery -A app.core.celery_worker.celery_app worker --loglevel=info -Q test-queue -c 1
+        env_file:
+            - ../.env
+        depends_on:
+            - redis
+            - backend-siga-fcen
+        networks:
+            - siga-fcen
+    
+    celery-beat:
+        container_name: 'celery_beat'
+        build:
+            context: ..
+            dockerfile: docker/Dockerfile.dev
+        command: celery -A app.core.celery_worker.celery_app worker --loglevel=info
+        env_file:
+            - ../.env
+        depends_on:
+            - redis
+            - backend-siga-fcen
+        networks:
+            - siga-fcen
+
+    flower:
+        container_name: "flower"
+        build:
+            context: ..
+            dockerfile: docker/Dockerfile.dev
+        command: celery -A app.core.celery_worker.celery_app flower --port=5555
+        env_file:
+            - ../.env
+        ports:
+            - "5555:5555"
+        depends_on:
+            - celery_worker
+        networks:
+            - siga-fcen
+
+    backend-siga-fcen:
         build:
             context: ..
             dockerfile: docker/Dockerfile.dev
@@ -42,14 +97,13 @@ services:
         env_file:
             - ../.env
         networks:
-            - auth-network
+            - siga-fcen
         depends_on:
-            - postgres-db-auth
-            - mongo-db-auth
+            - mongo-db
         restart: on-failure
     
 
 networks:
-    auth-network:
-        driver: bridge
+  siga-fcen:
+      external: True
 

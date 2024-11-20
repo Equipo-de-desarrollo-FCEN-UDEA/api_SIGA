@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-
+from uuid import UUID
 from app.schemas.utils.base_model import GeneralResponse
 
 class AcademicUnitTypeBase(BaseModel):
@@ -13,3 +13,10 @@ class AcademicUnitTypeUpdate(BaseModel):
 
 class AcademicUnitTypeInDB(GeneralResponse, AcademicUnitTypeBase):
     ...
+
+class AcademicUnitType(BaseModel):
+    id: UUID
+    name: str
+
+    class Config:
+        from_attributes = True

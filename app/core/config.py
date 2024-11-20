@@ -46,6 +46,10 @@ class Settings(BaseSettings):
     #: Postgres database url
     database_url:str
 
+    ## Redis
+    redis_url:str
+    redis_backend:str
+
 
 
 @lru_cache()

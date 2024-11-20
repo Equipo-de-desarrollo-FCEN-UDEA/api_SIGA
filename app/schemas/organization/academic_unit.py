@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from uuid import UUID
 
 from app.schemas.utils.base_model import GeneralResponse
+from app.schemas.organization.academic_unit_type import AcademicUnitTypeInDB, AcademicUnitType
 
 class AcademicUnitBase(BaseModel):
     name:str
@@ -20,16 +21,23 @@ class AcademicUnitUpdate(BaseModel):
     
 class AcademicUnitInDB(GeneralResponse, AcademicUnitBase):
     ...
-    
+
 class AcademicUnit(BaseModel):
+    id: UUID
     name: str
+    academic_unit_type: AcademicUnitType
     
     class Config:
         orm_mode = True
         from_attributes = True
 
-class AcademicUnits(GeneralResponse):
-    items: list[AcademicUnit]
+class program(AcademicUnit):
+    pass
 
-    class Config:
-        from_attributes = True
+class Institute(AcademicUnit):
+    academic_units: list[program]
+
+class School(AcademicUnit):
+    academic_units: list[Institute]
+    
+

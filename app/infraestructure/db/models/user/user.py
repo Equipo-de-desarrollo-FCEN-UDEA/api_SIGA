@@ -30,7 +30,7 @@ class User(BaseModel):
 
 
     # # relations
-    user_roles_academic_units = relationship("UserRolAcademicUnit", back_populates="user")
+    user_roles_academic_units = relationship("UserRolAcademicUnit", back_populates="user", lazy="selectin")
     user_applications = relationship("UserApplication", back_populates="user")
     votes = relationship("Vote", back_populates="user")
     

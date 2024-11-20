@@ -14,3 +14,11 @@ class VoteTypeUpdate(BaseModel):
     name: str | None
     description: str | None
 
+class VoteTypeInDB(VoteTypeBase):
+    id: UUID
+
+class VoteType(BaseModel):
+    name: str
+
+    class Config:
+        from_attributes = True

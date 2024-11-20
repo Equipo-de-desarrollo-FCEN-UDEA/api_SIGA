@@ -8,6 +8,6 @@ class Voting(BaseModel):
     user_application_id = Column(Uuid, ForeignKey("user_application.id"), nullable=False)
 
     # relations
-    academic_unit = relationship("AcademicUnit", back_populates="votings")
-    user_application = relationship("UserApplication", back_populates="votings")
-    votes = relationship("Vote", back_populates="voting")
+    academic_unit = relationship("AcademicUnit", back_populates="votings", lazy="joined")
+    user_application = relationship("UserApplication", back_populates="votings", lazy="joined")
+    votes = relationship("Vote", back_populates="voting", lazy="joined")

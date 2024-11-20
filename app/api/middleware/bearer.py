@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import Depends, Security, HTTPException, status
+from fastapi import Depends, Security, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 
 from jose.exceptions import JWTError
@@ -15,10 +15,19 @@ reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"http://localhost:8003{settings.API_V1_STR}/auth/access-token"
 )
 
+def get_token(request: Request):
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No Authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return token
 
 def get_current_user(
         security_scopes: SecurityScopes,
-        token: Annotated[str, Depends(reusable_oauth2)],
+        token: Annotated[str, Depends(get_token)],
         db=Depends(get_db),
     ) -> User:
 

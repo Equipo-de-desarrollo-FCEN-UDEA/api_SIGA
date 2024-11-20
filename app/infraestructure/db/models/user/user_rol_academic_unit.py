@@ -11,5 +11,5 @@ class UserRolAcademicUnit(LinkModel):
 
     # user = relationship("User", back_populates="user_roles")
     user = relationship("User", back_populates="user_roles_academic_units")
-    rol = relationship("Rol", back_populates="user_roles_academic_unit")
+    rol = relationship("Rol", back_populates="user_roles_academic_unit", lazy="selectin")
     academic_unit = relationship("AcademicUnit", back_populates="user_rol_academic_units")

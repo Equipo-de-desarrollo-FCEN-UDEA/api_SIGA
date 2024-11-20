@@ -23,12 +23,15 @@ pydantic = "^2.9.2"
 email-validator = "^2.2.0"
 odmantic = "^1.0.2"
 pydantic-settings = "^2.5.2"
+celery = "^5.2.3"
+redis = "^4.3.3"
 
 
 [tool.poetry.group.dev.dependencies]
 uvicorn = "^0.20.0"
 autopep8 = "^2.0.1"
 black = "^23.1.0"
+flower = "^1.2.0"
 flake8 = "^6.0.0"
 
 

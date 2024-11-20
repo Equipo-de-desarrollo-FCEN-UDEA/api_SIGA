@@ -11,12 +11,12 @@ class AcademicUnit(BaseModel):
     academic_unit_type_id = Column(Uuid, ForeignKey("academic_unit_type.id"), nullable=True)
 
     # relations    
-    academic_unit = relationship("AcademicUnit", remote_side="AcademicUnit.id" ,back_populates="academic_units")
-    academic_unit_type = relationship("AcademicUnitType", back_populates="academic_units")
+    academic_unit = relationship("AcademicUnit", remote_side="AcademicUnit.id" ,back_populates="academic_units", lazy="joined")
+    academic_unit_type = relationship("AcademicUnitType", back_populates="academic_units" , lazy="selectin")
     
     roles = relationship("Rol", back_populates="academic_unit")
 
-    academic_units = relationship("AcademicUnit", back_populates="academic_unit", cascade="all, delete-orphan")
+    academic_units = relationship("AcademicUnit", back_populates="academic_unit", cascade="all, delete-orphan", lazy="joined")
 
     user_rol_academic_units = relationship("UserRolAcademicUnit", back_populates="academic_unit")
 

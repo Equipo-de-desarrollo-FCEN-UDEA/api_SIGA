@@ -22,7 +22,7 @@ class UserService(ServiceBase[User, UserCreateInDB, UserUpdate, CRUDUserProtocol
         return super().create(obj_in=obj, db=db)
 
     def authenticate(self, *, email: str, password: str, db) -> UserInDB:
-        user = self.observer.get_by_email(email=email, db=db)
+        user: User = self.observer.get_by_email(email=email, db=db)
         crypt_svc.check_password(password, user.hashed_password)
         return user
     

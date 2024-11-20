@@ -16,7 +16,7 @@ class UserRolAcademicUnitCrud(CRUDBase[UserRolAcademicUnit, UserRolAcademicUnitC
             joinedload(UserRolAcademicUnit.academic_unit)
         ).filter(self.model.user_id == user_id).all()
     
-    def get_student_committee(self, *, user_id: UUID, db: Session) -> list[AcademicUnit]:
+    def get_student_committee(self, *, user_id: UUID, db: Session) -> UUID:
         # UUIDs constantes
         ESTUDIANTE_PREGRADO_ROL_ID = UUID('939875b2-3e34-4a17-9f3c-76cabba73f52')
         ESTUDIANTE_POSGRADO_ROL_ID = UUID('1ca355db-8700-4ee7-883b-18b8bbed403b')
@@ -44,5 +44,12 @@ class UserRolAcademicUnitCrud(CRUDBase[UserRolAcademicUnit, UserRolAcademicUnitC
                 return academic_unit.id
 
         raise HTTPException(404, "No se encontró el comité del estudiante")
+    
+    def get_academic_units_by_user_id_and_rol_id(self, *,user_id: UUID, rol_id: UUID, db: Session) -> list[AcademicUnit]:
+        user_rol_academic_units = db.query(UserRolAcademicUnit).options(
+            joinedload(UserRolAcademicUnit.academic_unit)
+        ).filter((self.model.user_id == user_id)&(self.model.rol_id == rol_id)).all()
+
+        return [user_rol_academic_unit.academic_unit for user_rol_academic_unit in user_rol_academic_units]
     
 user_rol_academic_unit_crud = UserRolAcademicUnitCrud(UserRolAcademicUnit)
