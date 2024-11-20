@@ -19,7 +19,7 @@ def create_app() -> FastAPI:
     initialize_fastapi_server_debugger_if_needed()
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=['http://localhost:3000'],
+        allow_origins=['http://172.16.83.228:3000', 'http://localhost:3000'],
         allow_credentials=True,
         allow_methods=['*'],
         allow_headers=['*'],
