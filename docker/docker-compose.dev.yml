@@ -64,7 +64,6 @@ services:
             - ../.env
         networks:
             - siga-fcen
-
         restart: on-failure
 
 
