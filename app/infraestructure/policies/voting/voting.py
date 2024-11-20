@@ -27,3 +27,4 @@ async def get_application_in_mongo(
         voting['user_application'].update(mobility)
         voting.update(info_voting)
         return voting
+    return None

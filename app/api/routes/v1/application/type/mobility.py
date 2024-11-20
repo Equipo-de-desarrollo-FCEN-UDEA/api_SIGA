@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import HTTPException
 from fastapi import Security
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -15,21 +13,10 @@ from app.api.middleware.bearer import get_current_active_user
 from app.api.middleware.mongo_db import get_mongo_db
 from app.api.middleware.postgres_db import get_db
 from app.infraestructure.policies.application.type.mobility import flux
-from app.infraestructure.policies.application.type.mobility import next_status
-from app.infraestructure.policies.application.user_application import current_status
-from app.protocols.db.models.application.application import ApplicationStatusType
 from app.schemas.application.type.mobility import Mobility
 from app.schemas.application.type.mobility import MobilityCreate
-from app.schemas.application.type.mobility import MobilityUpdate
-from app.schemas.application.user_application import UserApplicationCreate
-from app.schemas.application.user_application import UserApplicationStatus
-from app.schemas.application.user_application_academic_unit import UserApplicationAcademicUnitCreate
 from app.schemas.users.user import User
-from app.schemas.voting.voting import VotingCreate
 from app.services.application.type.mobility import mobility_svc
-from app.services.application.user_application import user_application_svc
-from app.services.application.user_application_academic_unit import user_application_academic_unit_svc
-from app.services.voting.voting import voting_svc
 
 
 router = APIRouter()
@@ -70,5 +57,10 @@ async def update_status(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ) -> Mobility:
 
-    await flux(user_application_id=id, db_mongo=db_mongo, db_postgres=db_postgres, current_user=current_user)
+    await flux(
+        user_application_id=id,
+        db_mongo=db_mongo,
+        db_postgres=db_postgres,
+        current_user=current_user,
+    )
     return JSONResponse(content='Status updated', status_code=200)
