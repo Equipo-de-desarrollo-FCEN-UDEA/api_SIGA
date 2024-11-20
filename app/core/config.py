@@ -66,6 +66,9 @@ class Settings(BaseSettings):
     # URLs front
     URL_LAB: str
 
+    # production
+    PRODUCTION: bool
+
 
 @lru_cache
 def get_settings() -> BaseSettings:

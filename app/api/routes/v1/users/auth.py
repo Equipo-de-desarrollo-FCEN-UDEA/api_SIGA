@@ -46,7 +46,7 @@ def login_access_token(
         value=access_token,
         httponly=True,     # Impide el acceso desde JavaScript
         # Solo en conexiones HTTPS (requiere HTTPS en producción)
-        secure=False,
+        secure=settings.PRODUCTION,
         samesite=None,     # Ayuda a prevenir ataques CSRF
         path='/',
     )
