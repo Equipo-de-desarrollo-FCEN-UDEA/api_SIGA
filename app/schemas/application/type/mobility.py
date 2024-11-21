@@ -1,12 +1,18 @@
-from pydantic import BaseModel
-from uuid import UUID
-from datetime import datetime
-from app.protocols.db.models.application.type.mobility import Process, MobilityType, MobilityPurpose
+from __future__ import annotations
 
+from datetime import datetime
+from uuid import UUID
+
+from pydantic import BaseModel
+
+from app.protocols.db.models.application.type.mobility import MobilityPurpose
+from app.protocols.db.models.application.type.mobility import MobilityType
+from app.protocols.db.models.application.type.mobility import Process
 from app.schemas.application.user_application import UserApplicationStatus
 
+
 class MobilityBase(BaseModel):
-    id_postgres: UUID | None = None
+    id: UUID | None = None
     process: Process
     type: MobilityType
     purpose: MobilityPurpose
@@ -14,12 +20,14 @@ class MobilityBase(BaseModel):
     destination_institution: str
     date_start: datetime
     date_end: datetime
-    total_time: int #tiempo total en meses
+    total_time: int  # tiempo total en meses
     date_report: datetime
     status: list[UserApplicationStatus] | None = []
 
+
 class MobilityCreate(MobilityBase):
     pass
+
 
 class MobilityUpdate(BaseModel):
     process: Process | None = None
@@ -32,6 +40,6 @@ class MobilityUpdate(BaseModel):
     total_time: int | None = None
     date_report: datetime | None = None
 
+
 class Mobility(MobilityBase):
     pass
-    
