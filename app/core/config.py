@@ -59,10 +59,6 @@ class Settings(BaseSettings):
     smtp_domain_email: str
     smtp_port_email: int
 
-    # Redis
-    redis_url: str
-    redis_backend: str
-
     # URLs front
     URL_LAB: str
 
