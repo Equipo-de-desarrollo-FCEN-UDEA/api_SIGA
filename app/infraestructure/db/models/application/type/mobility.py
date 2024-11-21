@@ -1,12 +1,16 @@
-from odmantic import Field, Model
+from __future__ import annotations
+
 from datetime import datetime
 from uuid import UUID
+
+from odmantic import Field
+from odmantic import Model
 
 from app.schemas.application.user_application import UserApplicationStatus
 
 
 class Mobility(Model):
-    id_postgres: UUID = Field(primary_field=True)
+    id: UUID = Field(primary_field=True)
     process: str
     type: str
     purpose: str
