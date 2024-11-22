@@ -10,7 +10,7 @@ from pydantic import validator
 
 
 class CommissionBase(BaseModel):
-    id_postgres: UUID | None = None
+    id: UUID | None = None
     country: str = Field(max_length=250, min_length=1)
     state: str | None = Field(max_length=250, min_length=1)
     city: str | None = Field(max_length=250, min_length=1)
