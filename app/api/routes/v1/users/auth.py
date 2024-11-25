@@ -7,7 +7,6 @@ from fastapi import Body
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
-from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -73,10 +72,7 @@ def activate_account(
     user.is_active = True
     user_update = UserUpdate.model_validate(user)
     user_svc.update(id=user.id, obj_in=user_update, db=db_postgres)
-    return JSONResponse(
-        status_code=200,
-        content={'msg': 'Cuenta activada correctamente'},
-    )
+    return {'msg': 'Cuenta activada correctamente'}
 
 
 @router.get('/protected')
