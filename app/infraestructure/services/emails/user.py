@@ -13,7 +13,10 @@ from app.core.logging import logging
 
 logger = logging.getLogger(__name__)
 
-env = Environment(loader=FileSystemLoader(templatesdir))
+env = Environment(
+    loader=FileSystemLoader(templatesdir),
+    autoescape=True,
+)
 
 
 _my_email = settings.smtp_user_email

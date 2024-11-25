@@ -12,3 +12,5 @@ init_data/
 
 # Docker out installations
 *=
+
+app/infraestructure/services/emails/render_templay.py

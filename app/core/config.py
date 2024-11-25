@@ -59,6 +59,12 @@ class Settings(BaseSettings):
     smtp_domain_email: str
     smtp_port_email: int
 
+    # URLs front
+    URL_LAB: str
+
+    # production
+    PRODUCTION: bool
+
 
 @lru_cache
 def get_settings() -> BaseSettings:

@@ -3,18 +3,15 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastapi import APIRouter
-from fastapi import Body
 from fastapi import Depends
-from fastapi import HTTPException
 from fastapi import Response
-from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
+from app.api.middleware.bearer import get_current_active_user
 from app.api.middleware.postgres_db import get_db
 from app.core.config import settings
 from app.schemas.users.user import User
-from app.schemas.users.user import UserUpdate
 from app.services.jwt import jwt_service
 from app.services.users.user import user_svc
 
@@ -23,7 +20,7 @@ router = APIRouter()
 user_model = User
 
 
-@router.post('/access-token')
+@router.post('/access-token', response_model=None)
 def login_access_token(
     response: Response,
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
@@ -49,32 +46,16 @@ def login_access_token(
         value=access_token,
         httponly=True,     # Impide el acceso desde JavaScript
         # Solo en conexiones HTTPS (requiere HTTPS en producción)
-        secure=True,
-        samesite='Lax',     # Ayuda a prevenir ataques CSRF
+        secure=settings.PRODUCTION,
+        samesite=None,     # Ayuda a prevenir ataques CSRF
         path='/',
     )
 
     return {'message': 'Login successful'}
 
-##
 
-
-@router.post('/activate-account/', response_model=dict)
-def activate_account(
-    token: str = Body(...), db_postgres: Session = Depends(get_db),
-) -> dict:
-    """ Activate account: Params:
-        token: str
-    """
-    print('este es el token', Body)
-    email = jwt_service.decode_access_token(token).sub
-    if not email:
-        raise HTTPException(status_code=400, detail='Invalid token')
-    user: User = user_svc.get_by_email(email=email, db=db_postgres)
-    user.is_active = True
-    user_update = UserUpdate.model_validate(user)
-    user_svc.update(id=user.id, obj_in=user_update, db=db_postgres)
-    return JSONResponse(
-        status_code=200,
-        content={'msg': 'Cuenta activada correctamente'},
-    )
+@router.get('/protected')
+async def protected_route(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+):
+    return {'message': 'Protected route'}
