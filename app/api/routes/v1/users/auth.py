@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
+from app.api.middleware.bearer import get_current_active_user
 from app.api.middleware.postgres_db import get_db
 from app.core.config import settings
 from app.schemas.users.user import User
@@ -23,7 +24,7 @@ router = APIRouter()
 user_model = User
 
 
-@router.post('/access-token')
+@router.post('/access-token', response_model=None)
 def login_access_token(
     response: Response,
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
@@ -49,14 +50,12 @@ def login_access_token(
         value=access_token,
         httponly=True,     # Impide el acceso desde JavaScript
         # Solo en conexiones HTTPS (requiere HTTPS en producción)
-        secure=True,
-        samesite='Lax',     # Ayuda a prevenir ataques CSRF
+        secure=settings.PRODUCTION,
+        samesite=None,     # Ayuda a prevenir ataques CSRF
         path='/',
     )
 
     return {'message': 'Login successful'}
-
-##
 
 
 @router.post('/activate-account/', response_model=dict)
@@ -78,3 +77,10 @@ def activate_account(
         status_code=200,
         content={'msg': 'Cuenta activada correctamente'},
     )
+
+
+@router.get('/protected')
+async def protected_route(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+):
+    return {'message': 'Protected route'}
