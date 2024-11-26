@@ -7,7 +7,7 @@ from jinja2 import FileSystemLoader
 env = Environment(loader=FileSystemLoader('./templates'))
 
 # Cargar el template
-template = env.get_template('email.base.html.j2')
+template = env.get_template('email.validar.email.html.j2')
 
 # Renderizar el template con datos de ejemplo
 rendered_html = template.render(
