@@ -3,10 +3,8 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import uuid4
 
-import pytest
-from pydantic import EmailStr
-
 from app.infraestructure.db.models.user.user import IdentificationType
+from app.schemas.organization.academic_unit_type import AcademicUnitType
 from app.schemas.users.user import User
 from app.schemas.users.user import UserBase
 from app.schemas.users.user import UserCreate
@@ -23,7 +21,7 @@ def test_user_base():
     user = UserBase(
         name='Test',
         last_name='User',
-        email=EmailStr('test@example.com'),
+        email='test@example.com',
         identification_type=IdentificationType.CEDULA_CIUDADANIA,
         identification_number='123456789',
         phone='1234567890',
@@ -42,7 +40,7 @@ def test_user_create():
     user = UserCreate(
         name='Test',
         last_name='User',
-        email=EmailStr('test@example.com'),
+        email='test@example.com',
         identification_type=IdentificationType.CEDULA_CIUDADANIA,
         identification_number='123456789',
         phone='1234567890',
@@ -75,7 +73,7 @@ def test_user_create_in_db():
     user = UserCreateInDB(
         name='Test',
         last_name='User',
-        email=EmailStr('test@example.com'),
+        email='test@example.com',
         identification_type=IdentificationType.CEDULA_CIUDADANIA,
         identification_number='123456789',
         phone='1234567890',
@@ -90,7 +88,7 @@ def test_user_in_db():
         id=uuid4(),
         name='Test',
         last_name='User',
-        email=EmailStr('test@example.com'),
+        email='test@example.com',
         identification_type=IdentificationType.CEDULA_CIUDADANIA,
         identification_number='123456789',
         phone='1234567890',
@@ -117,21 +115,21 @@ def test_user_search():
 
 
 def test_user():
-    role = Rol(id=uuid4(), name='Admin', description='PROFESOR')
+    rol = Rol(id=uuid4(), name='Admin', description='PROFESOR')
     academic_unit_type = AcademicUnitType(id=uuid4(), name='INSTITUTO')
     academic_unit = AcademicUnit(
-        id=uuid4(), name='Engineering', academic_unit_type=academic_unit_type,
+        id=uuid4(), name='Profesor', academic_unit_type=academic_unit_type,
     )
     user_roles_academic_units = [
         UserRolAcademicUnit(
-            role=role, academic_unit=academic_unit,
+            rol=rol, academic_unit=academic_unit,
         ),
     ]
     user = User(
         id=uuid4(),
         name='Test',
         last_name='User',
-        email=EmailStr('test@example.com'),
+        email='test@example.com',
         identification_type=IdentificationType.CEDULA_CIUDADANIA,
         identification_number='123456789',
         phone='1234567890',
