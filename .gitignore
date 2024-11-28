@@ -14,3 +14,4 @@ init_data/
 *=
 
 app/infraestructure/services/emails/render_templay.py
+ .coverage
