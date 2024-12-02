@@ -16,6 +16,14 @@ from app.schemas.users.user_rol_academic_unit import AcademicUnit
 from app.schemas.users.user_rol_academic_unit import Rol
 from app.schemas.users.user_rol_academic_unit import UserRolAcademicUnit
 
+import hashlib
+import binascii
+from uuid import uuid4
+
+def hash_password(password, salt):
+    dk = hashlib.pbkdf2_hmac('sha256', password.encode(), salt.encode(), 100000)
+    return binascii.hexlify(dk).decode()
+
 
 def test_user_base():
     user = UserBase(
@@ -37,6 +45,10 @@ def test_user_base():
 
 
 def test_user_create():
+    salt = 'somesalt'  # In a real scenario, use a unique salt for each password
+    password = 'password123'
+    hashed_password = hash_password(password, salt)
+
     user = UserCreate(
         name='Test',
         last_name='User',
@@ -45,9 +57,9 @@ def test_user_create():
         identification_number='123456789',
         phone='1234567890',
         is_active=True,
-        password='password123',
+        password=password,
     )
-    assert user.password == 'password123'
+    assert user.password == password
 
 
 def test_user_update():
@@ -78,9 +90,9 @@ def test_user_create_in_db():
         identification_number='123456789',
         phone='1234567890',
         is_active=True,
-        hashed_password='hashedpassword123',
+        hashed_password =hash_password('hashedpassword123', 'somesalt'),
     )
-    assert user.hashed_password == 'hashedpassword123'
+    assert user.hashed_password == hash_password('hashedpassword123', 'somesalt')
 
 
 def test_user_in_db():
