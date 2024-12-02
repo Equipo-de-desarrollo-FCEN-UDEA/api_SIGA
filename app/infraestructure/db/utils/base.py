@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from sqlalchemy import Column
 from sqlalchemy import DateTime
-from sqlalchemy.orm import as_declarative
-from sqlalchemy.orm import declared_attr
+from sqlalchemy.ext.declarative import as_declarative
+from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.sql import func
 
 
@@ -18,6 +18,7 @@ class Base:
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
+    @staticmethod
     def _camel2snake(name: str):
         return name[0].lower() + ''.join([
             '_' + i.lower()
