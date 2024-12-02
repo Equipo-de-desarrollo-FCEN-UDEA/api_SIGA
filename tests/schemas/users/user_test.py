@@ -118,7 +118,8 @@ def test_user():
     rol = Rol(id=uuid4(), name='Admin', description='PROFESOR')
     academic_unit_type = AcademicUnitType(id=uuid4(), name='INSTITUTO')
     academic_unit = AcademicUnit(
-        id=uuid4(), name='Profesor', academic_unit_type=academic_unit_type,
+        id=uuid4(), name='Instituto de Física',
+        academic_unit_type=academic_unit_type,
     )
     user_roles_academic_units = [
         UserRolAcademicUnit(
