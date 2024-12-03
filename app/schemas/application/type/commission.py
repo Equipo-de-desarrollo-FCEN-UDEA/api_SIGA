@@ -22,7 +22,7 @@ class CommissionBase(BaseModel):
 
 
 class CommissionCreate(CommissionBase):
-    pass
+    ...
 
 
 class CommissionUpdate(BaseModel):

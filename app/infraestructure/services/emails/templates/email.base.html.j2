@@ -1,10 +1,17 @@
 <!doctype html>
 <html lang="es">
 <head>
+  <!-- Bloque para el título de la página, puede ser sobrescrito en plantillas que extiendan esta base -->
+  <title> {% block title %}{% endblock %} </title>
+
+  <!-- Compatibilidad con IE -->
+  <!--[if !mso]><!-->
   <title>{% block title %}{% endblock %}</title>
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Estilos CSS para el correo electrónico -->
   <style type="text/css">
     body, table, td, p { margin: 0; padding: 0; }
     body { background-color: #FDFEFE; word-spacing: normal; }
