@@ -20,6 +20,9 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
 
+    class Config:
+        from_attributes = True
+
 
 class UserUpdate(BaseModel):
     email: str | None = None
@@ -27,6 +30,7 @@ class UserUpdate(BaseModel):
     last_name: str | None = None
     is_active: bool | None = None
     phone: str | None = None
+    hashed_password: str | None = None
     identification_type: IdentificationType | None = None
     identification_number: str | None = None
 
@@ -34,8 +38,11 @@ class UserUpdate(BaseModel):
         from_attributes = True
 
 class UserCreateInDB(UserBase):
+    id: UUID
     hashed_password: str
 
+    class Config:
+        from_attributes = True
 
 class UserInDB(GeneralResponse, UserBase):
     ...
