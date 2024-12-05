@@ -60,37 +60,7 @@ def login_access_token(
 
     return {'message': 'Login successful'}
 
-# Route for recovery password with email or identification
-
-
-@router.post('/password-recovery/{email}', response_model=dict)
-def recover_password(
-    email: str, *,
-    db_postgres: Session = Depends(get_db),
-) -> dict:
-    """
-    Password Recovery
-    """
-    user: User = user_svc.get_by_email(
-        db=db_postgres, email=email,
-    ) or user_svc.get_by_identification(
-        db=db_postgres, identification=email,
-    )
-    if not user:
-        raise HTTPException(
-            status_code=404,
-            detail='''El usuario con este correo o número de
-                      identificación no está registrado en el sistema''',
-        )
-
-    email_token = jwt_service.email_token(email=user.email)
-    recovery_password_email.apply_async(
-        args=(user.name, email_token, user.email),
-    )
-    return {
-        'msg': f'''El correo para recuperar
-            la contraseña fue enviado correctamente a {user.email}''',
-    }
+# Route for activate the account with the mailed token
 
 
 @router.post('/activate-account/', response_model=dict)
@@ -131,6 +101,38 @@ def activate_account(
 
     return {'msg': 'Cuenta activada correctamente'}
 
+# Route for recovery password with email or identification
+
+
+@router.post('/password-recovery/{email}', response_model=dict)
+def recover_password(
+    email: str, *,
+    db_postgres: Session = Depends(get_db),
+) -> dict:
+    """
+    Password Recovery
+    """
+    user: User = user_svc.get_by_email(
+        db=db_postgres, email=email,
+    ) or user_svc.get_by_identification(
+        db=db_postgres, identification=email,
+    )
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail='''El usuario con este correo o número de
+                      identificación no está registrado en el sistema''',
+        )
+
+    email_token = jwt_service.email_token(email=user.email)
+    recovery_password_email.apply_async(
+        args=(user.name, email_token, user.email),
+    )
+    return {
+        'msg': f'''El correo para recuperar
+            la contraseña fue enviado correctamente a {user.email}''',
+    }
+
 # Route for reset password
 
 
@@ -152,11 +154,15 @@ def reset_password(
     except Exception:
         raise HTTPException(status_code=400, detail='Invalid token')
 
-    user: UserCreateInDB = user_svc.get_by_email(email=email, db=db_postgres)
+    user: UserCreateInDB = user_svc.get_by_email(
+        email=email,
+        db=db_postgres,
+    )
     if not user:
         raise HTTPException(
             status_code=404,
-            detail='El usuario con ese correo electrónico no existe',
+            detail='''El usuario con ese
+            correo electrónico no existe''',
         )
 
     elif not user.is_active:
@@ -165,7 +171,10 @@ def reset_password(
     hashed_password = crypt_svc.get_password_hash(new_password)
     user.hashed_password = hashed_password
     user_update = UserUpdate.model_validate(user)
-    user_svc.update(id=user.id, obj_in=user_update, db=db_postgres)
+    user_svc.update(
+        id=user.id,
+        obj_in=user_update, db=db_postgres,
+    )
 
     return {'msg': 'Contraseña actualizada correctamente'}
 
