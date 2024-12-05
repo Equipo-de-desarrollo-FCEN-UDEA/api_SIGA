@@ -56,3 +56,33 @@ def confirm_email(to_name: str, token: str, email):
             from_addr=_my_email,
             to_addrs=email,
         )
+
+
+@celery_app.task
+def recovery_password_email(to_name: str, token: str, email: str):
+    template = env.get_template('email.recuperar.contraseña.html.j2')
+    link = f'http://{settings.APP_DOMAIN}/auth/recovery-password/{token}'
+    context = {
+        'user': {'nombre': to_name.title()},
+        'enlace': link,
+    }
+
+    render = template.render(context)
+    msg = EmailMessage()
+    msg['Subject'] = 'Recuperación de contraseña'
+    msg['From'] = _my_email
+    msg['To'] = email
+    msg.set_content(
+        render,
+        subtype='html',
+    )
+
+    with smtplib.SMTP(
+        settings.smtp_domain_email,
+        port=settings.smtp_port_email,
+    ) as smtp:
+        smtp.send_message(
+            msg=msg,
+            from_addr=_my_email,
+            to_addrs=email,
+        )
