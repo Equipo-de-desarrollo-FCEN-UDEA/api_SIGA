@@ -20,11 +20,11 @@ from app.schemas.users.user import UserUpdate
 from app.services.crypt import crypt_svc
 from app.services.jwt import jwt_service
 from app.services.users.user import user_svc
-# from app.infraestructure.db.models.user.user import User
-
 
 router = APIRouter()
 user_model = User
+
+# Auth for acces to api with email and password
 
 
 @router.post('/access-token', response_model=None)
@@ -41,13 +41,13 @@ def login_access_token(
         password=form_data.password,
         db=db_postgres,
     )
+
     scopes = [role.rol.scope for role in user.user_roles_academic_units]
 
     access_token = jwt_service.create_access_token(
         data={'sub': str(user.id), 'scopes': scopes},
         expires=settings.ACCESS_TOKEN_EXPIRE_MINUTES,
     )
-
     response.set_cookie(
         key='access_token',
         value=access_token,
@@ -57,10 +57,9 @@ def login_access_token(
         samesite=None,     # Ayuda a prevenir ataques CSRF
         path='/',
     )
-
     return {'message': 'Login successful'}
 
-# Route for activate the account with the mailed token
+# Active account with token
 
 
 @router.post('/activate-account/', response_model=dict)
@@ -68,8 +67,8 @@ def activate_account(
     token: str = Body(...),
     db_postgres: Session = Depends(get_db),
 ) -> dict:
-    """ Activate account: Params:
-        token: str
+    """
+    Activate account: Params: token: str
     """
     try:
         email = jwt_service.decode_access_token(
@@ -79,49 +78,52 @@ def activate_account(
         raise HTTPException(
             status_code=400, detail='Invalid token',
         )
-
     user: User = user_svc.get_by_email(
         email=email, db=db_postgres,
     )
     if not user:
         raise HTTPException(
             status_code=404,
-            detail='El usuario con ese correo electrónico no existe',
+            detail='''El usuario
+            con ese correo electrónico no existe''',
         )
-
     user.is_active = True
-    user_update = UserUpdate.model_validate(
-        user,
-    )
+    user_update = UserUpdate.model_validate(user)
     user_svc.update(
         id=user.id,
         obj_in=user_update,
         db=db_postgres,
     )
-
     return {'msg': 'Cuenta activada correctamente'}
 
 # Route for recovery password with email or identification
 
 
-@router.post('/password-recovery/{email}', response_model=dict)
+@router.post(
+    '/password-recovery/{identification_number}',
+    response_model=dict,
+)
 def recover_password(
-    email: str, *,
+    identification_number: str,
+    *,
     db_postgres: Session = Depends(get_db),
 ) -> dict:
     """
     Password Recovery
     """
     user: User = user_svc.get_by_email(
-        db=db_postgres, email=email,
-    ) or user_svc.get_by_identification(
-        db=db_postgres, identification=email,
+        db=db_postgres, email=identification_number,
     )
+    if not user:
+        user = user_svc.get_by_identification(
+            db_postgres, identification_number=identification_number,
+        )
     if not user:
         raise HTTPException(
             status_code=404,
             detail='''El usuario con este correo o número de
-                      identificación no está registrado en el sistema''',
+                      identificación no está registrado
+                      en el sistema''',
         )
 
     email_token = jwt_service.email_token(email=user.email)
@@ -130,7 +132,8 @@ def recover_password(
     )
     return {
         'msg': f'''El correo para recuperar
-            la contraseña fue enviado correctamente a {user.email}''',
+            la contraseña fue enviado
+            correctamente a {user.email}''',
     }
 
 # Route for reset password
@@ -143,9 +146,7 @@ def reset_password(
     db_postgres: Session = Depends(get_db),
 ) -> dict:
     """
-    Reset password
-
-    Params:
+    Reset password Params:
         token: str
         new_password: str
     """
