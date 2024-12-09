@@ -11,5 +11,5 @@ class CRUDUserProtocol(CRUDProtocol[User, UserCreateInDB, UserUpdate]):
     def get_by_email(self, *, email: str) -> User:
         ...
 
-    def get_by_identification(self, *, identification: str) -> User:
+    def get_by_identification(self, *, identification_number: str) -> User:
         ...

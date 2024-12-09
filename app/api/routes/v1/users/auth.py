@@ -25,8 +25,6 @@ router = APIRouter()
 user_model = User
 
 # Auth for acces to api with email and password
-
-
 @router.post('/access-token', response_model=None)
 def login_access_token(
     response: Response,
@@ -60,8 +58,6 @@ def login_access_token(
     return {'message': 'Login successful'}
 
 # Active account with token
-
-
 @router.post('/activate-account/', response_model=dict)
 def activate_account(
     token: str = Body(...),
@@ -97,27 +93,36 @@ def activate_account(
     return {'msg': 'Cuenta activada correctamente'}
 
 # Route for recovery password with email or identification
-
-
 @router.post(
-    '/password-recovery/{identification_number}',
-    response_model=dict,
-)
+    '/password-recovery/{email_or_id}',
+    response_model=dict,)
 def recover_password(
-    identification_number: str,
-    *,
+    email_or_id: str, *,
     db_postgres: Session = Depends(get_db),
 ) -> dict:
     """
     Password Recovery
     """
-    user: User = user_svc.get_by_email(
-        db=db_postgres, email=identification_number,
-    )
-    if not user:
-        user = user_svc.get_by_identification(
-            db_postgres, identification_number=identification_number,
+    user = None
+    try:
+        user = user_svc.get_by_email(
+            db=db_postgres, email=email_or_id,
         )
+        if user:
+            print(f"User found by email: {user.email}")
+    except Exception as e:
+        print(f"Error finding user by email: {e}")
+    
+    if not user:
+        try:
+            user : User = user_svc.get_by_identification(
+                identification_number=email_or_id, db=db_postgres
+            )
+            if user:
+                print(f"User found by identification: {user.email}")
+        except Exception as e:
+            print(f"Error finding user by identification: {e}")
+    
     if not user:
         raise HTTPException(
             status_code=404,
@@ -125,7 +130,7 @@ def recover_password(
                       identificación no está registrado
                       en el sistema''',
         )
-
+    
     email_token = jwt_service.email_token(email=user.email)
     recovery_password_email.apply_async(
         args=(user.name, email_token, user.email),
@@ -135,7 +140,6 @@ def recover_password(
             la contraseña fue enviado
             correctamente a {user.email}''',
     }
-
 # Route for reset password
 
 
