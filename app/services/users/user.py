@@ -43,5 +43,13 @@ class UserService(
     def get_by_email(self, *, email: str, db) -> User:
         return self.observer.get_by_email(email=email, db=db)
 
+    def get_by_identification(
+            self, *, identification_number: str, db,
+    ) -> User:
+        return self.observer.get_by_identification(
+            identification_number=identification_number,
+            db=db,
+        )
+
 
 user_svc = UserService()
