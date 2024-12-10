@@ -38,7 +38,6 @@ class UserUpdate(BaseModel):
         from_attributes = True
 
 class UserCreateInDB(UserBase):
-    id: UUID
     hashed_password: str
 
     class Config:
