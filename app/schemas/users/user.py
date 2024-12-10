@@ -1,11 +1,16 @@
-from pydantic import BaseModel, Field, EmailStr
+from __future__ import annotations
+
 from uuid import UUID
 
-from app.schemas.utils.base_model import GeneralResponse
-from app.schemas.users.rol import Rol
-from app.schemas.users.user_rol_academic_unit import UserRolAcademicUnit
+from pydantic import BaseModel
+from pydantic import EmailStr
+from pydantic import Field
 
 from app.infraestructure.db.models.user.user import IdentificationType
+from app.schemas.users.rol import Rol
+from app.schemas.users.user_rol_academic_unit import UserRolAcademicUnit
+from app.schemas.utils.base_model import GeneralResponse
+
 
 class UserBase(BaseModel):
     name: str
@@ -37,23 +42,33 @@ class UserUpdate(BaseModel):
     class Config:
         from_attributes = True
 
+
 class UserCreateInDB(UserBase):
-    id: UUID
     hashed_password: str
 
     class Config:
         from_attributes = True
+
+
+class UserUpdateInDB(UserBase):
+    id: UUID | None = None
+    hashed_password: str
+
+    class Config:
+        from_attributes = True
+
 
 class UserInDB(GeneralResponse, UserBase):
     ...
 
 
 class UserSearch(BaseModel):
-    names__icontains: str | None = Field(None, alias="names")
-    email__icontains: str | None = Field(None, alias="email")
+    names__icontains: str | None = Field(None, alias='names')
+    email__icontains: str | None = Field(None, alias='email')
 
     class Config:
         populate_by_name = True
+
 
 class User(UserBase):
     id: UUID
