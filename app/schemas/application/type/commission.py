@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
-from pydantic import Any
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
+
+from app.schemas.application.user_application import UserApplicationStatus
 
 
 class CommissionBase(BaseModel):
@@ -18,7 +20,8 @@ class CommissionBase(BaseModel):
     date_end: datetime
     reason: str = Field(max_length=500, min_length=5)
     justification: str = Field(max_length=500, min_length=5)
-    documents: list[Any] | None
+    status: list[UserApplicationStatus] = Field(default_factory=list)
+    documents: list[Any] = Field(default_factory=list)
 
 
 class CommissionCreate(CommissionBase):
@@ -37,14 +40,14 @@ class CommissionUpdate(BaseModel):
 
 
 class Compliment(BaseModel):
-    documents: list[Any]
-    emails: list[str]
+    documents: list[Any] | None
+    emails: list[str] | None
     observation: str = Field(max_length=300)
 
 
 class CommissionInDB(CommissionBase):
-    resolution: str | None
-    compliment: Compliment | None
+    resolution: str | None = None
+    compliment: Compliment | None = None
 
 
 class CommissionResponse(CommissionBase):
@@ -52,6 +55,6 @@ class CommissionResponse(CommissionBase):
 
 
 class CommissionDocument(CommissionInDB):
-    @validator('start_date', 'end_date')
+    @validator('date_start', 'date_end')
     def stringdate(cls, v, values, **kwargs):
         return v.strftime('%A %d de %B del %Y')
