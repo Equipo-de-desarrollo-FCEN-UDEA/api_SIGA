@@ -17,6 +17,7 @@ from app.infraestructure.services.emails.user import recovery_password_email
 from app.schemas.users.user import User
 from app.schemas.users.user import UserCreateInDB
 from app.schemas.users.user import UserUpdate
+from app.schemas.users.user import UserUpdateInDB
 from app.services.crypt import crypt_svc
 from app.services.jwt import jwt_service
 from app.services.users.user import user_svc
@@ -159,7 +160,7 @@ def reset_password(
     except Exception:
         raise HTTPException(status_code=400, detail='Invalid token')
 
-    user: UserCreateInDB = user_svc.get_by_email(
+    user: UserUpdateInDB = user_svc.get_by_email(
         email=email,
         db=db_postgres,
     )
