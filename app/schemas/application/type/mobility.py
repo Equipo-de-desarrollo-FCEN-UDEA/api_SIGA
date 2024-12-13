@@ -58,6 +58,5 @@ class MobilityUpdate(BaseModel):
     subjects: list[Subject] | None = None
 
 
-
 class Mobility(MobilityBase):
     pass
