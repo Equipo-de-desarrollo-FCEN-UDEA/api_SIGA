@@ -37,6 +37,26 @@ class UserCrud(CRUDBase[User, UserCreate, UserUpdate]):
             ]
 
             return response
+        
+    def get_by_identification(self, *, identification_number: str, db: Session) -> User:
+        with db:
+            response = db.query(User).filter(
+                (User.identification_number.ilike(identification_number)) & (
+                    UserRolAcademicUnit.is_active
+                ),
+            ).first()
+            if not response:
+                raise ORMError(
+                    f"No user found with identification number {identification_number}",
+                )
+
+            response.user_roles_academic_units = [
+                role
+                for role in response.user_roles_academic_units
+                if role.is_active
+            ]
+
+            return response
 
 
 user_crud = UserCrud(User)

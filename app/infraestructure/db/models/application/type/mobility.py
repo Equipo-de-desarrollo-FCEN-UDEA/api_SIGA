@@ -26,4 +26,5 @@ class Mobility(Model):
     total_time: int
     date_report: datetime = Field(default_factory=datetime.utcnow)
     subjects: list[Subject]
+    date_report: datetime
     status: list[UserApplicationStatus]

@@ -31,8 +31,9 @@ class MobilityBase(BaseModel):
     email_contact_person: str
     date_start: datetime
     date_end: datetime
-    total_time: int | None = None
     subjects: list[Subject] | None = []
+    total_time: int  # tiempo total en meses
+    date_report: datetime
     status: list[UserApplicationStatus] | None = []
 
 
@@ -55,6 +56,7 @@ class MobilityUpdate(BaseModel):
     total_time: int | None = None
     date_report: datetime | None = None
     subjects: list[Subject] | None = None
+
 
 
 class Mobility(MobilityBase):
