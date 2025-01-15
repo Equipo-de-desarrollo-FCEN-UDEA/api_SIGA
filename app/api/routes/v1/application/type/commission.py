@@ -2,12 +2,10 @@ from __future__ import annotations
 
 import logging
 from typing import Annotated
-from uuid import UUID
 
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Security
-from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.api.middleware.bearer import get_current_active_user
@@ -19,16 +17,21 @@ from app.services.application.type.commission import commission_svc
 
 log = logging.getLogger(__name__)
 
-
 router = APIRouter()
+
+CREATED = 201
+OK = 200
 
 
 @router.post(
     '/',
     response_model=CommissionCreate,
-    status_code=201,
+    status_code=CREATED,
     summary='Create a new commission',
-    description='Endpoint to create a new commission. This requires authentication and the appropriate scope for professor.',
+    description=(
+        'Endpoint to create a new commission. This requires authentication '
+        'and the appropriate scope for professors or administrative personnel.'
+    ),
 )
 async def create_commission(
     *,
@@ -54,23 +57,20 @@ async def create_commission(
         CommissionCreate: The created commission object.
 
     Raises:
-        HTTPException: If the user is not authenticated, lacks permissions, or an error occurs during creation.
+        HTTPException: If the user is not authenticated, lacks permissions,
+                        or an error occurs during creation.
 
     Possible responses:
         - **201**: Commission successfully created.
+        - **400**: Invalid data provided.
         - **401**: User not authenticated.
         - **500**: Internal server error.
     """
-    try:
-        commission_create = await commission_svc.create(
-            db_mongo=db_mongo,
-            obj_in=obj_in,
-            db_postgres=db_postgres,
-            current_user=current_user,
-            application_id='21444ff5-eecc-4365-aad9-ccce45b7d48f',
-        )
-    except Exception as e:
-        log.error(f"Error creating commission: {e}")
-        return JSONResponse(status_code=500, content={'message': 'Internal server error'})
 
-    return commission_create
+    return await commission_svc.create(
+        db_mongo=db_mongo,
+        obj_in=obj_in,
+        db_postgres=db_postgres,
+        current_user=current_user,
+        application_id='21444ff5-eecc-4365-aad9-ccce45b7d48f',
+    )
