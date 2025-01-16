@@ -50,8 +50,8 @@ class CommissionInDB(CommissionBase):
     compliment: Compliment | None = None
 
 
-class CommissionResponse(CommissionBase):
-    commission: CommissionInDB
+class CommissionResponse(CommissionInDB):
+    ...
 
 
 class CommissionDocument(CommissionInDB):

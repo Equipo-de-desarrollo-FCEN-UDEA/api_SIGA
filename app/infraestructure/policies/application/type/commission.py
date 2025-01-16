@@ -5,6 +5,7 @@ from app.infraestructure.policies.application.user_application import (
 )
 from app.protocols.db.models.application.application import ApplicationStatusType
 from app.schemas.users.user import User
+from app.services.application.type.commission import commission_svc
 
 
 def next_status(current_status: str, response: str | None = None) -> str | None:
@@ -42,3 +43,18 @@ def next_status(current_status: str, response: str | None = None) -> str | None:
         return status_transitions[current_status].get(response)
 
     return status_transitions[current_status]
+
+
+async def flux(
+    *,
+    user_application_id,
+    db_mongo,
+    db_postgres,
+    current_user: User,
+) -> str:
+    _current_status = await current_status(
+        user_application_id,
+        db_mongo,
+        commission_svc,
+    )
+    _next_status = next_status(_current_status)
