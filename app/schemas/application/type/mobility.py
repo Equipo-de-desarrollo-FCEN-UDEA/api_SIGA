@@ -39,7 +39,6 @@ class MobilityCreate(MobilityBase):
     total_time: int | None = None  # tiempo total en meses
 
 
-
 class MobilityUpdate(BaseModel):
     process: Process | None = None
     type: MobilityType | None = None

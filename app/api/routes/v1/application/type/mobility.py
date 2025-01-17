@@ -22,6 +22,17 @@ from app.services.application.type.mobility import mobility_svc
 router = APIRouter()
 
 
+@router.get('/{id}', response_model=Mobility, status_code=200)
+async def get_mobility(
+    *,
+    id: UUID,
+    db_mongo=Depends(get_mongo_db),
+    db_postgres: Session = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)],
+) -> Mobility:
+    return await mobility_svc.get(id=id, db=db_mongo)
+
+
 @router.post('/create', response_model=MobilityCreate, status_code=201)
 async def create_mobility(
     *,

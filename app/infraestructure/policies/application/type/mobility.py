@@ -89,6 +89,5 @@ async def flux(
 
 #    elif _next_status == ApplicationStatusType.IN_INTERNATIONAL.value:
 
-
     else:
         return next_status
