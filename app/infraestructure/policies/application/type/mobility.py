@@ -28,10 +28,10 @@ def next_status(current_status: str, response: str | None = None) -> str:
     elif current_status == ApplicationStatusType.IN_COMMITEE.value:
         if (response == 'APROBADA'):
             return ApplicationStatusType.IN_INTERNATIONAL.value
-        elif (response == 'RECHAZADA'):
+        elif (response == 'DEVUELTA'):
             return ApplicationStatusType.RETURNED.value
         else:
-            return ApplicationStatusType.RETURNED.value
+            return ApplicationStatusType.REJECTED.value
     elif current_status == ApplicationStatusType.IN_INTERNATIONAL.value:
         if (response == 'APROBADA'):
             return ApplicationStatusType.IN_DEAN.value
@@ -52,12 +52,13 @@ async def flux(
     db_mongo,
     db_postgres,
     current_user: User,
+    response: str | None = None,
 ) -> str:
     _current_status = await current_status(
         user_application_id,
         db_mongo, mobility_svc,
     )
-    _next_status = next_status(_current_status)
+    _next_status = next_status(_current_status, response)
     committee = user_rol_academic_unit_svc.get_student_committee(
         user_id=current_user.id, db=db_postgres,
     )
@@ -85,6 +86,9 @@ async def flux(
         )
 
         return 'terminado'
+
+#    elif _next_status == ApplicationStatusType.IN_INTERNATIONAL.value:
+
 
     else:
         return next_status
