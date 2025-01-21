@@ -25,7 +25,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchema]):
                   *, id: UUID) -> ModelType:
         response = await db.find_one(self.model, self.model.id == id)
         if response is None:
-            raise HTTPException(status_code=404, detail=f"{ModelType} Not found")
+            raise HTTPException(status_code=404, detail=f"{self.model.__name__} Not found")
         return response
     
     async def get_multi (
