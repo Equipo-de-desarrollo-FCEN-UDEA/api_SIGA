@@ -7,6 +7,8 @@ from odmantic import Model, ObjectId
 from odmantic.session import AIOSession
 from pydantic import BaseModel
 
+from fastapi import HTTPException
+
 
 ModelType = TypeVar("ModelType", bound=Model)
 UpdateSchema = TypeVar("UpdateSchema", bound=BaseModel)
@@ -23,7 +25,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchema]):
                   *, id: UUID) -> ModelType:
         response = await db.find_one(self.model, self.model.id == id)
         if response is None:
-            raise ODMError(f"{ModelType} Not found")
+            raise HTTPException(status_code=404, detail=f"{ModelType} Not found")
         return response
     
     async def get_multi (
