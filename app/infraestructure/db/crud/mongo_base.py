@@ -1,33 +1,39 @@
-from typing import Generic, TypeVar, Type
+from __future__ import annotations
+
+from typing import Generic
+from typing import Type
+from typing import TypeVar
 from uuid import UUID
 
-from app.core.exceptions import ODMError
-
-from odmantic import Model, ObjectId
+from odmantic import Model
+from odmantic import ObjectId
 from odmantic.session import AIOSession
 from pydantic import BaseModel
 
+from app.core.exceptions import ODMError
 
-ModelType = TypeVar("ModelType", bound=Model)
-UpdateSchema = TypeVar("UpdateSchema", bound=BaseModel)
-CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
 
+ModelType = TypeVar('ModelType', bound=Model)
+UpdateSchema = TypeVar('UpdateSchema', bound=BaseModel)
+CreateSchemaType = TypeVar('CreateSchemaType', bound=BaseModel)
 
 
 class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchema]):
-    def __init__(self, model: Type[ModelType]):
+    def __init__(self, model: type[ModelType]):
         """Factory crud with odm"""
         self.model = model
 
-    async def get(self, db: AIOSession,
-                  *, id: UUID) -> ModelType:
+    async def get(
+        self, db: AIOSession,
+        *, id: UUID,
+    ) -> ModelType:
         response = await db.find_one(self.model, self.model.id == id)
         if response is None:
             raise ODMError(f"{ModelType} Not found")
         return response
-    
-    async def get_multi (
-                    self,
+
+    async def get_multi(
+        self,
         *,
         payload: dict[str] | None = None,
         skip: int | None = None,
@@ -35,15 +41,16 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchema]):
         order_by: str | None = None,
         date_range: dict[str] | None = None,
         values: tuple[str] | None = None,
-        db: AIOSession
+        db: AIOSession,
     ) -> list[ModelType]:
         return await db.find(self.model)
 
     async def create(
-        self, 
+        self,
         db: AIOSession,
-        *, 
-        obj_in: Type[ModelType]) -> Type[ModelType]:
+        *,
+        obj_in: type[ModelType],
+    ) -> type[ModelType]:
         try:
             return await db.save(obj_in)
         except Exception as e:
@@ -54,7 +61,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchema]):
         db: AIOSession,
         *,
         db_obj: ModelType,
-        obj_in: UpdateSchema
+        obj_in: UpdateSchema,
     ) -> ModelType:
         try:
             update_data = obj_in.dict(exclude_unset=True)
@@ -64,6 +71,6 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchema]):
         except Exception as e:
             raise ODMError(f"Failed to update {self.model.__name__}: {str(e)}")
 
-    async def delete(self, db: AIOSession, *, id: ObjectId) -> Type[ModelType]:
+    async def delete(self, db: AIOSession, *, id: ObjectId) -> type[ModelType]:
         db_obj = await db.find_one(self.model, self.model.id == id)
         return await db.delete(db_obj)

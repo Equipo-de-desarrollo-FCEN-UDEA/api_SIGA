@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime
 import logging
+from datetime import datetime
 from http import HTTPStatus
-from typing import Annotated, Any
+from typing import Annotated
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter
@@ -16,8 +17,9 @@ from app.api.middleware.bearer import get_current_active_user
 from app.api.middleware.mongo_db import get_mongo_db
 from app.api.middleware.postgres_db import get_db
 from app.infraestructure.policies.application.type.commission import flux
-from app.schemas.application.type.commission import CommissionCreate, CommissionUpdate
+from app.schemas.application.type.commission import CommissionCreate
 from app.schemas.application.type.commission import CommissionResponse
+from app.schemas.application.type.commission import CommissionUpdate
 from app.schemas.users.user import User
 from app.services.application.type.commission import commission_svc
 
@@ -173,7 +175,7 @@ async def delete_commission(
     ] = None,
 ) -> str:
     await commission_svc.delete(id=id, db=db_mongo)
-    
+
     return JSONResponse(content='Commission successfully deleted.', status_code=HTTPStatus.OK.value)
 
 
@@ -206,7 +208,7 @@ async def delete_commission(
                                 'name': 'CREADA',
                                 'updated_by': '3fa85f64-5717-4562-b3fc-2c963f66afa6',
                                 'date': '2025-01-16T15:57:37.890Z',
-                            }
+                            },
                         ],
                         'documents': [
                             'string',
@@ -240,10 +242,11 @@ async def update_commission(
         db_postgres=db_postgres,
         current_user=current_user,
     )
-    
+
+
 @router.patch(
     '/update-status/{id}',
-    response_model=str, 
+    response_model=str,
     status_code=HTTPStatus.OK.value,
     summary='Update the status of a commission',
     description=(

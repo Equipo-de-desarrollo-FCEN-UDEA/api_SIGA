@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
 
 from app.infraestructure.policies.application.user_application import (
     current_status,
@@ -65,7 +66,7 @@ async def flux(
     )
 
     _next_status = next_status(_current_status)
-    
+
     if _next_status == ApplicationStatusType.IN_COMMITEE.value and (end_date - start_date) >= timedelta(days=30):
         print('The application has been in the committee for more than 30 days.')
     else:
@@ -73,7 +74,7 @@ async def flux(
 
     status = UserApplicationStatus(
         name=_next_status,
-        updated_by=current_user.id, 
+        updated_by=current_user.id,
         date=datetime.now(),
     )
 
@@ -82,6 +83,5 @@ async def flux(
         new_status=status,
         user_application_id=user_application_id,
     )
-    
+
     return _next_status
-            
