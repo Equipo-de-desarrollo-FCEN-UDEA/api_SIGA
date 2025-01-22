@@ -8,6 +8,7 @@ from app.protocols.db.utils.base_model import BaseModel
 
 class ApplicationStatusType(Enum):
     CREATE = 'CREADA'
+    UPDATED = 'ACTUALIZADA'
     IN_INSTITUTE = 'EN INSTITUTO'
     APPROVAL = 'VISTO BUENO'
     IN_COMMITEE = 'EN COMITE'

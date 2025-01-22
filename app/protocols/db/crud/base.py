@@ -1,5 +1,6 @@
 from datetime import date
-from typing import Protocol, Generic, TypeVar, Any
+from typing import Protocol, TypeVar, Any
+from uuid import UUID
 
 from app.schemas.utils.base_model import CreateSchemaType, UpdateSchemaType
 
@@ -11,7 +12,7 @@ class CRUDProtocol(Protocol[ModelType, CreateSchemaType, UpdateSchemaType]):
     def create(self, *, obj_in: CreateSchemaType) -> ModelType:
         ...
 
-    def get(self, *, id: int) -> ModelType:
+    def get(self, *, id: UUID) -> ModelType:
         ...
         
     def get_multi(
@@ -26,8 +27,8 @@ class CRUDProtocol(Protocol[ModelType, CreateSchemaType, UpdateSchemaType]):
     ) -> list[ModelType | dict[str, Any]]:
         ...
 
-    def update(self, *, id: int, obj_in: UpdateSchemaType) -> ModelType:
+    def update(self, *, id: UUID, obj_in: UpdateSchemaType) -> ModelType:
         ...
 
-    def delete(self, *, id: int) -> int:
+    def delete(self, *, id: UUID) -> int:
         ...

@@ -29,13 +29,14 @@ class CommissionCreate(CommissionBase):
 
 
 class CommissionUpdate(BaseModel):
-    country: str | None = Field(max_length=250, min_length=1)
-    state: str | None = Field(max_length=250, min_length=1)
-    city: str | None = Field(max_length=250, min_length=1)
+    country: str | None = Field(max_length=100, min_length=1)
+    state: str | None = Field(max_length=100, min_length=1)
+    city: str | None = Field(max_length=100, min_length=1)
     date_start: datetime | None
     date_end: datetime | None
-    reason: str | None = Field(max_length=500, min_length=5)
-    justification: str | None = Field(max_length=500, min_length=5)
+    reason: str | None = Field(max_length=100, min_length=5)
+    justification: str | None = Field(max_length=250, min_length=5)
+    status: list[UserApplicationStatus] = Field(default_factory=list)
     documents: list[Any] | None
 
 

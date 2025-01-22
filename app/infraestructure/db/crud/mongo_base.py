@@ -39,8 +39,11 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchema]):
     ) -> list[ModelType]:
         return await db.find(self.model)
 
-    async def create(self, db: AIOSession,
-                     *, obj_in: Type[ModelType]) -> Type[ModelType]:
+    async def create(
+        self, 
+        db: AIOSession,
+        *, 
+        obj_in: Type[ModelType]) -> Type[ModelType]:
         try:
             return await db.save(obj_in)
         except Exception as e:
@@ -50,11 +53,16 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchema]):
         self,
         db: AIOSession,
         *,
-        db_obj: Type[ModelType],
-        obj_in: Type[UpdateSchema]
-    ) -> Type[ModelType]:
-        db_obj.model_update(obj_in)
-        return await db.save(db_obj)
+        db_obj: ModelType,
+        obj_in: UpdateSchema
+    ) -> ModelType:
+        try:
+            update_data = obj_in.dict(exclude_unset=True)
+            for field, value in update_data.items():
+                setattr(db_obj, field, value)
+            return await db.save(db_obj)
+        except Exception as e:
+            raise ODMError(f"Failed to update {self.model.__name__}: {str(e)}")
 
     async def delete(self, db: AIOSession, *, id: ObjectId) -> Type[ModelType]:
         db_obj = await db.find_one(self.model, self.model.id == id)

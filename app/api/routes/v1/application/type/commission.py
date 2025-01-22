@@ -1,19 +1,22 @@
 from __future__ import annotations
 
+from datetime import datetime
 import logging
 from http import HTTPStatus
-from typing import Annotated
+from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Security
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.api.middleware.bearer import get_current_active_user
 from app.api.middleware.mongo_db import get_mongo_db
 from app.api.middleware.postgres_db import get_db
-from app.schemas.application.type.commission import CommissionCreate
+from app.infraestructure.policies.application.type.commission import flux
+from app.schemas.application.type.commission import CommissionCreate, CommissionUpdate
 from app.schemas.application.type.commission import CommissionResponse
 from app.schemas.users.user import User
 from app.services.application.type.commission import commission_svc
@@ -69,7 +72,7 @@ router = APIRouter()
 async def create_commission(
     *,
     obj_in: CommissionCreate,
-    db_mongo=Depends(get_mongo_db),
+    db_mongo: Any = Depends(get_mongo_db),
     db_postgres: Session = Depends(get_db),
     current_user: Annotated[
         User, Security(
@@ -87,7 +90,7 @@ async def create_commission(
 
 
 @router.get(
-    '/{commission_id}',
+    '/{id}',
     response_model=CommissionResponse,
     status_code=HTTPStatus.OK.value,
     summary='Get a commission by ID',
@@ -131,22 +134,19 @@ async def create_commission(
 )
 async def get_commission(
     *,
-    commission_id: UUID,
-    db_mongo=Depends(get_mongo_db),
+    id: UUID,
+    db_mongo: Any = Depends(get_mongo_db),
     current_user: Annotated[
         User, Security(
             get_current_active_user,
         ),
     ] = None,
 ) -> CommissionResponse:
-    return await commission_svc.get(
-        id=commission_id,
-        db=db_mongo,
-    )
+    return await commission_svc.get(id=id, db=db_mongo)
 
 
 @router.delete(
-    '/{commission_id}',
+    '/{id}',
     response_model=str,
     status_code=HTTPStatus.OK.value,
     summary='Delete a commission by ID',
@@ -164,7 +164,7 @@ async def get_commission(
 )
 async def delete_commission(
     *,
-    commission_id: UUID,
+    id: UUID,
     db_mongo=Depends(get_mongo_db),
     current_user: Annotated[
         User, Security(
@@ -172,8 +172,107 @@ async def delete_commission(
         ),
     ] = None,
 ) -> str:
-    await commission_svc.delete(
-        id=commission_id,
-        db=db_mongo,
+    await commission_svc.delete(id=id, db=db_mongo)
+    
+    return JSONResponse(content='Commission successfully deleted.', status_code=HTTPStatus.OK.value)
+
+
+@router.put(
+    '/{id}',
+    response_model=CommissionUpdate,
+    status_code=HTTPStatus.OK.value,
+    summary='Update a commission by ID',
+    description=(
+        'Update a specific commission by its unique ID. '
+        'Authentication is required, and only users with the appropriate scope '
+        'for professors or administrative personnel can access this endpoint.'
+    ),
+    responses={
+        200: {
+            'description': 'Commission successfully updated.',
+            'content': {
+                'application/json': {
+                    'example': {
+                        'id': '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+                        'country': 'Colombia',
+                        'state': 'Antioquia',
+                        'city': 'Medellin',
+                        'date_start': '2025-01-16T15:57:37.890Z',
+                        'date_end': '2025-01-16T15:57:37.890Z',
+                        'reason': 'string',
+                        'justification': 'string',
+                        'status': [
+                            {
+                                'name': 'CREADA',
+                                'updated_by': '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+                                'date': '2025-01-16T15:57:37.890Z',
+                            }
+                        ],
+                        'documents': [
+                            'string',
+                        ],
+                    },
+                },
+            },
+        },
+        400: {'description': 'Invalid data provided.'},
+        401: {'description': 'User not authenticated.'},
+        404: {'description': 'Commission not found.'},
+        500: {'description': 'Internal server error.'},
+    },
+)
+async def update_commission(
+    *,
+    id: UUID,
+    obj_in: CommissionUpdate,
+    db_mongo: Any = Depends(get_mongo_db),
+    db_postgres: Session = Depends(get_db),
+    current_user: Annotated[
+        User, Security(
+            get_current_active_user,
+        ),
+    ] = None,
+) -> CommissionUpdate:
+    return await commission_svc.update(
+        id=id,
+        db_mongo=db_mongo,
+        obj_in=obj_in,
+        db_postgres=db_postgres,
+        current_user=current_user,
     )
-    return 'Commission successfully deleted.'
+    
+@router.patch(
+    '/update-status/{id}',
+    response_model=str, 
+    status_code=HTTPStatus.OK.value,
+    summary='Update the status of a commission',
+    description=(
+        'Update the status of a specific commission by its unique ID. '
+        'Authentication is required, and only users with the appropriate scope '
+        'for professors or administrative personnel can access this endpoint.'
+    ),
+    responses={
+        200: {'description': 'Commission status successfully updated.'},
+        401: {'description': 'User not authenticated.'},
+        404: {'description': 'Commission not found.'},
+        500: {'description': 'Internal server error.'},
+    },
+)
+async def update_status(
+    *,
+    id: UUID,
+    start_date: datetime,
+    end_date: datetime,
+    db_mongo=Depends(get_mongo_db),
+    db_postgres: Session = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)],
+) -> str:
+    await flux(
+        start_date=start_date,
+        end_date=end_date,
+        user_application_id=id,
+        db_mongo=db_mongo,
+        db_postgres=db_postgres,
+        current_user=current_user,
+    )
+    return JSONResponse(content='Status updated', status_code=HTTPStatus.OK.value)

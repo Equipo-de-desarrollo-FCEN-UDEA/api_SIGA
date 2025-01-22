@@ -30,7 +30,7 @@ class ServiceBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType, CrudTyp
             raise BaseErrors(code=503, detail="Service not available")
         return self.observer.create(obj_in=obj_in, db=db)
 
-    def get(self, *, id: UUID, db) -> ModelType:
+    def get(self, *, id: UUID, db: Any) -> ModelType:
         if self.observer is None:
             raise BaseErrors(code=503, detail="Service not available")
         return self.observer.get(id=id, db=db)
@@ -63,7 +63,7 @@ class ServiceBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType, CrudTyp
             raise BaseErrors(code=503, detail="Service not available")
         return self.observer.update(id=id, obj_in=obj_in, db=db)
 
-    def delete(self, *, id: int, db) -> int:
+    def delete(self, *, id: UUID, db) -> int:
         if self.observer is None:
             raise BaseErrors(code=503, detail="Service not available")
         return self.observer.delete(id=id, db=db)
