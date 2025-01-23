@@ -9,7 +9,7 @@ from pydantic import BaseModel
 class VotingStatus(BaseModel):
     result: str
     date: datetime
-    observation: str | None
+    observation: str | None = None
 
 
 class VotingInfoBase(BaseModel):
@@ -22,7 +22,9 @@ class VotingInfoCreate(VotingInfoBase):
 
 
 class VotingInfoUpdate(BaseModel):
-    pass
+    statuses: list[VotingStatus] | None = []
+
+    
 
 
 class VotingInfo(VotingInfoBase):

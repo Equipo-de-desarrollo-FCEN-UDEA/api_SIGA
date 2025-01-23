@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+from app.schemas.voting.vote import Vote
 from app.schemas.voting.voting import VotingResponse
 from app.services.application.type.mobility import mobility_svc
 from app.services.voting.voting_info import voting_info_svc
+
+from app.infraestructure.policies.voting.vote import vote_count
+from app.protocols.db.models.voting.voting_info import VotingResult
 
 
 async def get_application_in_mongo(
@@ -28,3 +32,15 @@ async def get_application_in_mongo(
         voting.update(info_voting)
         return voting
     return {}
+
+async def voting_result(votes: list[Vote]) -> VotingResult:
+    votes = [vote.vote_type.name for vote in votes]
+    if 'CONSENSO' in votes:
+        return VotingResult.MEETING
+    positive_votes, negative_votes = await vote_count(votes)
+    if positive_votes > negative_votes:
+        return VotingResult.APPROVED
+    elif positive_votes < negative_votes:
+        return VotingResult.REJECTED
+    else:
+        return VotingResult.MEETING

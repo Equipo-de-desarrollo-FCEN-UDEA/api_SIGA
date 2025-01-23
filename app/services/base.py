@@ -58,10 +58,10 @@ class ServiceBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType, CrudTyp
             db = db
         )
 
-    def update(self, *, id: UUID, obj_in: UpdateSchemaType, db) -> ModelType:
+    def update(self, *,db_obj:ModelType, obj_in: UpdateSchemaType, db) -> ModelType:
         if self.observer is None:
             raise BaseErrors(code=503, detail="Service not available")
-        return self.observer.update(id=id, obj_in=obj_in, db=db)
+        return self.observer.update(db_obj=db_obj, obj_in=obj_in, db=db)
 
     def delete(self, *, id: int, db) -> int:
         if self.observer is None:
