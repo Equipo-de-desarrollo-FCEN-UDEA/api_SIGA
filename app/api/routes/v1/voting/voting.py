@@ -52,7 +52,7 @@ async def close_voting(
     voting_id: UUID,
     db_postgres = Depends(get_db),
     db_mongo = Depends(get_mongo_db),
-    current_user: Annotated[User, Security(get_current_active_user, scopes=["votante"])]
+    current_user: Annotated[User, Security(get_current_active_user, scopes=["representante"])]
 ) -> JSONResponse:
     votes:list[Vote] = vote_svc.get_votes_by_voting(voting_id=voting_id, db=db_postgres)
     result = await voting_result(votes=votes)
