@@ -18,12 +18,15 @@ from app.api.middleware.postgres_db import get_db
 from app.infraestructure.formats import formats_dir
 from app.infraestructure.policies.application.type.mobility import delete_file
 from app.infraestructure.policies.application.type.mobility import flux
-from app.infraestructure.policies.application.type.mobility import generate_mobility_format
-from app.infraestructure.policies.application.type.mobility import mobility_data
+from app.infraestructure.policies.application.type.mobility import (
+    generate_mobility_format,
+)
 from app.schemas.application.type.mobility import Mobility
 from app.schemas.application.type.mobility import MobilityCreate
+from app.schemas.application.type.mobility import MobilityWithUser
 from app.schemas.users.user import User
 from app.services.application.type.mobility import mobility_svc
+from app.services.application.user_application import user_application_svc
 
 router = APIRouter()
 
@@ -35,8 +38,17 @@ async def get_mobility(
     db_mongo=Depends(get_mongo_db),
     db_postgres: Session = Depends(get_db),
     current_user: Annotated[User, Depends(get_current_active_user)],
-) -> Mobility:
-    return await mobility_svc.get(id=id, db=db_mongo)
+) -> MobilityWithUser:
+    mobility = await mobility_svc.get(id=id, db=db_mongo)
+    user_application = user_application_svc.get(id=mobility.id, db=db_postgres)
+
+    mobility_with_user_application = {
+        **vars(mobility), **vars(user_application.user),
+    }
+    # print(mobility_with_user_application['type'])
+    print(MobilityWithUser(**mobility_with_user_application))
+
+    return MobilityWithUser(**mobility_with_user_application)
 
 
 @router.post('/create', response_model=MobilityCreate, status_code=201)
@@ -83,13 +95,29 @@ async def update_status(
     return JSONResponse(content='Status updated', status_code=200)
 
 
-@router.post('/generate-mobility-form/')
-async def download_mobility_form(background_tasks: BackgroundTasks):
-    # Rellenar datos de la solicitud.
+@router.post('/generate-mobility-form/{id}')
+async def download_mobility_form(
+    id: UUID,
+    background_tasks: BackgroundTasks,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    db_mongo=Depends(get_mongo_db),
+    db_postgres: Session = Depends(get_db),
+):
+    # Obtener los datos de la movilidad
+    mobility = await get_mobility(
+        id=id,
+        db_mongo=db_mongo,
+        db_postgres=db_postgres,
+        current_user=current_user,
+    )
+
+    # Convertir los datos de la movilidad a un diccionario
+    mobility_dict = mobility.dict()
+
     try:
         # Generar archivo temporal
         file_path = generate_mobility_format(
-            mobility_data, formats_dir +
+            mobility_dict, formats_dir +
             '/mobility/plantilla_mobility.docx',
         )
     except Exception as e:
@@ -103,7 +131,10 @@ async def download_mobility_form(background_tasks: BackgroundTasks):
     response = FileResponse(
         file_path,
         filename='solicitud_mobility.docx',
-        media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        media_type=(
+            'application/vnd.openxmlformats-officedocument'
+            '-wordprocessingml.document'
+        ),
     )
 
     return response
