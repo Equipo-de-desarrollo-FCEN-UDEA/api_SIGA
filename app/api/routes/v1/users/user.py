@@ -9,11 +9,13 @@ from fastapi import HTTPException
 from fastapi import Security
 
 from app.api.middleware.bearer import get_current_active_user
+from app.api.middleware.bearer import get_current_user
 from app.api.middleware.postgres_db import get_db
 from app.schemas.users.user import User
 from app.schemas.users.user import UserCreate
 from app.schemas.users.user import UserInDB
 from app.schemas.users.user import UserUpdate
+from app.schemas.users.user import UserPublic
 from app.schemas.users.user_rol_academic_unit import UserRolAcademicUnit
 from app.schemas.users.user_rol_academic_unit import UserRolAcademicUnitCreate
 from app.services.users.user import user_svc
@@ -92,4 +94,8 @@ def delete_user(*, id: int) -> None:
 
 @router.get('/view/me', response_model=UserInDB, status_code=200)
 async def read_users_me(current_user: Annotated[User, Depends(get_current_active_user)]) -> UserInDB:
+    return current_user
+
+@router.get('/session/me', response_model=UserPublic, status_code=200)
+async def get_session(current_user: Annotated[User, Depends(get_current_user)]) -> UserPublic:
     return current_user

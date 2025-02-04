@@ -63,7 +63,7 @@ def login_access_token(
         samesite=None,     # Ayuda a prevenir ataques CSRF
         path='/',
     )
-    return {'message': 'Login successful'}
+    return {'User': UserPublic.model_validate(user).model_dump()}
 
 # Active account with token
 
