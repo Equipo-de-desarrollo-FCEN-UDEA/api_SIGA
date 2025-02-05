@@ -9,5 +9,7 @@ class Token(BaseModel):
 
 class TokenPayload(BaseModel):
     sub: int | str | None = None
+    info: dict | None = None
     scopes: list[str] = []
+
 

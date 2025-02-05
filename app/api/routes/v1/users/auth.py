@@ -18,6 +18,7 @@ from app.schemas.users.user import User
 from app.schemas.users.user import UserCreateInDB
 from app.schemas.users.user import UserUpdate
 from app.schemas.users.user import UserUpdateInDB
+from app.schemas.users.user import UserPublic
 from app.services.crypt import crypt_svc
 from app.services.jwt import jwt_service
 from app.services.users.user import user_svc
@@ -44,9 +45,13 @@ def login_access_token(
     )
 
     scopes = [role.rol.scope for role in user.user_roles_academic_units]
-
+    user_id = str(user.id)
     access_token = jwt_service.create_access_token(
-        data={'sub': str(user.id), 'scopes': scopes},
+        data={
+            'sub': user_id,
+            'info': UserPublic.model_validate(user).model_dump(),
+            'scopes': scopes
+        },
         expires=settings.ACCESS_TOKEN_EXPIRE_MINUTES,
     )
     response.set_cookie(
@@ -58,7 +63,7 @@ def login_access_token(
         samesite=None,     # Ayuda a prevenir ataques CSRF
         path='/',
     )
-    return {'message': 'Login successful'}
+    return {'User': UserPublic.model_validate(user).model_dump()}
 
 # Active account with token
 

@@ -25,7 +25,7 @@ def get_token(request: Request):
         )
     return token
 
-def get_current_user(
+def get_current_user_db(
         security_scopes: SecurityScopes,
         token: Annotated[str, Depends(get_token)],
         db=Depends(get_db),
@@ -64,9 +64,46 @@ def get_current_user(
 
     return user
 
+def get_current_user(
+        security_scopes: SecurityScopes,
+        token: Annotated[str, Depends(get_token)],
+    ) -> User:
+
+    if security_scopes.scopes:
+        authenticate_value = f"Bearer scope={security_scopes.scopes}"
+    else:
+        authenticate_value = "Bearer"
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": authenticate_value},
+    )
+
+    try:
+        payload = jwt_service.decode_access_token(token)
+        user_id: str = payload.sub
+        if user_id is None:
+            raise credentials_exception
+        token_scopes = payload.scopes
+        token_data = TokenPayload(scopes=token_scopes, sub=user_id, info=payload.info)
+    except(JWTError, InvalidCredentials):
+        raise credentials_exception
+    
+    user = token_data.info
+    if user is None:
+        raise credentials_exception
+
+    if security_scopes.scopes and not any(scope in token_data.scopes for scope in security_scopes.scopes):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not enough permissions",
+            headers={"WWW-Authenticate": authenticate_value},
+        )
+
+    return user
 
 def get_current_active_user(
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: Annotated[User, Depends(get_current_user_db)],
 ) -> User:
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
