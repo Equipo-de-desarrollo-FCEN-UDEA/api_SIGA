@@ -99,6 +99,7 @@ def get_current_user(
             detail="Not enough permissions",
             headers={"WWW-Authenticate": authenticate_value},
         )
+    user = {**user, "scopes": token_data.scopes}
 
     return user
 
