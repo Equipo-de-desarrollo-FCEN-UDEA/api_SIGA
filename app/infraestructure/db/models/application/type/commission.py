@@ -20,6 +20,6 @@ class Commission(Model):
     reason: str
     justification: str
     documents: list[Any] | None
-    resolution: str | None
-    compliment: Any | None
+    resolution: str | None = None
+    compliment: Any | None = None
     status: list[UserApplicationStatus]
