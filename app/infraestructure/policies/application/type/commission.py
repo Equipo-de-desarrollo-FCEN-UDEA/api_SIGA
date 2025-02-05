@@ -96,12 +96,12 @@ async def flux(
                 user_application_id=user_application_id,
                 db=db_postgres,
             )
-            # await create_voting(
-            #     academic_unit_id=committee.academic_unit_id,
-            #     user_application_id=user_application_id,
-            #     db_postgres=db_postgres,
-            #     db_mongo=db_mongo,
-            # )
+            await create_voting(
+                academic_unit_id=committee.academic_unit_id,
+                user_application_id=user_application_id,
+                db_postgres=db_postgres,
+                db_mongo=db_mongo,
+            )
             status = UserApplicationStatus(
                 name=_next_status,
                 updated_by=current_user.id,
@@ -114,6 +114,17 @@ async def flux(
             )
 
             return 'terminado'
-
     else:
-        next_status
+
+        status = UserApplicationStatus(
+            name=_next_status,
+            updated_by=current_user.id,
+            date=datetime.now(),
+        )
+        await commission_svc.add_status(
+            db_mongo=db_mongo,
+            new_status=status,
+            user_application_id=user_application_id,
+        )
+
+        return 'actualizado'
