@@ -64,6 +64,9 @@ class Mobility(MobilityBase):
 class MobilityWithUser(Mobility):
     name: str
     last_name: str
+    student_rol: str
+    school: str
+    current_program: str
     phone: str
     email: str
     identification_type: str

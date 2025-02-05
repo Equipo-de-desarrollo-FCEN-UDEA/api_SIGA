@@ -10,11 +10,18 @@ from fastapi import HTTPException
 from fastapi import Security
 from fastapi.responses import FileResponse
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import aliased
 from sqlalchemy.orm import Session
 
 from app.api.middleware.bearer import get_current_active_user
 from app.api.middleware.mongo_db import get_mongo_db
 from app.api.middleware.postgres_db import get_db
+from app.infraestructure.db.models.organization.academic_unit import (
+    AcademicUnit,
+)
+from app.infraestructure.db.models.user.user_rol_academic_unit import (
+    UserRolAcademicUnit,
+)
 from app.infraestructure.formats import formats_dir
 from app.infraestructure.policies.application.type.mobility import delete_file
 from app.infraestructure.policies.application.type.mobility import flux
@@ -40,13 +47,45 @@ async def get_mobility(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ) -> MobilityWithUser:
     mobility = await mobility_svc.get(id=id, db=db_mongo)
+
     user_application = user_application_svc.get(id=mobility.id, db=db_postgres)
 
+    # Hallar el rol de solicitante (est. pregrado o postgrado)
+
+    user_rol_academic_unit = db_postgres.query(UserRolAcademicUnit).filter(
+        UserRolAcademicUnit.user_id == user_application.user_id,
+    ).all()
+
+    student_rol = [
+        {
+            'role': user_role_academic_unit.rol.name,
+            'academic_unit': user_role_academic_unit.academic_unit.name,
+        }
+        for user_role_academic_unit in user_rol_academic_unit
+        if user_role_academic_unit.rol.name.lower()
+        in ['estudiante pregrado', 'estudiante postgrado']
+    ]
+
+    # Hallar a qué instituto pertenece el programa al que está inscrito
+
+    school = aliased(AcademicUnit)
+    program = aliased(AcademicUnit)
+    result = db_postgres.query(
+        program.name.label('current_program'),
+        school.name.label('school'),
+    ).join(
+        school, program.academic_unit_id == school.id,
+    ).filter(
+        program.name == student_rol[0]['academic_unit'],
+    ).first()
+
     mobility_with_user_application = {
-        **vars(mobility), **vars(user_application.user),
+        **vars(mobility),
+        **vars(user_application.user),
+        'student_rol': student_rol[0]['role'],
+        'current_program': student_rol[0]['academic_unit'],
+        'school': result.school if result else None,
     }
-    # print(mobility_with_user_application['type'])
-    print(MobilityWithUser(**mobility_with_user_application))
 
     return MobilityWithUser(**mobility_with_user_application)
 
@@ -113,6 +152,21 @@ async def download_mobility_form(
 
     # Convertir los datos de la movilidad a un diccionario
     mobility_dict = mobility.dict()
+
+    for i in range(1, 5):
+
+        subject = mobility_dict['subjects'][
+            i -
+            1
+        ] if i <= len(mobility_dict['subjects']) else {}
+
+        # Asignar las claves correspondientes con un valor vacío si no existe
+        mobility_dict[f'code{i}'] = subject.get('extern_code', '')
+        mobility_dict[f'subject{i}'] = subject.get('extern_name', '')
+        mobility_dict[f'recognized_code{i}'] = subject.get('intern_code', '')
+        mobility_dict[f'recognized_subject{i}'] = subject.get(
+            'intern_name', '',
+        )
 
     try:
         # Generar archivo temporal
