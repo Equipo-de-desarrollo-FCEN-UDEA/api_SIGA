@@ -26,6 +26,8 @@ from app.services.users.user_rol_academic_unit import (
     user_rol_academic_unit_svc,
 )
 
+from app.core.config import settings
+
 
 def next_status(current_status: str, response: str | None = None) -> str:
     if current_status == ApplicationStatusType.CREATE.value:
@@ -86,6 +88,10 @@ async def flux(
         )
 
     elif _current_status == ApplicationStatusType.IN_COMMITEE.value:
+        send_to_academic_unit(
+            academic_unit_id=settings.INTERNAL_FCEN,
+            user_application_id=user_application_id, db=db_postgres,
+        )
         status = UserApplicationStatus(
             name=_next_status,
             updated_by=current_user.id, date=datetime.now(),
