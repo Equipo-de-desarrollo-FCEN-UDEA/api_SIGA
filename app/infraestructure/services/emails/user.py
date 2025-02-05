@@ -61,7 +61,7 @@ def confirm_email(to_name: str, token: str, email):
 @celery_app.task
 def recovery_password_email(to_name: str, token: str, email: str):
     template = env.get_template('email.recuperar.contraseña.html.j2')
-    link = f'{settings.APP_DOMAIN}/auth/recovery-password/{token}'
+    link = f'{settings.APP_DOMAIN}/auth/reiniciar-contrasena/{token}'
     context = {
         'user': {'nombre': to_name.title()},
         'enlace': link,
