@@ -65,6 +65,9 @@ class Settings(BaseSettings):
     # production
     PRODUCTION: bool
 
+    # Academic units Ids
+    INTERNAL_FCEN: str
+
 
 @lru_cache
 def get_settings() -> BaseSettings:
