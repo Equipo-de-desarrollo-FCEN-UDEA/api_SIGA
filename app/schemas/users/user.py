@@ -76,3 +76,10 @@ class User(UserBase):
 
     class Config:
         from_attributes = True
+
+class UserPublic(BaseModel):
+    name: str
+    last_name: str
+
+    class Config:
+        from_attributes = True
