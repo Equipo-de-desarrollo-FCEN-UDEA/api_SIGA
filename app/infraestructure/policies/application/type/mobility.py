@@ -36,7 +36,7 @@ def next_status(current_status: str, response: str | None = None) -> str:
     elif current_status == ApplicationStatusType.IN_COMMITEE.value:
         if (response == 'APROBADA'):
             return ApplicationStatusType.IN_INTERNATIONAL.value
-        elif (response == 'DEVUELTA'):
+        elif (response == 'RECHAZADA'):
             return ApplicationStatusType.RETURNED.value
         else:
             return ApplicationStatusType.REJECTED.value
@@ -67,6 +67,7 @@ async def flux(
         db_mongo, mobility_svc,
     )
     _next_status = next_status(_current_status, response)
+    print(_next_status)
     committee = user_rol_academic_unit_svc.get_student_committee(
         user_id=current_user.id, db=db_postgres,
     )
@@ -87,18 +88,17 @@ async def flux(
             updated_by=current_user.id, date=datetime.now(),
         )
 
-        await mobility_svc.add_status(
-            db_mongo=db_mongo,
-            new_status=status,
-            user_application_id=user_application_id,
+    elif _current_status == ApplicationStatusType.IN_COMMITEE.value:
+        status = UserApplicationStatus(
+            name=_next_status,
+            updated_by=current_user.id, date=datetime.now(),
         )
 
-        return 'terminado'
-
-#    elif _next_status == ApplicationStatusType.IN_INTERNATIONAL.value:
-
-    else:
-        return next_status
+    await mobility_svc.add_status(
+        db_mongo=db_mongo,
+        new_status=status,
+        user_application_id=user_application_id,
+    )
 
 # Generar documento
 

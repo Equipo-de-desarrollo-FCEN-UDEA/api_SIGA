@@ -16,7 +16,7 @@ from app.services.voting.vote import vote_svc
 from app.services.users.user_rol_academic_unit import user_rol_academic_unit_svc
 from fastapi.responses import JSONResponse
 
-from app.infraestructure.policies.voting.voting import get_application_in_mongo, voting_result
+from app.infraestructure.policies.voting.voting import get_application_in_mongo, update_application_status, voting_result
 
 router = APIRouter()
 
@@ -46,7 +46,7 @@ async def get_voting(*,
     voting = await get_application_in_mongo(voting=voting, db=db_mongo)
     return voting
 
-@router.patch("close/{voting_id}",  status_code=200)
+@router.patch("/close/{voting_id}",  status_code=200)
 async def close_voting(
     *,
     voting_id: UUID,
@@ -61,4 +61,12 @@ async def close_voting(
     voting_info.statuses.append(new_status)
     new_voting_info = VotingInfoUpdate(statuses=voting_info.statuses)
     voting_info = await voting_info_svc.update(db_obj=voting_info ,obj_in=new_voting_info, db=db_mongo)
+    voting = voting_svc.get(id=voting_id, db=db_postgres)
+    await update_application_status(
+        voting=voting,
+        db_mongo=db_mongo,
+        db_postgres=db_postgres,
+        current_user=current_user,
+        result=result
+    )
     return JSONResponse(status_code=200, content={"message": "Votación cerrada exitosamente"})

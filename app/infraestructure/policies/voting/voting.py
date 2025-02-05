@@ -1,7 +1,8 @@
 from __future__ import annotations
-
+from app.infraestructure.policies.application.type import mobility
 from app.schemas.voting.vote import Vote
 from app.schemas.voting.voting import VotingResponse
+from app.infraestructure.db.models.voting.voting import Voting
 from app.services.application.type.mobility import mobility_svc
 from app.services.voting.voting_info import voting_info_svc
 
@@ -44,3 +45,28 @@ async def voting_result(votes: list[Vote]) -> VotingResult:
         return VotingResult.REJECTED
     else:
         return VotingResult.MEETING
+    
+async def update_application_status(
+        *,
+        voting: Voting,
+        db_mongo,
+        db_postgres,
+        current_user,
+        result
+):
+    user_application = voting.user_application
+    aplication = user_application.application
+    application_type = aplication.name
+    if result == VotingResult.APPROVED:
+        response = "APROBADA"
+    elif result == VotingResult.REJECTED:
+        response = "RECHAZADA"
+    if application_type == 'MOVILIDAD':
+         await mobility.flux(
+            user_application_id=user_application.id,
+            db_mongo=db_mongo,
+            db_postgres=db_postgres,
+            current_user=current_user,
+            response=response,
+        )
+
