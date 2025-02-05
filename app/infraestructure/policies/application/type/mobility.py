@@ -25,9 +25,6 @@ from app.services.application.type.mobility import mobility_svc
 from app.services.users.user_rol_academic_unit import (
     user_rol_academic_unit_svc,
 )
-# from fastapi import FastAPI
-# from fastapi.responses import FileResponse
-# from app.schemas.application.type.mobility import MobilityResponse
 
 
 def next_status(current_status: str, response: str | None = None) -> str:
@@ -100,65 +97,11 @@ async def flux(
     else:
         return next_status
 
-# Generar documento
-
-# mobility_dict = MobilityResponse.dict()
-
-# mobility_dict = {
-#     'date': '23/01/2025',
-#     'name': 'Jhon Jaramillo',
-#     'phone': '123456789',
-#     'email': 'jeronimo@udea.edu.co',
-#     'identification_type': 'Cédula de ciudadanía',
-#     'identification_number': '987654321',
-#     'nationality': 'Colombiana',
-#     'rol': 'Estudiante',
-#     'school': 'Facultad de Ciencias Exactas y Naturales',
-#     'current_academic_program': 'Ingeniería Química',
-#     'semester': '8',
-#     'name_coordinator': 'Dra. María Pérez',
-#     'phone_coordinator': '123456789',
-#     'email_coordinator': 'coordinacion@udea.edu.co',
-#     'incoming_leaving': 'Saliente',
-#     'national_international': 'Internacional',
-#     'process': 'Intercambio académico',
-#     'destination_country': 'España',
-#     'destination_institution': 'Universidad de Barcelona',
-#     'academic_program': 'Ingeniería Química',
-#     'name_contact_person': 'Dr. Juan López',
-#     'cellphone_contact_person': '987654321',
-#     'email_contact_person': 'juan.lopez@ub.edu',
-#     'date_start': '1 de febrero de 2025',
-#     'date_end': '30 de junio de 2025',
-#     'signature': 'Jeronimo Pérez',
-#     'signature_responsible': 'Dra. Ana Martínez',
-#     'date_report': '20 de enero de 2025',
-
-#     'code1': '1234',
-#     'subject1': 'Materia 1',
-#     'recognized_code1': '1234',
-#     'recognized_subject1': 'Materia 1',
-#     'code2': '5678',
-#     'subject2': 'Materia 2',
-#     'recognized_code2': '5678',
-#     'recognized_subject2': 'Materia 2',
-#     'code3': '9101',
-#     'subject3': 'Materia 3',
-#     'recognized_code3': '9101',
-#     'recognized_subject3': 'Materia 3',
-#     'code4': '1121',
-#     'subject4': 'Materia 4',
-#     'recognized_code4': '1121',
-#     'recognized_subject4': 'Materia 4',
-# }
-
 
 def generate_mobility_format(mobility_dict: dict, path: str):
-    # Crear documento a partir de una plantilla
-    print(mobility_dict['type'])
-    print(type(mobility_dict['type']))
+
     mobility_data = {
-        # 'date': mobility_dict['date'],
+        'date': mobility_dict['status'][0]['date'].strftime('%Y-%m-%d'),
 
         'name': mobility_dict['name'] + ' ' + mobility_dict['last_name'],
         'phone': mobility_dict['phone'],
@@ -166,17 +109,15 @@ def generate_mobility_format(mobility_dict: dict, path: str):
         'identification_type': mobility_dict['identification_type']
         .replace('_', ' '),
         'identification_number': mobility_dict['identification_number'],
-        # 'nationality': mobility_dict['nationality'],
-        'rol': 'Estudiante',
-        # 'school': mobility_dict['school'],
-        # 'current_academic_program': mobility_dict[
-        # 'current_academic_program'
-        # ],
-        # 'semester': mobility_dict['semester'],
+        'nationality': 'HAY QUE PEDIR LA NACIONALIDAD',
+        'rol': mobility_dict['student_rol'],
+        'school': mobility_dict['school'],
+        'current_academic_program': mobility_dict['current_program'],
+        'semester': 'HAY QUE PEDIR EL SEMESTRE',
 
-        # 'name_coordinator': mobility_dict['name_coordinator'],
-        # 'phone_coordinator': mobility_dict['phone_coordinator'],
-        # 'email_coordinator': mobility_dict['email_coordinator'],
+        'name_coordinator': 'HAY QUE INVENTARLO',
+        'phone_coordinator': 'HAY QUE INVENTARLO',
+        'email_coordinator': 'HAY QUE INVENTARLO',
 
         'incoming_leaving': mobility_dict['type'].value.split()[0],
         'national_international': mobility_dict['type'].value.split()[1],
@@ -192,25 +133,25 @@ def generate_mobility_format(mobility_dict: dict, path: str):
         'date_start': mobility_dict['date_start'].strftime('%Y-%m-%d'),
         'date_end': mobility_dict['date_end'].strftime('%Y-%m-%d'),
 
-        # 'code1': mobility_dict['code1'],
-        # 'subject1': mobility_dict['subject1'],
-        # 'recognized_code1': mobility_dict['recognized_code1'],
-        # 'recognized_subject1': mobility_dict['recognized_subject1'],
-        # 'code2': mobility_dict['code2'],
-        # 'subject2': mobility_dict['subject2'],
-        # 'recognized_code2': mobility_dict['recognized_code2'],
-        # 'recognized_subject2': mobility_dict['recognized_subject2'],
-        # 'code3': mobility_dict['code3'],
-        # 'subject3': mobility_dict['subject3'],
-        # 'recognized_code3': mobility_dict['recognized_code3'],
-        # 'recognized_subject3': mobility_dict['recognized_subject3'],
-        # 'code4': mobility_dict['code4'],
-        # 'subject4': mobility_dict['subject4'],
-        # 'recognized_code4': mobility_dict['recognized_code4'],
-        # 'recognized_subject4': mobility_dict['recognized_subject4'],
+        'code1': mobility_dict['code1'],
+        'subject1': mobility_dict['subject1'],
+        'recognized_code1': mobility_dict['recognized_code1'],
+        'recognized_subject1': mobility_dict['recognized_subject1'],
+        'code2': mobility_dict['code2'],
+        'subject2': mobility_dict['subject2'],
+        'recognized_code2': mobility_dict['recognized_code2'],
+        'recognized_subject2': mobility_dict['recognized_subject2'],
+        'code3': mobility_dict['code3'],
+        'subject3': mobility_dict['subject3'],
+        'recognized_code3': mobility_dict['recognized_code3'],
+        'recognized_subject3': mobility_dict['recognized_subject3'],
+        'code4': mobility_dict['code4'],
+        'subject4': mobility_dict['subject4'],
+        'recognized_code4': mobility_dict['recognized_code4'],
+        'recognized_subject4': mobility_dict['recognized_subject4'],
 
-        # 'signature': mobility_dict['signature'],
-        # 'signature_responsible': mobility_dict['signature_responsible'],
+        'signature': '',
+        'signature_responsible': '',
 
         'date_report': mobility_dict['date_report'].strftime('%Y-%m-%d'),
     }
@@ -248,6 +189,5 @@ def delete_file(file_path: str):
     """Función para eliminar el archivo después de la descarga."""
     try:
         os.remove(file_path)
-        print(f'Archivo eliminado: {file_path}')
     except FileNotFoundError:
         print(f'Archivo no encontrado: {file_path}')
