@@ -83,3 +83,6 @@ class UserPublic(BaseModel):
 
     class Config:
         from_attributes = True
+
+class UserSession(UserPublic):
+    scopes: list[str]
