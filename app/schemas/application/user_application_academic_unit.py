@@ -1,3 +1,4 @@
+from datetime import datetime
 from pydantic import BaseModel
 from uuid import UUID
 
@@ -14,5 +15,9 @@ class UserApplicationAcademicUnitUpdate(BaseModel):
     user_application_id: UUID | None
     academic_unit_id: UUID | None
 
-class UserApplicationAcademicUnitCreateInDB(GeneralResponse, UserApplicationAcademicUnitBase):
-    pass
+class UserApplicationAcademicUnitInDB(UserApplicationAcademicUnitBase):
+    created_at: datetime | None
+    updated_at: datetime | None
+
+    class Config:
+        from_attributes = True
