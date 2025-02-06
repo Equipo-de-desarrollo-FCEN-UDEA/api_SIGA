@@ -14,7 +14,7 @@ from app.api.middleware.postgres_db import get_db
 
 router = APIRouter()
 
-@router.get("/get/{application_id}", response_model=list[UserApplicationInfo], status_code=200)
+@router.get("/get/{academic_unit_id}", response_model=list[UserApplicationInfo], status_code=200)
 def get_user_application_academic_unit_by_academic_unit(
         *, academic_unit_id: UUID, 
         db = Depends(get_db), 
