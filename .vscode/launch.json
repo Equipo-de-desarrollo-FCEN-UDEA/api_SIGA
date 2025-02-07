@@ -1,7 +1,5 @@
 {
     "configurations": [
-        
-
         {
             "name": "Python: Remote Attach",
             "type": "python",

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import TypeVar
+from uuid import UUID
 
 from fastapi import HTTPException
 from odmantic import Model
@@ -21,6 +22,7 @@ from app.protocols.db.models.application.application import (
 from app.schemas.application.user_application import UserApplicationCreate
 from app.schemas.application.user_application import UserApplicationStatus
 from app.schemas.users.user import User
+
 
 ModelType = TypeVar('ModelType', bound=Model)
 UpdateSchema = TypeVar('UpdateSchema', bound=BaseModel)
@@ -73,6 +75,52 @@ class ApplicationTypeBaseCrud(
             raise HTTPException(status_code=400, detail='Error: ' + str(e))
 
         return obj_create
+
+    async def update(
+            self,
+            db_mongo: AIOSession,
+            *,
+            id: UUID,
+            obj_in: UpdateSchema,
+            db_postgres: Session,
+            current_user: User,
+    ) -> ModelType:
+        try:
+            with db_postgres:
+                db_obj = db_postgres.query(
+                    UserApplication).filter_by(id=id).first()
+
+                if not db_obj:
+                    raise ORMError('User application not found')
+
+                status = ApplicationStatusType.UPDATED.value
+                obj_in.status.append(
+                    UserApplicationStatus(
+                        name=status,
+                        updated_by=current_user.id,
+                        date=datetime.now(),
+                    ),
+                )
+
+                updated_obj_in = {**obj_in.dict(), 'id': db_obj.id}
+
+                obj_updated = await super().update(
+                    db_mongo,
+                    db_obj=db_obj,
+                    obj_in=self.model(**updated_obj_in),
+                )
+
+                db_postgres.commit()
+
+        except Exception as e:
+            db_postgres.rollback()
+            raise ORMError(str(e))
+
+        except PyMongoError as e:
+            db_postgres.rollback()
+            raise HTTPException(status_code=400, detail='Error: ' + str(e))
+
+        return obj_updated
 
     async def add_status(
         self,
