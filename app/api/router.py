@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from app.api.routes import ping
 from app.api.routes.v1.application import application
+from app.api.routes.v1.application import user_application_academic_unit
 from app.api.routes.v1.application.type import commission
 from app.api.routes.v1.application.type import mobility
 from app.api.routes.v1.organization import academic_unit
@@ -61,6 +62,10 @@ api_router.include_router(vote.router, prefix='/vote', tags=['vote'])
 
 api_router.include_router(
     application.router, prefix='/application', tags=['application'],
+)
+api_router.include_router(
+    user_application_academic_unit.router,
+    prefix='/user_application_academic_unit', tags=['user_application_academic_unit'],
 )
 api_router.include_router(
     mobility.router, prefix='/mobility', tags=['mobility'],
