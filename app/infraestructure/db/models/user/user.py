@@ -25,7 +25,7 @@ class User(BaseModel):
     identification_number= Column(String(50), unique=True)
     phone = Column(String(20), nullable=True)
     hashed_password = Column(String(300), nullable=False)
-    is_active = Column(Boolean, nullable=True, default=True)
+    is_active = Column(Boolean, nullable=True, default=False)
 
 
 
