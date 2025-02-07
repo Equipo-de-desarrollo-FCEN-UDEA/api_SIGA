@@ -7,4 +7,4 @@ from app.schemas.application.user_application import UserApplicationCreate, User
 
 class CRUDUserApplicationAcademicUnitProtocol(CRUDProtocol[UserApplicationAcademicUnit, UserApplicationCreate, UserApplicationUpdate]):
     def get_by_academic_unit(self,*, academic_unit_id: UUID, db: Session) -> UserApplicationAcademicUnit:
-        ...
+        pass

@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Annotated
 from uuid import UUID
-from fastapi import APIRouter, Depends, Security, HTTPException
+from fastapi import APIRouter, Depends, Security
 from app.api.middleware.bearer import get_current_active_user
 from app.schemas.users.user import User
 from app.schemas.voting.voting import VotingInDB, VotingResponse
@@ -60,7 +60,7 @@ async def close_voting(
     voting_info: VotingInfo = await voting_info_svc.get(id=voting_id, db=db_mongo)
     voting_info.statuses.append(new_status)
     new_voting_info = VotingInfoUpdate(statuses=voting_info.statuses)
-    voting_info = await voting_info_svc.update(db_obj=voting_info ,obj_in=new_voting_info, db=db_mongo)
+    await voting_info_svc.update(db_obj=voting_info ,obj_in=new_voting_info, db=db_mongo)
     voting = voting_svc.get(id=voting_id, db=db_postgres)
     await update_application_status(
         voting=voting,
