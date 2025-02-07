@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from typing import Generic
-from typing import Type
 from typing import TypeVar
 from uuid import UUID
 
+from fastapi import HTTPException
 from odmantic import Model
 from odmantic import ObjectId
 from odmantic.session import AIOSession
@@ -29,7 +29,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchema]):
     ) -> ModelType:
         response = await db.find_one(self.model, self.model.id == id)
         if response is None:
-            raise ODMError(f"{ModelType} Not found")
+            raise HTTPException(
+                status_code=404, detail=f'{self.model.__name__} Not found',
+            )
         return response
 
     async def get_multi(
@@ -69,7 +71,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchema]):
                 setattr(db_obj, field, value)
             return await db.save(db_obj)
         except Exception as e:
-            raise ODMError(f"Failed to update {self.model.__name__}: {str(e)}")
+            raise ODMError(f'Failed to update {self.model.__name__}: {str(e)}')
 
     async def delete(self, db: AIOSession, *, id: ObjectId) -> type[ModelType]:
         db_obj = await db.find_one(self.model, self.model.id == id)

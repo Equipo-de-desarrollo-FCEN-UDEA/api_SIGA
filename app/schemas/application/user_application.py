@@ -29,3 +29,11 @@ class UserApplicationCreateInDB(GeneralResponse, UserApplicationBase):
 class UserApplicationInfo(GeneralResponse, UserApplicationBase):
     application: Application
     user: UserInDB
+
+class UserApplication(BaseModel):
+    id: UUID
+    application: Application
+    user: UserInDB
+
+    class Config:
+        from_attributes = True

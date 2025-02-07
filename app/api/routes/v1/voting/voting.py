@@ -1,16 +1,22 @@
+from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 from fastapi import APIRouter, Depends, Security
 from app.api.middleware.bearer import get_current_active_user
 from app.schemas.users.user import User
 from app.schemas.voting.voting import VotingInDB, VotingResponse
+from app.schemas.voting.voting_info import VotingInfo, VotingStatus, VotingInfoUpdate
 from app.infraestructure.db.models.voting.voting import Voting
+from app.schemas.voting.vote import Vote
 from app.api.middleware.postgres_db import get_db
 from app.api.middleware.mongo_db import get_mongo_db
 from app.services.voting.voting import voting_svc
+from app.services.voting.voting_info import voting_info_svc
+from app.services.voting.vote import vote_svc
 from app.services.users.user_rol_academic_unit import user_rol_academic_unit_svc
+from fastapi.responses import JSONResponse
 
-from app.infraestructure.policies.voting.voting import get_application_in_mongo
+from app.infraestructure.policies.voting.voting import get_application_in_mongo, update_application_status, voting_result
 
 router = APIRouter()
 
@@ -39,3 +45,28 @@ async def get_voting(*,
     voting = voting_svc.get(id=voting_id, db=db_postgres)
     voting = await get_application_in_mongo(voting=voting, db=db_mongo)
     return voting
+
+@router.patch("/close/{voting_id}",  status_code=200)
+async def close_voting(
+    *,
+    voting_id: UUID,
+    db_postgres = Depends(get_db),
+    db_mongo = Depends(get_mongo_db),
+    current_user: Annotated[User, Security(get_current_active_user, scopes=["representante"])]
+) -> JSONResponse:
+    votes:list[Vote] = vote_svc.get_votes_by_voting(voting_id=voting_id, db=db_postgres)
+    result = await voting_result(votes=votes)
+    new_status = VotingStatus(result=result.value, date=datetime.now())
+    voting_info: VotingInfo = await voting_info_svc.get(id=voting_id, db=db_mongo)
+    voting_info.statuses.append(new_status)
+    new_voting_info = VotingInfoUpdate(statuses=voting_info.statuses)
+    await voting_info_svc.update(db_obj=voting_info ,obj_in=new_voting_info, db=db_mongo)
+    voting = voting_svc.get(id=voting_id, db=db_postgres)
+    await update_application_status(
+        voting=voting,
+        db_mongo=db_mongo,
+        db_postgres=db_postgres,
+        current_user=current_user,
+        result=result
+    )
+    return JSONResponse(status_code=200, content={"message": "Votación cerrada exitosamente"})

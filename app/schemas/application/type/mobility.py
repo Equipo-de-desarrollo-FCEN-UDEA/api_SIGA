@@ -19,7 +19,6 @@ class Subject(BaseModel):
 
 
 class MobilityBase(BaseModel):
-    id: UUID | None = None
     process: Process
     type: MobilityType
     purpose: MobilityPurpose
@@ -32,13 +31,12 @@ class MobilityBase(BaseModel):
     date_start: datetime
     date_end: datetime
     subjects: list[Subject] | None = []
-    total_time: int  # tiempo total en meses
-    date_report: datetime
     status: list[UserApplicationStatus] | None = []
 
 
 class MobilityCreate(MobilityBase):
-    pass
+    id: UUID | None = None
+    total_time: int | None = None  # tiempo total en meses
 
 
 class MobilityUpdate(BaseModel):
@@ -59,4 +57,17 @@ class MobilityUpdate(BaseModel):
 
 
 class Mobility(MobilityBase):
-    pass
+    id: UUID
+    date_report: datetime | None = None
+
+
+class MobilityWithUser(Mobility):
+    name: str
+    last_name: str
+    student_rol: str
+    school: str
+    current_program: str
+    phone: str
+    email: str
+    identification_type: str
+    identification_number: str
