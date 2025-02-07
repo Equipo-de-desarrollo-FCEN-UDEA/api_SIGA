@@ -44,7 +44,7 @@ def login_access_token(
         db=db_postgres,
     )
 
-    scopes = [role.rol.scope for role in user.user_roles_academic_units]
+    scopes = [role.rol.scope+":"+str(role.rol.academic_unit_id )for role in user.user_roles_academic_units]
     user_id = str(user.id)
     access_token = jwt_service.create_access_token(
         data={
