@@ -1,12 +1,15 @@
+from uuid import UUID
 from fastapi import Depends, Security, HTTPException, status
 from fastapi.security import OAuth2AuthorizationCodeBearer, SecurityScopes
 from typing import Annotated, List, Optional
 from app.services.jwt import jwt_service
 from jose.exceptions import JWTError
 from app.core.exceptions import InvalidCredentials
+from app.protocols.db.models.users.user import User
 
 
-from app.api.middleware.bearer import get_token
+
+from app.api.middleware.bearer import get_credentials_exception, get_token
 
 class ScopeChecker:
     def __init__(self, scopes: List[str]):
@@ -30,36 +33,12 @@ class ScopeChecker:
         return parsed
 
     def has_scope_pattern(self, security_scopes: str) -> bool:
-        print("HOLA")
         return any(scope["full_scope"] in security_scopes for scope in self.parsed_scopes)
 
-    def has_resource_access(self, uuid: str, resource_type: Optional[str] = None) -> bool:
+    def has_role(self, security_roles:list[str]) -> bool:
         return any(
-            scope["uuid"] == uuid and 
-            (not resource_type or scope["type"] == resource_type)
-            for scope in self.parsed_scopes
+            scope["role"] in  security_roles for scope in self.parsed_scopes
         )
-
-    def get_resources_for_type(self, resource_type: str) -> List[str]:
-        return list({
-            scope["uuid"] 
-            for scope in self.parsed_scopes 
-            if scope["type"] == resource_type
-        })
-
-def get_credentials_exception(
-    security_scopes: SecurityScopes,
-) -> HTTPException:
-    if security_scopes.scopes:
-        authenticate_value = f"Bearer scope={security_scopes.scopes}"
-    else:
-        authenticate_value = "Bearer"
-
-    return HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": authenticate_value},
-    )
 
 def get_current_user_scopes(
         token: Annotated[str, Depends(get_token)],
@@ -88,3 +67,25 @@ def has_scope(
         )
     return True
 
+def has_role_in_academic_unit(role: str):
+    def dependency(academic_unit_id: UUID, scopes: ScopeChecker = Security(get_current_user_scopes)):
+        required_scope = f"{role}:{academic_unit_id}"
+        if not scopes.has_scope_pattern(required_scope):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tienes los permisos necesarios"
+            )
+        return True
+    return dependency  # Retorna la función sin ejecutarla
+
+def has_role(
+        security_roles: SecurityScopes,
+        scopes: ScopeChecker = Depends(get_current_user_scopes),
+    ):
+
+    if security_roles.scopes and not scopes.has_role(security_roles.scopes):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes los permisos necesarios"
+        )
+    return True
