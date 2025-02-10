@@ -25,21 +25,27 @@ def get_token(request: Request):
         )
     return token
 
-def get_current_user_db(
-        security_scopes: SecurityScopes,
-        token: Annotated[str, Depends(get_token)],
-        db=Depends(get_db),
-    ) -> User:
-
+def get_credentials_exception(
+    security_scopes: SecurityScopes,
+) -> HTTPException:
     if security_scopes.scopes:
         authenticate_value = f"Bearer scope={security_scopes.scopes}"
     else:
         authenticate_value = "Bearer"
-    credentials_exception = HTTPException(
+
+    return HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": authenticate_value},
     )
+
+def get_current_user_db(
+        security_scopes: SecurityScopes,
+        token: Annotated[str, Depends(get_token)],
+        credentials_exception: HTTPException = Depends(get_credentials_exception),
+        db=Depends(get_db),
+    ) -> User:
+
 
     try:
         payload = jwt_service.decode_access_token(token)
@@ -59,7 +65,6 @@ def get_current_user_db(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
-            headers={"WWW-Authenticate": authenticate_value},
         )
 
     return user
@@ -67,17 +72,8 @@ def get_current_user_db(
 def get_current_user(
         security_scopes: SecurityScopes,
         token: Annotated[str, Depends(get_token)],
+        credentials_exception: HTTPException = Depends(get_credentials_exception),
     ) -> User:
-
-    if security_scopes.scopes:
-        authenticate_value = f"Bearer scope={security_scopes.scopes}"
-    else:
-        authenticate_value = "Bearer"
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": authenticate_value},
-    )
 
     try:
         payload = jwt_service.decode_access_token(token)
@@ -97,7 +93,6 @@ def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
-            headers={"WWW-Authenticate": authenticate_value},
         )
     user = {**user, "scopes": token_data.scopes}
 
