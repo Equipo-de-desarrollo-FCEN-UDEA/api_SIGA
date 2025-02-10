@@ -1,6 +1,6 @@
 from uuid import UUID
 from fastapi import Depends, Security, HTTPException, status
-from fastapi.security import OAuth2AuthorizationCodeBearer, SecurityScopes
+from fastapi.security import SecurityScopes
 from typing import Annotated, List, Optional
 from app.services.jwt import jwt_service
 from jose.exceptions import JWTError
