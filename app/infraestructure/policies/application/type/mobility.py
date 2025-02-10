@@ -43,12 +43,12 @@ def next_status(current_status: str, response: str | None = None) -> str:
         if (response == 'APROBADA'):
             return ApplicationStatusType.IN_DEAN.value
         elif (response == 'RECHAZADA'):
-            return ApplicationStatusType.RETURNED.value
+            return ApplicationStatusType.REJECTED.value
     elif current_status == ApplicationStatusType.IN_DEAN.value:
         if (response == 'APROBADA'):
             return ApplicationStatusType.APPROVED.value
         elif (response == 'RECHAZADA'):
-            return ApplicationStatusType.RETURNED.value
+            return ApplicationStatusType.REJECTED.value
     else:
         return None
 
@@ -65,13 +65,20 @@ async def flux(
         user_application_id,
         db_mongo, mobility_svc,
     )
+    if _current_status == ApplicationStatusType.APPROVED.value:
+        raise HTTPException(
+            status_code=400, detail='Solicitud ya aprobada',
+        )
+    elif _current_status == ApplicationStatusType.REJECTED.value:
+        raise  HTTPException(
+            status_code=400, detail='Solicitud ya rechazada',
+        )
     _next_status = next_status(_current_status, response)
-    print(_next_status)
-    committee = user_rol_academic_unit_svc.get_student_committee(
-        user_id=current_user.id, db=db_postgres,
-    )
 
     if _next_status == ApplicationStatusType.IN_COMMITEE.value:
+        committee = user_rol_academic_unit_svc.get_student_committee(
+            user_id=current_user.id, db=db_postgres,
+        )
         send_to_academic_unit(
             academic_unit_id=committee,
             user_application_id=user_application_id, db=db_postgres,
@@ -88,10 +95,27 @@ async def flux(
         )
 
     elif _current_status == ApplicationStatusType.IN_COMMITEE.value:
-        send_to_academic_unit(
-            academic_unit_id=settings.INTERNAL_FCEN,
-            user_application_id=user_application_id, db=db_postgres,
+        if response == 'APROBADA':
+            send_to_academic_unit(
+                academic_unit_id=settings.INTERNAL_FCEN,
+                user_application_id=user_application_id, db=db_postgres,
+            )
+        status = UserApplicationStatus(
+            name=_next_status,
+            updated_by=current_user.id, date=datetime.now(),
         )
+
+    elif _current_status == ApplicationStatusType.IN_INTERNATIONAL.value:
+        if response == 'APROBADA':
+            send_to_academic_unit(
+                academic_unit_id=settings.FCEN,
+                user_application_id=user_application_id, db=db_postgres,
+            )
+        status = UserApplicationStatus(
+            name=_next_status,
+            updated_by=current_user.id, date=datetime.now(),
+        )
+    elif _current_status == ApplicationStatusType.IN_DEAN.value:
         status = UserApplicationStatus(
             name=_next_status,
             updated_by=current_user.id, date=datetime.now(),
