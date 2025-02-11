@@ -42,6 +42,24 @@ class UserApplicationAcademicUnitCrud(
             )
         return response
 
+    def get_active(
+            self,
+            *,
+            user_application_id,
+            db: Session,
+    ) -> UserApplicationAcademicUnit:
+        with db:
+            response = db.query(UserApplicationAcademicUnit).filter(
+                self.model.user_application_id == user_application_id,
+                self.model.is_active,
+            ).first()
+        if not response:
+            raise ORMError(
+                f'No user application academic unit found with user application '
+                f'{user_application_id}',
+            )
+        return response
+
     def response(
             self,
             *,
