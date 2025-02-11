@@ -9,6 +9,8 @@ from fastapi import HTTPException
 from fastapi import Security
 
 from app.api.middleware.bearer import get_current_active_user
+from app.api.middleware.scopes import has_scope
+from app.api.middleware.scopes import has_role
 from app.api.middleware.bearer import get_current_user
 from app.api.middleware.postgres_db import get_db
 from app.schemas.users.user import User, UserSession
@@ -47,7 +49,7 @@ def get_all_user(
     db_postgres=Depends(get_db),
     current_user: Annotated[
         User, Security(
-        get_current_active_user, scopes=['admin'],
+        has_role, scopes=['admin'],
         ),
     ] = None,
 ) -> list[UserInDB]:
