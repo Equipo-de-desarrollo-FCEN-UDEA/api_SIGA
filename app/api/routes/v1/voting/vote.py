@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.middleware.bearer import get_current_active_user
 from app.api.middleware.postgres_db import get_db
+from app.api.middleware.scopes import has_role
 from app.schemas.users.user import User
 from app.schemas.voting.vote import VoteCreate
 from app.services.voting.vote import vote_svc
@@ -21,9 +22,14 @@ async def create_vote(
     *,
         new_vote: VoteCreate,
         db_postgres=Depends(get_db),
+        permissions: Annotated[
+            str, Security(
+                has_role, scopes=['votante'],
+            ),
+        ] = False,
         current_user: Annotated[
             User, Security(
-                get_current_active_user, scopes=['votante'],
+                get_current_active_user,
             ),
         ] = None,
 ) -> JSONResponse:
