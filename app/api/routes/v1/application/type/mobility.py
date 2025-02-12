@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from app.api.middleware.bearer import get_current_active_user
 from app.api.middleware.mongo_db import get_mongo_db
 from app.api.middleware.postgres_db import get_db
+from app.api.middleware.scopes import has_role
 from app.infraestructure.formats import formats_dir
 from app.infraestructure.policies.application.type.mobility import delete_file
 from app.infraestructure.policies.application.type.mobility import flux
@@ -27,6 +28,7 @@ from app.schemas.users.user import User
 from app.services.application.type.mobility import mobility_svc
 from app.services.application.user_application import user_application_svc
 from app.services.organization.academic_unit import academic_unit_svc
+
 
 router = APIRouter()
 
@@ -50,11 +52,10 @@ async def create_mobility(
     obj_in: MobilityCreate,
     db_mongo=Depends(get_mongo_db),
     db_postgres: Session = Depends(get_db),
+    permissions: Annotated[bool, Security(has_role, scopes=['estudiante'])] = False,
     current_user: Annotated[
         User, Security(
-            get_current_active_user, scopes=[
-                'estudiante:posgrado', 'estudiante:pregrado',
-            ],
+            get_current_active_user,
         ),
     ] = None,
 ) -> MobilityCreate:

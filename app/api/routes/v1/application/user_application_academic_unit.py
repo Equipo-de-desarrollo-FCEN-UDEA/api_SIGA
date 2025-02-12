@@ -81,7 +81,7 @@ def get_active_user_application_academic_unit(
 async def approve_user_application_academic_unit(
         user_application_id: UUID,
         academic_unit_id: UUID,
-        result: Result = Result.APPROVED,
+        result: Result,
         *,
         db_postgres=Depends(get_db),
         db_mongo=Depends(get_mongo_db),
