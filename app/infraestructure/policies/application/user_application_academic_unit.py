@@ -1,4 +1,3 @@
-from fastapi import Depends
 from app.api.middleware.postgres_db import get_db
 from app.infraestructure.db.models.application.user_application_academic_unit import UserApplicationAcademicUnit
 from app.infraestructure.policies.application.type import mobility
