@@ -264,8 +264,9 @@ async def update_commission(
 async def update_status(
     *,
     id: UUID,
-    start_date: datetime,
-    end_date: datetime,
+    start_date: datetime | None,
+    end_date: datetime | None,
+    response: str,
     db_mongo=Depends(get_mongo_db),
     db_postgres: Session = Depends(get_db),
     current_user: Annotated[User, Depends(get_current_active_user)],
@@ -277,5 +278,6 @@ async def update_status(
         db_mongo=db_mongo,
         db_postgres=db_postgres,
         current_user=current_user,
+        response=response,
     )
     return JSONResponse(content='Status updated', status_code=HTTPStatus.OK.value)
