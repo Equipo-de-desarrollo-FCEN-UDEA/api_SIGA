@@ -105,6 +105,7 @@ async def download_mobility_form(
 
     rol = None
     current_program = None
+    school_id = None
 
     for role in user_application.user.user_roles_academic_units:
         if role.rol.name in ['ESTUDIANTE PREGRADO', 'ESTUDIANTE POSTGRADO']:
