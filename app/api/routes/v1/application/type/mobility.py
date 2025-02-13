@@ -10,18 +10,12 @@ from fastapi import HTTPException
 from fastapi import Security
 from fastapi.responses import FileResponse
 from fastapi.responses import JSONResponse
-from sqlalchemy.orm import aliased
 from sqlalchemy.orm import Session
 
 from app.api.middleware.bearer import get_current_active_user
 from app.api.middleware.mongo_db import get_mongo_db
 from app.api.middleware.postgres_db import get_db
-from app.infraestructure.db.models.organization.academic_unit import (
-    AcademicUnit,
-)
-from app.infraestructure.db.models.user.user_rol_academic_unit import (
-    UserRolAcademicUnit,
-)
+from app.api.middleware.scopes import has_role
 from app.infraestructure.formats import formats_dir
 from app.infraestructure.policies.application.type.mobility import delete_file
 from app.infraestructure.policies.application.type.mobility import flux
@@ -30,10 +24,11 @@ from app.infraestructure.policies.application.type.mobility import (
 )
 from app.schemas.application.type.mobility import Mobility
 from app.schemas.application.type.mobility import MobilityCreate
-from app.schemas.application.type.mobility import MobilityWithUser
 from app.schemas.users.user import User
 from app.services.application.type.mobility import mobility_svc
 from app.services.application.user_application import user_application_svc
+from app.services.organization.academic_unit import academic_unit_svc
+
 
 router = APIRouter()
 
@@ -45,49 +40,10 @@ async def get_mobility(
     db_mongo=Depends(get_mongo_db),
     db_postgres: Session = Depends(get_db),
     current_user: Annotated[User, Depends(get_current_active_user)],
-) -> MobilityWithUser:
+) -> Mobility:
     mobility = await mobility_svc.get(id=id, db=db_mongo)
 
-    user_application = user_application_svc.get(id=mobility.id, db=db_postgres)
-
-    # Hallar el rol de solicitante (est. pregrado o postgrado)
-
-    user_rol_academic_unit = db_postgres.query(UserRolAcademicUnit).filter(
-        UserRolAcademicUnit.user_id == user_application.user_id,
-    ).all()
-
-    student_rol = [
-        {
-            'role': user_role_academic_unit.rol.name,
-            'academic_unit': user_role_academic_unit.academic_unit.name,
-        }
-        for user_role_academic_unit in user_rol_academic_unit
-        if user_role_academic_unit.rol.name.lower()
-        in ['estudiante pregrado', 'estudiante postgrado']
-    ]
-
-    # Hallar a qué instituto pertenece el programa al que está inscrito
-
-    school = aliased(AcademicUnit)
-    program = aliased(AcademicUnit)
-    result = db_postgres.query(
-        program.name.label('current_program'),
-        school.name.label('school'),
-    ).join(
-        school, program.academic_unit_id == school.id,
-    ).filter(
-        program.name == student_rol[0]['academic_unit'],
-    ).first()
-
-    mobility_with_user_application = {
-        **vars(mobility),
-        **vars(user_application.user),
-        'student_rol': student_rol[0]['role'],
-        'current_program': student_rol[0]['academic_unit'],
-        'school': result.school if result else None,
-    }
-
-    return MobilityWithUser(**mobility_with_user_application)
+    return Mobility(**vars(mobility))
 
 
 @router.post('/create', response_model=MobilityCreate, status_code=201)
@@ -96,11 +52,10 @@ async def create_mobility(
     obj_in: MobilityCreate,
     db_mongo=Depends(get_mongo_db),
     db_postgres: Session = Depends(get_db),
+    permissions: Annotated[bool, Security(has_role, scopes=['estudiante'])] = False,
     current_user: Annotated[
         User, Security(
-            get_current_active_user, scopes=[
-                'estudiante:posgrado', 'estudiante:pregrado',
-            ],
+            get_current_active_user,
         ),
     ] = None,
 ) -> MobilityCreate:
@@ -143,15 +98,38 @@ async def download_mobility_form(
     db_postgres: Session = Depends(get_db),
 ):
     # Obtener los datos de la movilidad
-    mobility = await get_mobility(
-        id=id,
-        db_mongo=db_mongo,
-        db_postgres=db_postgres,
-        current_user=current_user,
-    )
+    mobility = await mobility_svc.get(id=id, db=db_mongo)
+
+    # Obtener el rol y el programa actual del usuario
+    user_application = user_application_svc.get(id=mobility.id, db=db_postgres)
+
+    rol = None
+    current_program = None
+    school_id = None
+
+    for role in user_application.user.user_roles_academic_units:
+        if role.rol.name in ['ESTUDIANTE PREGRADO', 'ESTUDIANTE POSTGRADO']:
+            rol = vars(role.rol)
+            current_program = vars(role.academic_unit)
+            school_id = current_program['academic_unit_id']
+            break
+
+    if current_program:
+        academic_unit = academic_unit_svc.get(id=school_id, db=db_postgres)
+        school = academic_unit.name
+    else:
+        school = None
+        academic_unit = None
 
     # Convertir los datos de la movilidad a un diccionario
-    mobility_dict = mobility.dict()
+    mobility_dict = {
+        **vars(mobility),
+        **vars(user_application.user),
+        'student_rol': rol,
+        'current_program': current_program,
+        'school': school,
+    }
+    print(mobility_dict)
 
     for i in range(1, 5):
 

@@ -67,6 +67,7 @@ class Settings(BaseSettings):
 
     # Academic units Ids
     INTERNAL_FCEN: str
+    FCEN: str
 
 
 @lru_cache
