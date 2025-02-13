@@ -25,6 +25,10 @@ class CRUDUserApplicationAcademicUnitProtocol(
             academic_unit_id: UUID,
             db: Session,
     ) -> UserApplicationAcademicUnit:
+        """
+            This method is currently empty because the implementation details
+            depend on the specific requirements of the application.
+        """
         pass
 
     def get_active(
@@ -33,7 +37,23 @@ class CRUDUserApplicationAcademicUnitProtocol(
             user_application_id: UUID,
             db: Session,
     ) -> UserApplicationAcademicUnit:
+        """
+            This method is currently empty because the implementation details
+            depend on the specific requirements of the application.
+        """
         pass
+
+        def get_by_user(
+                self,
+                *,
+                user_id: UUID,
+                db: Session,
+        ) -> UserApplicationAcademicUnit:
+            """
+                This method is currently empty because the implementation details
+                depend on the specific requirements of the application.
+            """
+            pass
 
     def response(
             self,
@@ -42,4 +62,8 @@ class CRUDUserApplicationAcademicUnitProtocol(
             academic_unit_id: UUID,
             db: Session,
     ) -> UserApplicationAcademicUnit:
+        """
+            This method is currently empty because the implementation details
+            depend on the specific requirements of the application.
+        """
         pass

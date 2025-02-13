@@ -17,6 +17,8 @@ from app.schemas.application.user_application_academic_unit import (
 )
 from app.services.base import ServiceBase
 
+NOT_AVAILABLE = 'Service not available'
+
 
 class UserApplicationAcademicUnitService(
     ServiceBase[
@@ -26,7 +28,6 @@ class UserApplicationAcademicUnitService(
         CRUDUserApplicationAcademicUnitProtocol,
     ],
 ):
-
     def get_by_academic_unit(
             self,
             *,
@@ -36,7 +37,7 @@ class UserApplicationAcademicUnitService(
         if self.observer is None:
             raise BaseErrors(
                 code=503,
-                detail='Service not available',
+                detail=NOT_AVAILABLE,
             )
         return self.observer.get_by_academic_unit(
             academic_unit_id=academic_unit_id, db=db,
@@ -51,7 +52,7 @@ class UserApplicationAcademicUnitService(
         if self.observer is None:
             raise BaseErrors(
                 code=503,
-                detail='Service not available',
+                detail=NOT_AVAILABLE,
             )
         return self.observer.get_active(
             user_application_id=user_application_id,
@@ -68,7 +69,7 @@ class UserApplicationAcademicUnitService(
         if self.observer is None:
             raise BaseErrors(
                 code=503,
-                detail='Service not available',
+                detail=NOT_AVAILABLE,
             )
         return self.observer.response(
             user_application_id=user_application_id,
