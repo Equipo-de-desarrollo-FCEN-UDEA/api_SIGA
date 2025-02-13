@@ -19,9 +19,9 @@ async def response(
     user_application = user_application_academic_unit.user_application
     aplication = user_application.application
     application_type = aplication.name
+    response = 'RECHAZADA'
     if result == Result.APPROVED:
         response = 'APROBADA'
-    response = 'RECHAZADA'
     if application_type == 'MOVILIDAD':
         await mobility.flux(
             user_application_id=user_application.id,
