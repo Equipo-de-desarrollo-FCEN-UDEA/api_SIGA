@@ -7,6 +7,7 @@ from tempfile import NamedTemporaryFile
 from docx import Document
 from fastapi import HTTPException
 
+from app.core.config import settings
 from app.infraestructure.policies.application.user_application import (
     create_voting,
 )
@@ -26,8 +27,6 @@ from app.services.users.user_rol_academic_unit import (
     user_rol_academic_unit_svc,
 )
 
-from app.core.config import settings
-
 
 def next_status(current_status: str, response: str | None = None) -> str:
     if current_status == ApplicationStatusType.CREATE.value:
@@ -43,12 +42,12 @@ def next_status(current_status: str, response: str | None = None) -> str:
         if (response == 'APROBADA'):
             return ApplicationStatusType.IN_DEAN.value
         elif (response == 'RECHAZADA'):
-            return ApplicationStatusType.RETURNED.value
+            return ApplicationStatusType.REJECTED.value
     elif current_status == ApplicationStatusType.IN_DEAN.value:
         if (response == 'APROBADA'):
             return ApplicationStatusType.APPROVED.value
         elif (response == 'RECHAZADA'):
-            return ApplicationStatusType.RETURNED.value
+            return ApplicationStatusType.REJECTED.value
     else:
         return None
 
@@ -65,13 +64,20 @@ async def flux(
         user_application_id,
         db_mongo, mobility_svc,
     )
+    if _current_status == ApplicationStatusType.APPROVED.value:
+        raise HTTPException(
+            status_code=400, detail='Solicitud ya aprobada',
+        )
+    elif _current_status == ApplicationStatusType.REJECTED.value:
+        raise HTTPException(
+            status_code=400, detail='Solicitud ya rechazada',
+        )
     _next_status = next_status(_current_status, response)
-    print(_next_status)
-    committee = user_rol_academic_unit_svc.get_student_committee(
-        user_id=current_user.id, db=db_postgres,
-    )
 
     if _next_status == ApplicationStatusType.IN_COMMITEE.value:
+        committee = user_rol_academic_unit_svc.get_student_committee(
+            user_id=current_user.id, db=db_postgres,
+        )
         send_to_academic_unit(
             academic_unit_id=committee,
             user_application_id=user_application_id, db=db_postgres,
@@ -88,10 +94,27 @@ async def flux(
         )
 
     elif _current_status == ApplicationStatusType.IN_COMMITEE.value:
-        send_to_academic_unit(
-            academic_unit_id=settings.INTERNAL_FCEN,
-            user_application_id=user_application_id, db=db_postgres,
+        if response == 'APROBADA':
+            send_to_academic_unit(
+                academic_unit_id=settings.INTERNAL_FCEN,
+                user_application_id=user_application_id, db=db_postgres,
+            )
+        status = UserApplicationStatus(
+            name=_next_status,
+            updated_by=current_user.id, date=datetime.now(),
         )
+
+    elif _current_status == ApplicationStatusType.IN_INTERNATIONAL.value:
+        if response == 'APROBADA':
+            send_to_academic_unit(
+                academic_unit_id=settings.FCEN,
+                user_application_id=user_application_id, db=db_postgres,
+            )
+        status = UserApplicationStatus(
+            name=_next_status,
+            updated_by=current_user.id, date=datetime.now(),
+        )
+    elif _current_status == ApplicationStatusType.IN_DEAN.value:
         status = UserApplicationStatus(
             name=_next_status,
             updated_by=current_user.id, date=datetime.now(),
@@ -107,58 +130,75 @@ async def flux(
 def generate_mobility_format(mobility_dict: dict, path: str):
 
     mobility_data = {
-        'date': mobility_dict['status'][0]['date'].strftime('%Y-%m-%d'),
-
-        'name': mobility_dict['name'] + ' ' + mobility_dict['last_name'],
+        'date': (
+            mobility_dict['status'][0].date.strftime('%Y-%m-%d')
+            if mobility_dict['status']
+            else None
+        ),
+        'name': f"{mobility_dict['name']} {mobility_dict['last_name']}",
         'phone': mobility_dict['phone'],
         'email': mobility_dict['email'],
-        'identification_type': mobility_dict['identification_type']
-        .replace('_', ' '),
+        'identification_type': (
+            mobility_dict['identification_type'].value.replace('_', ' ')
+        ),
         'identification_number': mobility_dict['identification_number'],
         'nationality': 'HAY QUE PEDIR LA NACIONALIDAD',
-        'rol': mobility_dict['student_rol'],
+        'rol': (
+            mobility_dict['student_rol']['name']
+            if mobility_dict['student_rol']
+            else None
+        ),
         'school': mobility_dict['school'],
-        'current_academic_program': mobility_dict['current_program'],
+        'current_academic_program': (
+            mobility_dict['current_program']['name']
+            if mobility_dict['current_program']
+            else None
+        ),
         'semester': 'HAY QUE PEDIR EL SEMESTRE',
-
         'name_coordinator': 'HAY QUE INVENTARLO',
         'phone_coordinator': 'HAY QUE INVENTARLO',
         'email_coordinator': 'HAY QUE INVENTARLO',
-
-        'incoming_leaving': mobility_dict['type'].value.split()[0],
-        'national_international': mobility_dict['type'].value.split()[1],
-        'process': mobility_dict['process'].value,
+        'incoming_leaving': (
+            mobility_dict['type'].value.split()[0]
+            if hasattr(mobility_dict['type'], 'value')
+            else mobility_dict['type'].split()[0]
+        ),
+        'national_international': (
+            mobility_dict['type'].value.split()[1]
+            if hasattr(mobility_dict['type'], 'value')
+            else mobility_dict['type'].split()[1]
+        ),
+        'process': (
+            mobility_dict['process'].value
+            if hasattr(mobility_dict['process'], 'value')
+            else mobility_dict['process']
+        ),
         'destination_country': mobility_dict['destination_country'],
         'destination_institution': mobility_dict['destination_institution'],
         'academic_program': mobility_dict['academic_program'],
-
         'name_contact_person': mobility_dict['name_contact_person'],
         'cellphone_contact_person': mobility_dict['cellphone_contact_person'],
         'email_contact_person': mobility_dict['email_contact_person'],
-
         'date_start': mobility_dict['date_start'].strftime('%Y-%m-%d'),
         'date_end': mobility_dict['date_end'].strftime('%Y-%m-%d'),
-
-        'code1': mobility_dict['code1'],
-        'subject1': mobility_dict['subject1'],
-        'recognized_code1': mobility_dict['recognized_code1'],
-        'recognized_subject1': mobility_dict['recognized_subject1'],
-        'code2': mobility_dict['code2'],
-        'subject2': mobility_dict['subject2'],
-        'recognized_code2': mobility_dict['recognized_code2'],
-        'recognized_subject2': mobility_dict['recognized_subject2'],
-        'code3': mobility_dict['code3'],
-        'subject3': mobility_dict['subject3'],
-        'recognized_code3': mobility_dict['recognized_code3'],
-        'recognized_subject3': mobility_dict['recognized_subject3'],
-        'code4': mobility_dict['code4'],
-        'subject4': mobility_dict['subject4'],
-        'recognized_code4': mobility_dict['recognized_code4'],
-        'recognized_subject4': mobility_dict['recognized_subject4'],
-
+        'code1': mobility_dict.get('code1', ''),
+        'subject1': mobility_dict.get('subject1', ''),
+        'recognized_code1': mobility_dict.get('recognized_code1', ''),
+        'recognized_subject1': mobility_dict.get('recognized_subject1', ''),
+        'code2': mobility_dict.get('code2', ''),
+        'subject2': mobility_dict.get('subject2', ''),
+        'recognized_code2': mobility_dict.get('recognized_code2', ''),
+        'recognized_subject2': mobility_dict.get('recognized_subject2', ''),
+        'code3': mobility_dict.get('code3', ''),
+        'subject3': mobility_dict.get('subject3', ''),
+        'recognized_code3': mobility_dict.get('recognized_code3', ''),
+        'recognized_subject3': mobility_dict.get('recognized_subject3', ''),
+        'code4': mobility_dict.get('code4', ''),
+        'subject4': mobility_dict.get('subject4', ''),
+        'recognized_code4': mobility_dict.get('recognized_code4', ''),
+        'recognized_subject4': mobility_dict.get('recognized_subject4', ''),
         'signature': '',
         'signature_responsible': '',
-
         'date_report': mobility_dict['date_report'].strftime('%Y-%m-%d'),
     }
 
