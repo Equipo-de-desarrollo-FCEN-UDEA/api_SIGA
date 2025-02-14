@@ -15,10 +15,9 @@ from app.api.middleware.postgres_db import get_db
 from app.core.config import settings
 from app.infraestructure.services.emails.user import recovery_password_email
 from app.schemas.users.user import User
-from app.schemas.users.user import UserCreateInDB
+from app.schemas.users.user import UserPublic
 from app.schemas.users.user import UserUpdate
 from app.schemas.users.user import UserUpdateInDB
-from app.schemas.users.user import UserPublic
 from app.services.crypt import crypt_svc
 from app.services.jwt import jwt_service
 from app.services.users.user import user_svc
@@ -43,13 +42,16 @@ def login_access_token(
         password=form_data.password,
         db=db_postgres,
     )
-    scopes = [role.rol.scope+":"+str(role.academic_unit_id )for role in user.user_roles_academic_units]
+    scopes = [
+        role.rol.scope+':'+str(role.academic_unit_id)
+        for role in user.user_roles_academic_units
+    ]
     user_id = str(user.id)
     access_token = jwt_service.create_access_token(
         data={
             'sub': user_id,
             'info': UserPublic.model_validate(user).model_dump(),
-            'scopes': scopes
+            'scopes': scopes,
         },
         expires=settings.ACCESS_TOKEN_EXPIRE_MINUTES,
     )
@@ -121,9 +123,9 @@ def recover_password(
             db=db_postgres, email=email_or_id,
         )
         if user:
-            print(f"User found by email: {user.email}")
+            print(f'User found by email: {user.email}')
     except Exception as e:
-        print(f"Error finding user by email: {e}")
+        print(f'Error finding user by email: {e}')
 
     if not user:
         try:
@@ -131,9 +133,9 @@ def recover_password(
                 identification_number=email_or_id, db=db_postgres,
             )
             if user:
-                print(f"User found by identification: {user.email}")
+                print(f'User found by identification: {user.email}')
         except Exception as e:
-            print(f"Error finding user by identification: {e}")
+            print(f'Error finding user by identification: {e}')
 
     if not user:
         raise HTTPException(
@@ -201,3 +203,11 @@ async def protected_route(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     return {'message': 'Protected route'}
+
+
+@router.post('/logout')
+async def logout(
+    response: Response,
+):
+    response.delete_cookie(key='access_token')
+    return {'message': 'Logout successful'}
