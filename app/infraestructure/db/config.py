@@ -30,6 +30,7 @@ from app.infraestructure.db.crud.voting.vote import vote_crud
 from app.infraestructure.db.crud.voting.vote_type import vote_type_crud
 from app.infraestructure.db.crud.voting.voting import voting_crud
 from app.infraestructure.db.crud.voting.voting_info import voting_info_crud
+from app.infraestructure.db.utils.base import Base
 from app.services.application.application import application_svc
 from app.services.application.type.commission import commission_svc
 from app.services.application.type.mobility import mobility_svc
