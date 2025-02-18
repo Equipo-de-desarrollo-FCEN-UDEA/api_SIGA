@@ -9,12 +9,14 @@ from app.infraestructure.db.models.voting.voting_info import VotingInfo
 from app.schemas.application.user_application_academic_unit import (
     UserApplicationAcademicUnitCreate,
 )
+from app.schemas.application.user_application_user import UserApplicationUserCreate
 from app.schemas.voting.voting import VotingCreate
 from app.schemas.voting.voting_info import VotingInfoCreate
 from app.schemas.voting.voting_info import VotingStatus
 from app.services.application.user_application_academic_unit import (
     user_application_academic_unit_svc,
 )
+from app.services.application.user_application_user import user_application_user_svc
 from app.services.voting.voting import voting_svc
 from app.services.voting.voting_info import voting_info_svc
 
@@ -46,6 +48,16 @@ def send_to_academic_unit(
     )
 
 
+def send_to_user(
+        *,
+        user_application_user: UserApplicationUserCreate,
+        db,
+) -> None:
+    user_application_user_svc.create(
+        obj_in=user_application_user, db=db,
+    )
+
+
 async def create_voting(
         *,
         academic_unit_id,
@@ -68,7 +80,6 @@ async def create_voting(
         date=datetime.now(),
         observation=None,
     )
-    print(f"GUARDAR: {status}")
 
     voting_info_to_create = VotingInfoCreate(
         id=id,
