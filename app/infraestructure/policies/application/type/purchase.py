@@ -1,13 +1,99 @@
 from __future__ import annotations
 
+from datetime import datetime
+from uuid import UUID
+
+from fastapi import HTTPException
+from fastapi.responses import JSONResponse
+
+from app.infraestructure.policies.application.user_application import current_status
+from app.infraestructure.policies.application.user_application import send_to_user
 from app.protocols.db.models.application.type.purchase import PurchaseStatus
+from app.schemas.application.user_application import UserApplicationStatus
+from app.schemas.users.user import User
+from app.services.application.type.purchase import purchase_svc
+
+STATUS_LIST = list(PurchaseStatus)
 
 
-def next_status(*, current_status: str, is_approved: bool = False) -> PurchaseStatus:
-    status_list = list(PurchaseStatus)
+def next_status(
+        *,
+        current_status: str,
+        is_approved: bool = True,
+        current_user,
+) -> UserApplicationStatus:
+    if not is_approved:
+        return PurchaseStatus.REJECTED
+    for i, status in enumerate(STATUS_LIST):
+        if status.value == current_status:
+            if i+1 < len(STATUS_LIST):
+                name = STATUS_LIST[i+1].value
+                status = UserApplicationStatus(
+                    name=name,
+                    updated_by=current_user.id,
+                    date=datetime.now(),
+                )
+                return status
+            raise HTTPException(status_code=400, detail='Invalid status')
+
+
+async def flux(
+        *,
+        user_application_id,
+        db_mongo,
+        current_user: User,
+        is_approved: bool | None = None,
+        user_to_assign: UUID | None = None,
+) -> JSONResponse:
+    _current_status = await current_status(
+        user_application_id=user_application_id,
+        db_mongo=db_mongo,
+        svc=purchase_svc,
+    )
+    _next_status = next_status(
+        current_status=_current_status,
+        is_approved=is_approved,
+        current_user=current_user,
+    )
+
+    def assign_responsible(user_id: UUID):
+        send_to_user(
+            user_application_id=user_application_id,
+            user_id=user_id, db=db_mongo,
+        )
+        return JSONResponse(
+            status_code=200,
+            content={'message': 'User assigned successfully'},
+        )
+
+    def request_cdp():
+        pass
+
+    def approve_cdp():
+        pass
+
+    def update_documents():
+        pass
+
+    def select_provider():
+        pass
+
+    def place_order():
+        pass
+
+    def close():
+        pass
+
+    def reject():
+        pass
+
     if is_approved:
-        for i, status in enumerate(status_list):
-            if status.value == current_status:
-                if i+1 < len(status_list):
-                    return status_list[i+1]
-    return PurchaseStatus.REJECTED
+        if _current_status == PurchaseStatus.SENT_TO_ACADEMIC_UNIT.value:
+            res = assign_responsible(user_id=user_to_assign)
+
+    await purchase_svc.add_status(
+        db_mongo=db_mongo,
+        new_status=_next_status,
+        user_application_id=user_application_id,
+    )
+    return res
