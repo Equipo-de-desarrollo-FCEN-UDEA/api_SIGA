@@ -59,15 +59,3 @@ class MobilityUpdate(BaseModel):
 class Mobility(MobilityBase):
     id: UUID
     date_report: datetime | None = None
-
-
-class MobilityWithUser(Mobility):
-    name: str
-    last_name: str
-    student_rol: str
-    school: str
-    current_program: str
-    phone: str
-    email: str
-    identification_type: str
-    identification_number: str
