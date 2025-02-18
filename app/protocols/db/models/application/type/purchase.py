@@ -48,3 +48,15 @@ class Purchase(MongoModel):
     marco_agreement: bool | None
     status: list[Status]
     prior_consultation: list[PriorConsultation]
+
+
+class PurchaseStatus(Enum):
+    SENT_TO_ACADEMIC_UNIT = 'Enviado a Unidad Académica'
+    ASSISTANT_ASSIGNED = 'Auxiliar Asignado'
+    CDP_REQUESTED = 'CDP Solicitado'
+    CDP_APPROVED = 'CDP Aprobado'
+    UPDATED_DOCUMENTS = 'Documentos Actualizados'
+    SELECTED_PROVIDER = 'Proveedor Seleccionado'
+    ORDER_PLACED = 'Orden de Compra Realizada'
+    FINISHED = 'Finalizado'
+    REJECTED = 'Rechazado'
