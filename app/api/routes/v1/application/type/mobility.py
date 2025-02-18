@@ -150,7 +150,7 @@ async def download_mobility_form(
         # Generar archivo temporal
         file_path = generate_mobility_format(
             mobility_dict, formats_dir +
-            '/mobility/mobility_template.docx',
+            '/mobility/mobility_format.docx',
         )
     except Exception as e:
         raise HTTPException(
