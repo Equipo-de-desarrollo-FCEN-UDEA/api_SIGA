@@ -69,6 +69,9 @@ class Settings(BaseSettings):
     INTERNAL_FCEN: str
     FCEN: str
 
+    # Applications ID
+    PURCHASE_ID: str
+
 
 @lru_cache
 def get_settings() -> BaseSettings:

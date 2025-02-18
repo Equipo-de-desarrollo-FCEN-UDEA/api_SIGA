@@ -8,6 +8,7 @@ from app.api.routes.v1.application import user_application_academic_unit
 from app.api.routes.v1.application import user_application_user
 from app.api.routes.v1.application.type import commission
 from app.api.routes.v1.application.type import mobility
+from app.api.routes.v1.application.type import purchase
 from app.api.routes.v1.organization import academic_unit
 from app.api.routes.v1.organization import academic_unit_type
 from app.api.routes.v1.users import auth
@@ -78,4 +79,8 @@ api_router.include_router(
 )
 api_router.include_router(
     commission.router, prefix='/commission', tags=['commission'],
+)
+
+api_router.include_router(
+    purchase.router, prefix='/purchase', tags=['purchase'],
 )

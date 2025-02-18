@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from uuid import UUID
+
 from pydantic import BaseModel
 
 from app.protocols.db.models.application.type.purchase import PurchaseScope
@@ -18,11 +20,13 @@ class BankConsultation(BaseModel):
 
 
 class PriorConsultation(BaseModel):
-    annual_plan: list[AnnualPlan] | None = []
-    bank_consultation: list[BankConsultation] | None = []
+    annual_plan: AnnualPlan | None = None
+    bank_consultation: BankConsultation | None = None
+    contract: str | None = None
 
 
 class PurchaseBase(BaseModel):
+    id: UUID | None = None
     type: PurchaseType
     scope: PurchaseScope
     need: str
@@ -30,8 +34,8 @@ class PurchaseBase(BaseModel):
     responsible_condition: str
     estimated_budget: float
     marco_agreement: bool | None = None
-    status: list[UserApplicationStatus] | None = []
-    prior_consultation: list[PriorConsultation] | None = []
+    status: list[UserApplicationStatus] | None = None
+    prior_consultation: PriorConsultation | None = None
 
 
 class PurchaseCreate(PurchaseBase):

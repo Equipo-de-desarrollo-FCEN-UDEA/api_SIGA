@@ -34,8 +34,9 @@ class BankConsultation():
 
 
 class PriorConsultation():
-    annual_plan: list[AnnualPlan]
-    bank_consultation: list[BankConsultation]
+    annual_plan: AnnualPlan
+    bank_consultation: BankConsultation
+    contract: str
 
 
 class Purchase(MongoModel):
@@ -47,7 +48,7 @@ class Purchase(MongoModel):
     estimated_budget: float
     marco_agreement: bool | None
     status: list[Status]
-    prior_consultation: list[PriorConsultation]
+    prior_consultation: PriorConsultation
 
 
 class PurchaseStatus(Enum):

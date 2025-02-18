@@ -4,6 +4,7 @@ from app.core.logging import get_logger
 from app.infraestructure.db.crud.application.application import application_crud
 from app.infraestructure.db.crud.application.type.commission import commission_crud
 from app.infraestructure.db.crud.application.type.mobility import mobility_crud
+from app.infraestructure.db.crud.application.type.purchase import purchase_crud
 from app.infraestructure.db.crud.application.user_application import (
     user_application_crud,
 )
@@ -32,6 +33,7 @@ from app.infraestructure.db.crud.voting.voting_info import voting_info_crud
 from app.services.application.application import application_svc
 from app.services.application.type.commission import commission_svc
 from app.services.application.type.mobility import mobility_svc
+from app.services.application.type.purchase import purchase_svc
 from app.services.application.user_application import user_application_svc
 from app.services.application.user_application_academic_unit import (
     user_application_academic_unit_svc,
@@ -86,6 +88,7 @@ def init_db() -> None:
     # application types config
     mobility_svc.register_observer(mobility_crud)
     commission_svc.register_observer(commission_crud)
+    purchase_svc.register_observer(purchase_crud)
 
     # voting config
     voting_svc.register_observer(voting_crud)
