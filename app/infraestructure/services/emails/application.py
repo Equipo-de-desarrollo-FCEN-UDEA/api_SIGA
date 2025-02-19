@@ -28,7 +28,6 @@ def create_application_email(
     tipo_solicitud: str,
     email: str,
 ):
-
     template = env.get_template('email.creacion.solicitud.html.j2')
 
     context = {
@@ -56,20 +55,3 @@ def create_application_email(
             from_addr=_my_email,
             to_addrs=email,
         )
-
-# with smtplib.SMTP_SSL(
-#         settings.smtp_local_host_email,
-#         port=settings.smtp_local_port_email,
-#     ) as smtp:
-#         smtp.send_message(msg=msg,)
-
-
-# with smtplib.SMTP(
-#         settings.smtp_domain_email,
-#         port=settings.smtp_port_email,
-#     ) as smtp:
-#         smtp.send_message(
-#             msg=msg,
-#             from_addr=_my_email,
-#             to_addrs=email,
-#         )
