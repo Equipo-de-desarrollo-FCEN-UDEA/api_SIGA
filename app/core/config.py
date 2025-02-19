@@ -70,6 +70,8 @@ class Settings(BaseSettings):
 
     # Academic units Ids
     INTERNAL_FCEN: str
+    EXTENSION_ID: str
+    CIEN_ID: str
     FCEN: str
 
     # Applications ID
