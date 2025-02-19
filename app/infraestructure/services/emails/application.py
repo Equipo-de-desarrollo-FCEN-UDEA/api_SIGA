@@ -55,3 +55,42 @@ def create_application_email(
             from_addr=_my_email,
             to_addrs=email,
         )
+
+
+@celery_app.task
+def update_status_email(
+    tipo_solicitud: str,
+    observacion: str,
+    nombre_estado: str,
+    uuid: str,
+    email: list[str] | str,
+):
+    template = env.get_template('email.cambio.estado.html.j2')
+    enlace = f'{settings.APP_DOMAIN}/solicitudes/{tipo_solicitud}/ver/{uuid}'
+    context = {
+        'req': {
+            'tipo_solicitud': tipo_solicitud,
+            'observacion': observacion,
+            'nombre_estado': nombre_estado,
+        },
+        'estado': {'nombre_estado': nombre_estado},
+        'Enlace': enlace,
+    }
+    render = template.render(context)
+    msg = EmailMessage()
+    msg['Subject'] = 'Actualización de estado'
+    msg['From'] = _my_email
+    msg['To'] = ', '.join(email) if isinstance(email, list) else email
+    msg.set_content(
+        render,
+        subtype='html',
+    )
+    with smtplib.SMTP(
+        settings.smtp_local_host_email,
+        port=settings.smtp_local_port_email,
+    ) as smtp:
+        smtp.send_message(
+            msg=msg,
+            from_addr=_my_email,
+            to_addrs=email,
+        )
