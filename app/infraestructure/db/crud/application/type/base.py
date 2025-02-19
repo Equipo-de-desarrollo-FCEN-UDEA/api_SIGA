@@ -22,7 +22,7 @@ from app.protocols.db.models.application.application import (
 from app.schemas.application.user_application import UserApplicationCreate
 from app.schemas.application.user_application import UserApplicationStatus
 from app.schemas.users.user import User
-
+from app.services.application.user_application import user_application_svc
 
 ModelType = TypeVar('ModelType', bound=Model)
 UpdateSchema = TypeVar('UpdateSchema', bound=BaseModel)
@@ -39,40 +39,26 @@ class ApplicationTypeBaseCrud(
         current_user: User,
         application_id: str,
     ) -> ModelType:
-        user_application = UserApplicationCreate(
+        user_application_create = UserApplicationCreate(
             user_id=current_user.id, application_id=application_id,
         )
-        obj_in_data = user_application.model_dump()
-        db_obj = UserApplication(**obj_in_data)
-        try:
-            with db_postgres:
-                db_postgres.add(db_obj)
-                db_postgres.flush()
+        user_application = user_application_svc.create(
+            obj_in=user_application_create, db=db_postgres,
+        )
 
-                obj_in.id = db_obj.id
+        obj_in.id = user_application.id
 
-                status = ApplicationStatusType.CREATE.value
-                obj_in.status += [
-                    UserApplicationStatus(
-                        name=status,
-                        updated_by=current_user.id,
-                        date=datetime.now(),
-                    ),
-                ]
+        create_status = UserApplicationStatus(
+            name='CREADA',
+            updated_by=current_user.id,
+            date=datetime.now(),
+        )
+        obj_in.status = [create_status]
 
-                obj_create = await super().create(
-                    db_mongo,
-                    obj_in=self.model(**dict(obj_in)),
-                )
-                db_postgres.commit()
-
-        except Exception as e:
-            db_postgres.rollback()
-            raise ORMError(str(e))
-
-        except PyMongoError as e:
-            db_postgres.rollback()
-            raise HTTPException(status_code=400, detail='Error: ' + str(e))
+        obj_create = await super().create(
+            db_mongo,
+            obj_in=self.model(**dict(obj_in)),
+        )
 
         return obj_create
 
@@ -88,7 +74,8 @@ class ApplicationTypeBaseCrud(
         try:
             with db_postgres:
                 db_obj = db_postgres.query(
-                    UserApplication).filter_by(id=id).first()
+                    UserApplication,
+                ).filter_by(id=id).first()
 
                 if not db_obj:
                     raise ORMError('User application not found')
