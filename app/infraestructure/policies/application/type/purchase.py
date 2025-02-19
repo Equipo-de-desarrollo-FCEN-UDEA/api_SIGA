@@ -7,6 +7,9 @@ from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 
 from app.infraestructure.policies.application.user_application import current_status
+from app.infraestructure.policies.application.user_application import (
+    send_to_academic_unit,
+)
 from app.infraestructure.policies.application.user_application import send_to_user
 from app.protocols.db.models.application.type.purchase import PurchaseStatus
 from app.schemas.application.user_application import UserApplicationStatus
@@ -23,7 +26,13 @@ def next_status(
         current_user,
 ) -> UserApplicationStatus:
     if not is_approved:
-        return PurchaseStatus.REJECTED
+        name = PurchaseStatus.REJECTED.value
+        status = UserApplicationStatus(
+            name=name,
+            updated_by=current_user.id,
+            date=datetime.now(),
+        )
+        return status
     for i, status in enumerate(STATUS_LIST):
         if status.value == current_status:
             if i+1 < len(STATUS_LIST):
@@ -41,9 +50,11 @@ async def flux(
         *,
         user_application_id,
         db_mongo,
+        db_postgres,
         current_user: User,
         is_approved: bool | None = None,
         user_to_assign: UUID | None = None,
+        academic_unit_id: UUID | None = None,
 ) -> JSONResponse:
     _current_status = await current_status(
         user_application_id=user_application_id,
@@ -87,9 +98,15 @@ async def flux(
     def reject():
         pass
 
-    if is_approved:
-        if _current_status == PurchaseStatus.SENT_TO_ACADEMIC_UNIT.value:
-            res = assign_responsible(user_id=user_to_assign)
+    if _current_status == PurchaseStatus.CREATED.value:
+        res = send_to_academic_unit(
+            user_application_id=user_application_id,
+            academic_unit_id=academic_unit_id,
+            db=db_postgres,
+        )
+
+    elif _current_status == PurchaseStatus.SENT_TO_ACADEMIC_UNIT.value:
+        res = assign_responsible(user_id=user_to_assign)
 
     await purchase_svc.add_status(
         db_mongo=db_mongo,
