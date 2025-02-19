@@ -115,12 +115,17 @@ class ApplicationTypeBaseCrud(
         *,
         new_status: UserApplicationStatus,
         user_application_id,
-    ) -> None:
+    ):
         try:
-            await db_mongo.get_collection(self.model).update_one(
+            res = await db_mongo.get_collection(self.model).update_one(
                 {'_id': user_application_id},
                 {'$push': {'status': new_status.model_dump()}},
             )
+            if res.modified_count == 1:
+                updated_document = await db_mongo.get_collection(self.model).find_one({'_id': user_application_id})
+                return updated_document
+            else:
+                raise ORMError('Failed to update the document')
 
         except Exception as e:
             raise ORMError(str(e))
