@@ -66,37 +66,37 @@ class ApplicationTypeBaseService(
         )
 
 
-async def add_status(
-    self, *,
-    new_status: UserApplicationStatus,
-    db_mongo: AIOSession,
-    db_postgres: Session,
-    user_application_id: UUID,
-):
-    if self.observer is None:
-        raise BaseErrors(code=503, detail='Service not available')
+    async def add_status(
+        self, *,
+        new_status: UserApplicationStatus,
+        db_mongo: AIOSession,
+        db_postgres: Session,
+        user_application_id: UUID,
+    ):
+        if self.observer is None:
+            raise BaseErrors(code=503, detail='Service not available')
 
-    user_application = user_application_svc.get(
-        id=user_application_id,
-        db=db_postgres,
-    )
+        user_application = user_application_svc.get(
+            id=user_application_id,
+            db=db_postgres,
+        )
 
-    document = await self.observer.add_status(
-        new_status=new_status,
-        db_mongo=db_mongo,
-        user_application_id=user_application_id,
-    )
+        document = await self.observer.add_status(
+            new_status=new_status,
+            db_mongo=db_mongo,
+            user_application_id=user_application_id,
+        )
 
-    status = document['status'][-1]
+        status = document['status'][-1]
 
-    update_status_email.apply_async(
-        args=[
-            user_application.application.name,
-            status['name'],
-            status['name'],
-            user_application_id,
-            user_application.user.email,
-        ],
-    )
+        update_status_email.apply_async(
+            args=[
+                user_application.application.name,
+                status['name'],
+                status['name'],
+                user_application_id,
+                user_application.user.email,
+            ],
+        )
 
-    return document
+        return document
