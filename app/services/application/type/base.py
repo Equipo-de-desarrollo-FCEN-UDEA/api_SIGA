@@ -57,6 +57,15 @@ class ApplicationTypeBaseService(
         if self.observer is None:
             raise BaseErrors(code=503, detail='Service not available')
 
+        return self.observer.update(
+            id=id,
+            obj_in=obj_in,
+            db_mongo=db_mongo,
+            db_postgres=db_postgres,
+            current_user=current_user,
+        )
+
+
     async def add_status(
         self, *,
         new_status: UserApplicationStatus,
