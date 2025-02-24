@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from typing import Annotated
 from uuid import UUID
 
@@ -25,16 +24,12 @@ from app.services.application.type.purchase import purchase_svc
 
 
 router = APIRouter()
-UPLOAD_DIR = 'uploaded_pdfs'
-os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
 @router.post('/create', response_model=PurchaseCreate, status_code=201)
 async def create_purchase(
     *,
     obj_in: PurchaseCreate,
-    pdf1: UploadFile = File(...),
-    pdf2: UploadFile = File(...),
     db_mongo=Depends(get_mongo_db),
     db_postgres: Session = Depends(get_db),
     current_user: Annotated[
@@ -44,21 +39,12 @@ async def create_purchase(
     ] = None,
 ) -> PurchaseCreate:
 
-    # Guardar los PDFs en la carpeta local
-    file_paths = []
-    for pdf in [pdf1, pdf2]:
-        file_path = os.path.join(UPLOAD_DIR, pdf.filename)
-        with open(file_path, 'wb') as buffer:
-            buffer.write(await pdf.read())
-        file_paths.append(file_path)
-
     purchase_create = await purchase_svc.create(
         obj_in=obj_in,
         db_mongo=db_mongo,
         db_postgres=db_postgres,
         current_user=current_user,
         application_id=settings.PURCHASE_ID,
-        pdf_paths=file_paths,
     )
 
     return purchase_create
@@ -80,6 +66,29 @@ async def send_to_academic_unit(
         current_user=current_user,
         is_approved=True,
         academic_unit_id=UUID(academic_unit_id.value),
+    )
+
+    return res
+
+
+@router.post('/upload/{id}', response_model=None, status_code=200)
+async def upload_files(
+    *,
+    id: UUID,
+    pdf1: UploadFile = File(...),
+    pdf2: UploadFile = File(...),
+    db_mongo=Depends(get_mongo_db),
+    db_postgres: Session = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)],
+) -> JSONResponse:
+
+    res = await flux(
+        user_application_id=id,
+        db_mongo=db_mongo,
+        db_postgres=db_postgres,
+        current_user=current_user,
+        is_approved=True,
+        pdfs=[pdf1, pdf2],
     )
 
     return res

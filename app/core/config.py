@@ -77,6 +77,9 @@ class Settings(BaseSettings):
     # Applications ID
     PURCHASE_ID: str
 
+    # Buckets
+    UPLOAD_DIR: str
+
 
 @lru_cache
 def get_settings() -> BaseSettings:
