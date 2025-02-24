@@ -65,3 +65,25 @@ async def send_to_academic_unit(
     )
 
     return res
+
+
+@router.patch('/send/user/{id}', response_model=None, status_code=200)
+async def assing_auxiliary(
+    *,
+    id: UUID,
+    user_id: UUID,
+    is_approved: bool,
+    db_mongo=Depends(get_mongo_db),
+    db_postgres: Session = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)],
+) -> JSONResponse:
+    res = await flux(
+        user_application_id=id,
+        db_mongo=db_mongo,
+        db_postgres=db_postgres,
+        current_user=current_user,
+        is_approved=is_approved,
+        user_to_assign=user_id,
+    )
+
+    return res

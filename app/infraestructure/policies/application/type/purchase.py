@@ -67,16 +67,6 @@ async def flux(
         current_user=current_user,
     )
 
-    def assign_responsible(user_id: UUID):
-        send_to_user(
-            user_application_id=user_application_id,
-            user_id=user_id, db=db_mongo,
-        )
-        return JSONResponse(
-            status_code=200,
-            content={'message': 'User assigned successfully'},
-        )
-
     def request_cdp():
         pass
 
@@ -106,7 +96,11 @@ async def flux(
         )
 
     elif _current_status == PurchaseStatus.SENT_TO_ACADEMIC_UNIT.value:
-        res = assign_responsible(user_id=user_to_assign)
+        res = send_to_user(
+            user_application_id=user_application_id,
+            user_id=user_to_assign,
+            db=db_postgres,
+        )
 
     await purchase_svc.add_status(
         db_mongo=db_mongo,
