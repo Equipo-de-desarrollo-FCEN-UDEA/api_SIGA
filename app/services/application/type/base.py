@@ -8,10 +8,12 @@ from odmantic.session import AIOSession
 from sqlalchemy.orm import Session
 
 from app.errors.base import BaseErrors
+from app.infraestructure.services.emails.application import update_status_email
 from app.protocols.db.crud.application.user_application import CRUDUserApplicationProtocol
 from app.schemas.application.user_application import UserApplicationStatus
 from app.schemas.utils.base_model import CreateSchemaType
 from app.schemas.utils.base_model import UpdateSchemaType
+from app.services.application.user_application import user_application_svc
 from app.services.base import ServiceBase
 
 ModelType = TypeVar('ModelType')
@@ -19,7 +21,10 @@ ModelType = TypeVar('ModelType')
 CrudType = TypeVar('CrudType', bound=CRUDUserApplicationProtocol)
 
 
-class ApplicationTypeBaseService(ServiceBase[ModelType, CreateSchemaType, UpdateSchemaType, CrudType]):
+class ApplicationTypeBaseService(
+    ServiceBase[ModelType, CreateSchemaType, UpdateSchemaType, CrudType],
+):
+
     def create(
         self, *,
         obj_in: CreateSchemaType,
@@ -28,9 +33,17 @@ class ApplicationTypeBaseService(ServiceBase[ModelType, CreateSchemaType, Update
         current_user: Annotated,
         application_id: str,
     ) -> CreateSchemaType:
+
         if self.observer is None:
             raise BaseErrors(code=503, detail='Service not available')
-        return self.observer.create(obj_in=obj_in, db_mongo=db_mongo, db_postgres=db_postgres, current_user=current_user, application_id=application_id)
+
+        return self.observer.create(
+            obj_in=obj_in,
+            db_mongo=db_mongo,
+            db_postgres=db_postgres,
+            current_user=current_user,
+            application_id=application_id,
+        )
 
     def update(
         self, *,
@@ -40,16 +53,50 @@ class ApplicationTypeBaseService(ServiceBase[ModelType, CreateSchemaType, Update
         db_postgres: Session,
         current_user: Annotated,
     ) -> UpdateSchemaType:
+
         if self.observer is None:
             raise BaseErrors(code=503, detail='Service not available')
-        return self.observer.update(id=id, obj_in=obj_in, db_mongo=db_mongo, db_postgres=db_postgres, current_user=current_user)
 
-    def add_status(
+        return self.observer.update(
+            id=id,
+            obj_in=obj_in,
+            db_mongo=db_mongo,
+            db_postgres=db_postgres,
+            current_user=current_user,
+        )
+
+
+    async def add_status(
         self, *,
         new_status: UserApplicationStatus,
         db_mongo: AIOSession,
+        db_postgres: Session,
         user_application_id: UUID,
     ):
         if self.observer is None:
             raise BaseErrors(code=503, detail='Service not available')
-        return self.observer.add_status(new_status=new_status, db_mongo=db_mongo, user_application_id=user_application_id)
+
+        user_application = user_application_svc.get(
+            id=user_application_id,
+            db=db_postgres,
+        )
+
+        document = await self.observer.add_status(
+            new_status=new_status,
+            db_mongo=db_mongo,
+            user_application_id=user_application_id,
+        )
+
+        status = document['status'][-1]
+
+        update_status_email.apply_async(
+            args=[
+                user_application.application.name,
+                status['name'],
+                status['name'],
+                user_application_id,
+                user_application.user.email,
+            ],
+        )
+
+        return document

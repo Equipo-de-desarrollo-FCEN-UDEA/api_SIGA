@@ -122,6 +122,7 @@ async def flux(
 
     await mobility_svc.add_status(
         db_mongo=db_mongo,
+        db_postgres=db_postgres,
         new_status=status,
         user_application_id=user_application_id,
     )

@@ -104,6 +104,7 @@ async def flux(
 
     await purchase_svc.add_status(
         db_mongo=db_mongo,
+        db_postgres=db_postgres,
         new_status=_next_status,
         user_application_id=user_application_id,
     )
