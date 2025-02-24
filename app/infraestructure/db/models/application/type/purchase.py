@@ -15,8 +15,8 @@ class Purchase(Model):
     scope: str
     need: str
     description: str
-    responsible_condition: str
+    responsible_condition: str | None = None
     estimated_budget: float
-    marco_agreement: bool
-    status: list[UserApplicationStatus]
-    prior_consultation: PriorConsultation
+    marco_agreement: bool | None = None
+    status: list[UserApplicationStatus] = []
+    prior_consultation: PriorConsultation | None = None
