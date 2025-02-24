@@ -4,18 +4,13 @@ from datetime import datetime
 from typing import TypeVar
 from uuid import UUID
 
-from fastapi import HTTPException
 from odmantic import Model
 from odmantic.session import AIOSession
 from pydantic import BaseModel
-from pymongo.errors import PyMongoError
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import ORMError
 from app.infraestructure.db.crud.mongo_base import CRUDBase
-from app.infraestructure.db.models.application.user_application import (
-    UserApplication,
-)
 from app.schemas.application.user_application import UserApplicationCreate
 from app.schemas.application.user_application import UserApplicationStatus
 from app.schemas.users.user import User
@@ -65,33 +60,13 @@ class ApplicationTypeBaseCrud(
             *,
             id: UUID,
             obj_in: UpdateSchema,
-            db_postgres: Session,
-            current_user: User,
     ) -> ModelType:
-        try:
-            with db_postgres:
-                db_obj = db_postgres.query(
-                    UserApplication,
-                ).filter_by(id=id).first()
-
-                if not db_obj:
-                    raise ORMError('User application not found')
-
-                obj_updated = await super().update(
-                    db_mongo,
-                    db_obj=db_obj,
-                    obj_in=obj_in,
-                )
-
-                db_postgres.commit()
-
-        except Exception as e:
-            db_postgres.rollback()
-            raise ORMError(str(e))
-
-        except PyMongoError as e:
-            db_postgres.rollback()
-            raise HTTPException(status_code=400, detail='Error: ' + str(e))
+        db_obj = await super().get(db_mongo, id=id)
+        obj_updated = await super().update(
+            db_mongo,
+            db_obj=db_obj,
+            obj_in=obj_in,
+        )
 
         return obj_updated
 
