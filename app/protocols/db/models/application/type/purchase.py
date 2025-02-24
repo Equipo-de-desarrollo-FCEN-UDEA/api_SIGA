@@ -56,6 +56,7 @@ class PurchaseStatus(Enum):
     CREATED = 'CREADA'
     SENT_TO_ACADEMIC_UNIT = 'Enviado a Unidad Académica'
     ASSISTANT_ASSIGNED = 'Auxiliar Asignado'
+    COMPLETED_INFORMATION = 'Información Completada'
     CDP_REQUESTED = 'CDP Solicitado'
     CDP_APPROVED = 'CDP Aprobado'
     UPDATED_DOCUMENTS = 'Documentos Actualizados'

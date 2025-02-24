@@ -9,7 +9,9 @@ from sqlalchemy.orm import Session
 
 from app.errors.base import BaseErrors
 from app.infraestructure.services.emails.application import update_status_email
-from app.protocols.db.crud.application.user_application import CRUDUserApplicationProtocol
+from app.protocols.db.crud.application.user_application import (
+    CRUDUserApplicationProtocol,
+)
 from app.schemas.application.user_application import UserApplicationStatus
 from app.schemas.utils.base_model import CreateSchemaType
 from app.schemas.utils.base_model import UpdateSchemaType
@@ -45,26 +47,21 @@ class ApplicationTypeBaseService(
             application_id=application_id,
         )
 
-    def update(
+    async def update(
         self, *,
         id: UUID,
         obj_in: UpdateSchemaType,
         db_mongo: AIOSession,
-        db_postgres: Session,
-        current_user: Annotated,
     ) -> UpdateSchemaType:
 
         if self.observer is None:
             raise BaseErrors(code=503, detail='Service not available')
 
-        return self.observer.update(
+        return await self.observer.update(
             id=id,
             obj_in=obj_in,
             db_mongo=db_mongo,
-            db_postgres=db_postgres,
-            current_user=current_user,
         )
-
 
     async def add_status(
         self, *,

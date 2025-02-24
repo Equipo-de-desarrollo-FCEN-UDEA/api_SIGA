@@ -4,21 +4,13 @@ from datetime import datetime
 from typing import TypeVar
 from uuid import UUID
 
-from fastapi import HTTPException
 from odmantic import Model
 from odmantic.session import AIOSession
 from pydantic import BaseModel
-from pymongo.errors import PyMongoError
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import ORMError
 from app.infraestructure.db.crud.mongo_base import CRUDBase
-from app.infraestructure.db.models.application.user_application import (
-    UserApplication,
-)
-from app.protocols.db.models.application.application import (
-    ApplicationStatusType,
-)
 from app.schemas.application.user_application import UserApplicationCreate
 from app.schemas.application.user_application import UserApplicationStatus
 from app.schemas.users.user import User
@@ -68,44 +60,13 @@ class ApplicationTypeBaseCrud(
             *,
             id: UUID,
             obj_in: UpdateSchema,
-            db_postgres: Session,
-            current_user: User,
     ) -> ModelType:
-        try:
-            with db_postgres:
-                db_obj = db_postgres.query(
-                    UserApplication,
-                ).filter_by(id=id).first()
-
-                if not db_obj:
-                    raise ORMError('User application not found')
-
-                status = ApplicationStatusType.UPDATED.value
-                obj_in.status.append(
-                    UserApplicationStatus(
-                        name=status,
-                        updated_by=current_user.id,
-                        date=datetime.now(),
-                    ),
-                )
-
-                updated_obj_in = {**obj_in.dict(), 'id': db_obj.id}
-
-                obj_updated = await super().update(
-                    db_mongo,
-                    db_obj=db_obj,
-                    obj_in=self.model(**updated_obj_in),
-                )
-
-                db_postgres.commit()
-
-        except Exception as e:
-            db_postgres.rollback()
-            raise ORMError(str(e))
-
-        except PyMongoError as e:
-            db_postgres.rollback()
-            raise HTTPException(status_code=400, detail='Error: ' + str(e))
+        db_obj = await super().get(db_mongo, id=id)
+        obj_updated = await super().update(
+            db_mongo,
+            db_obj=db_obj,
+            obj_in=obj_in,
+        )
 
         return obj_updated
 
@@ -122,7 +83,11 @@ class ApplicationTypeBaseCrud(
                 {'$push': {'status': new_status.model_dump()}},
             )
             if res.modified_count == 1:
-                updated_document = await db_mongo.get_collection(self.model).find_one({'_id': user_application_id})
+                updated_document = await db_mongo.get_collection(
+                    self.model,
+                ).find_one(
+                    {'_id': user_application_id},
+                )
                 return updated_document
             else:
                 raise ORMError('Failed to update the document')

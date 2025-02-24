@@ -59,11 +59,21 @@ def send_to_academic_unit(
 
 def send_to_user(
         *,
-        user_application_user: UserApplicationUserCreate,
+        user_application_id: UUID,
+        user_id: UUID,
         db,
-) -> None:
+) -> JSONResponse:
+    user_application_user = UserApplicationUserCreate(
+        user_application_id=user_application_id,
+        user_id=user_id,
+    )
     user_application_user_svc.create(
         obj_in=user_application_user, db=db,
+    )
+
+    return JSONResponse(
+        status_code=200,
+        content={'message': 'User assigned successfully'},
     )
 
 

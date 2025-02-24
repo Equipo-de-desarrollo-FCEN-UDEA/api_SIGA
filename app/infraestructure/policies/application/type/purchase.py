@@ -12,6 +12,7 @@ from app.infraestructure.policies.application.user_application import (
 )
 from app.infraestructure.policies.application.user_application import send_to_user
 from app.protocols.db.models.application.type.purchase import PurchaseStatus
+from app.schemas.application.type.purchase import PurchaseUpdate
 from app.schemas.application.user_application import UserApplicationStatus
 from app.schemas.users.user import User
 from app.services.application.type.purchase import purchase_svc
@@ -55,6 +56,7 @@ async def flux(
         is_approved: bool | None = None,
         user_to_assign: UUID | None = None,
         academic_unit_id: UUID | None = None,
+        obj_in: PurchaseUpdate | None = None,
 ) -> JSONResponse:
     _current_status = await current_status(
         user_application_id=user_application_id,
@@ -67,21 +69,28 @@ async def flux(
         current_user=current_user,
     )
 
-    def assign_responsible(user_id: UUID):
-        send_to_user(
-            user_application_id=user_application_id,
-            user_id=user_id, db=db_mongo,
+    async def complete_information():
+        await purchase_svc.update(
+            id=user_application_id,
+            obj_in=obj_in,
+            db_mongo=db_mongo,
         )
         return JSONResponse(
             status_code=200,
-            content={'message': 'User assigned successfully'},
+            content={'message': 'Information completed'},
         )
 
     def request_cdp():
-        pass
+        return JSONResponse(
+            status_code=200,
+            content={'message': 'CDP requested'},
+        )
 
     def approve_cdp():
-        pass
+        return JSONResponse(
+            status_code=200,
+            content={'message': 'CDP approved'},
+        )
 
     def update_documents():
         pass
@@ -106,7 +115,20 @@ async def flux(
         )
 
     elif _current_status == PurchaseStatus.SENT_TO_ACADEMIC_UNIT.value:
-        res = assign_responsible(user_id=user_to_assign)
+        res = send_to_user(
+            user_application_id=user_application_id,
+            user_id=user_to_assign,
+            db=db_postgres,
+        )
+
+    elif _current_status == PurchaseStatus.ASSISTANT_ASSIGNED.value:
+        res = await complete_information()
+
+    elif _current_status == PurchaseStatus.COMPLETED_INFORMATION.value:
+        res = request_cdp()
+
+    elif _current_status == PurchaseStatus.CDP_REQUESTED.value:
+        res = approve_cdp()
 
     await purchase_svc.add_status(
         db_mongo=db_mongo,
