@@ -16,9 +16,6 @@ from app.infraestructure.db.crud.mongo_base import CRUDBase
 from app.infraestructure.db.models.application.user_application import (
     UserApplication,
 )
-from app.protocols.db.models.application.application import (
-    ApplicationStatusType,
-)
 from app.schemas.application.user_application import UserApplicationCreate
 from app.schemas.application.user_application import UserApplicationStatus
 from app.schemas.users.user import User
@@ -80,21 +77,10 @@ class ApplicationTypeBaseCrud(
                 if not db_obj:
                     raise ORMError('User application not found')
 
-                status = ApplicationStatusType.UPDATED.value
-                obj_in.status.append(
-                    UserApplicationStatus(
-                        name=status,
-                        updated_by=current_user.id,
-                        date=datetime.now(),
-                    ),
-                )
-
-                updated_obj_in = {**obj_in.dict(), 'id': db_obj.id}
-
                 obj_updated = await super().update(
                     db_mongo,
                     db_obj=db_obj,
-                    obj_in=self.model(**updated_obj_in),
+                    obj_in=obj_in,
                 )
 
                 db_postgres.commit()
@@ -122,7 +108,11 @@ class ApplicationTypeBaseCrud(
                 {'$push': {'status': new_status.model_dump()}},
             )
             if res.modified_count == 1:
-                updated_document = await db_mongo.get_collection(self.model).find_one({'_id': user_application_id})
+                updated_document = await db_mongo.get_collection(
+                    self.model,
+                ).find_one(
+                    {'_id': user_application_id},
+                )
                 return updated_document
             else:
                 raise ORMError('Failed to update the document')
