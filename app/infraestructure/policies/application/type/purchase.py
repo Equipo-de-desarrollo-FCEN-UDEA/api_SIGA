@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import os
 from datetime import datetime
 from uuid import UUID
 
 from fastapi import HTTPException
+from fastapi import UploadFile
 from fastapi.responses import JSONResponse
 
+from app.core.config import settings
 from app.infraestructure.policies.application.user_application import current_status
 from app.infraestructure.policies.application.user_application import (
     send_to_academic_unit,
@@ -16,6 +19,7 @@ from app.schemas.application.type.purchase import PurchaseUpdate
 from app.schemas.application.user_application import UserApplicationStatus
 from app.schemas.users.user import User
 from app.services.application.type.purchase import purchase_svc
+from app.services.application.user_application import user_application_svc
 
 STATUS_LIST = list(PurchaseStatus)
 
@@ -57,6 +61,7 @@ async def flux(
         user_to_assign: UUID | None = None,
         academic_unit_id: UUID | None = None,
         obj_in: PurchaseUpdate | None = None,
+        pdfs: list[UploadFile] | None = None,
 ) -> JSONResponse:
     _current_status = await current_status(
         user_application_id=user_application_id,
@@ -68,6 +73,29 @@ async def flux(
         is_approved=is_approved,
         current_user=current_user,
     )
+
+    async def upload_files():
+        user_id = user_application_svc.get(
+            id=user_application_id,
+            db=db_postgres,
+        ).user_id
+        DIR = f'{settings.UPLOAD_DIR}/{str(user_id)}/{str(user_application_id)}'
+        os.makedirs(DIR, exist_ok=True)
+
+        file_names = ['cotizacion1.pdf', 'cotizacion2.pdf']
+        file_paths = []
+
+        for i, pdf in enumerate(pdfs):
+            if i >= len(file_names):
+                break
+            file_path = os.path.join(DIR, file_names[i])
+            with open(file_path, 'wb') as buffer:
+                buffer.write(await pdf.read())
+            file_paths.append(file_path)
+        return JSONResponse(
+            status_code=200,
+            content={'message': 'Files uploaded'},
+        )
 
     async def complete_information():
         await purchase_svc.update(
@@ -108,6 +136,9 @@ async def flux(
         pass
 
     if _current_status == PurchaseStatus.CREATED.value:
+        res = await upload_files()
+
+    elif _current_status == PurchaseStatus.UPLOADED_FILES.value:
         res = send_to_academic_unit(
             user_application_id=user_application_id,
             academic_unit_id=academic_unit_id,

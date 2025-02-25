@@ -5,7 +5,9 @@ from uuid import UUID
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import File
 from fastapi import Security
+from fastapi import UploadFile
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
@@ -36,6 +38,7 @@ async def create_purchase(
         ),
     ] = None,
 ) -> PurchaseCreate:
+
     purchase_create = await purchase_svc.create(
         obj_in=obj_in,
         db_mongo=db_mongo,
@@ -63,6 +66,29 @@ async def send_to_academic_unit(
         current_user=current_user,
         is_approved=True,
         academic_unit_id=UUID(academic_unit_id.value),
+    )
+
+    return res
+
+
+@router.post('/upload/{id}', response_model=None, status_code=200)
+async def upload_files(
+    *,
+    id: UUID,
+    pdf1: UploadFile = File(...),
+    pdf2: UploadFile = File(...),
+    db_mongo=Depends(get_mongo_db),
+    db_postgres: Session = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)],
+) -> JSONResponse:
+
+    res = await flux(
+        user_application_id=id,
+        db_mongo=db_mongo,
+        db_postgres=db_postgres,
+        current_user=current_user,
+        is_approved=True,
+        pdfs=[pdf1, pdf2],
     )
 
     return res

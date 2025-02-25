@@ -54,6 +54,7 @@ class Purchase(MongoModel):
 
 class PurchaseStatus(Enum):
     CREATED = 'CREADA'
+    UPLOADED_FILES = 'Archivos Cargados'
     SENT_TO_ACADEMIC_UNIT = 'Enviado a Unidad Académica'
     ASSISTANT_ASSIGNED = 'Auxiliar Asignado'
     COMPLETED_INFORMATION = 'Información Completada'
