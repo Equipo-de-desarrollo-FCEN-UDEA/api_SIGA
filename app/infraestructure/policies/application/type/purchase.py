@@ -81,9 +81,14 @@ async def flux(
         ).user_id
         DIR = f'{settings.UPLOAD_DIR}/{str(user_id)}/{str(user_application_id)}'
         os.makedirs(DIR, exist_ok=True)
+
+        file_names = ['cotizacion1.pdf', 'cotizacion2.pdf']
         file_paths = []
-        for pdf in pdfs:
-            file_path = os.path.join(DIR, pdf.filename)
+
+        for i, pdf in enumerate(pdfs):
+            if i >= len(file_names):
+                break
+            file_path = os.path.join(DIR, file_names[i])
             with open(file_path, 'wb') as buffer:
                 buffer.write(await pdf.read())
             file_paths.append(file_path)
