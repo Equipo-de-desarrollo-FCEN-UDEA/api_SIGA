@@ -61,7 +61,7 @@ async def flux(
         user_to_assign: UUID | None = None,
         academic_unit_id: UUID | None = None,
         obj_in: PurchaseUpdate | None = None,
-        pdfs: list[UploadFile] | None = None,
+        files: list[UploadFile] | None = None,
 ) -> JSONResponse:
     _current_status = await current_status(
         user_application_id=user_application_id,
@@ -81,10 +81,8 @@ async def flux(
         ).user_id
         DIR = f'{str(user_id)}/{str(user_application_id)}/'
 
-        file_names = ['pre-cotizacion1.pdf', 'pre-cotizacion2.pdf']
-
-        for i, pdf in enumerate(pdfs):
-            file_path = DIR + file_names[i]
+        for i, pdf in enumerate(files):
+            file_path = f'{DIR}precotizacion-{i}.pdf'
             res = s3.push_data_to_s3_bucket(
                 bucket_name=settings.aws_bucket_name,
                 data=pdf.file,
