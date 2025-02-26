@@ -25,6 +25,20 @@ class PriorConsultation(BaseModel):
     contract: str | None = None
 
 
+class Provider(BaseModel):
+    id: str
+    name: str
+    phone: str
+    email: str
+
+
+class Material(BaseModel):
+    id: UUID
+    name: str
+    quantity: int
+    unit_price: float
+
+
 class PurchaseBase(BaseModel):
     type: PurchaseType
     scope: PurchaseScope
@@ -48,6 +62,8 @@ class PurchaseUpdate(BaseModel):
     marco_agreement: bool | None = None
     status: list[UserApplicationStatus] | None = None
     prior_consultation: list[PriorConsultation] | None = None
+    selected_provider: Provider | None = None
+    materials: list[Material] | None = None
 
 
 class PurchaseComplete(BaseModel):
