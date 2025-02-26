@@ -26,20 +26,16 @@ class PriorConsultation(BaseModel):
 
 
 class PurchaseBase(BaseModel):
-    id: UUID | None = None
     type: PurchaseType
     scope: PurchaseScope
     need: str
     description: str
-    responsible_condition: str
     estimated_budget: float
-    marco_agreement: bool | None = None
     status: list[UserApplicationStatus] | None = None
-    prior_consultation: PriorConsultation | None = None
 
 
 class PurchaseCreate(PurchaseBase):
-    ...
+    id: UUID | None = None
 
 
 class PurchaseUpdate(BaseModel):
@@ -52,3 +48,9 @@ class PurchaseUpdate(BaseModel):
     marco_agreement: bool | None = None
     status: list[UserApplicationStatus] | None = None
     prior_consultation: list[PriorConsultation] | None = None
+
+
+class PurchaseComplete(BaseModel):
+    responsible_condition: str
+    marco_agreement: bool
+    prior_consultation: PriorConsultation

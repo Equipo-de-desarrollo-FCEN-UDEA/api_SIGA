@@ -4,6 +4,7 @@ from datetime import datetime
 from uuid import UUID
 
 from fastapi import HTTPException
+from fastapi.responses import JSONResponse
 
 from app.infraestructure.db.models.voting.voting_info import VotingInfo
 from app.schemas.application.user_application_academic_unit import (
@@ -37,24 +38,42 @@ def send_to_academic_unit(
         academic_unit_id: UUID,
         user_application_id: UUID,
         db,
-) -> None:
+) -> JSONResponse:
     user_application_to_send = UserApplicationAcademicUnitCreate(
         user_application_id=user_application_id,
         academic_unit_id=academic_unit_id,
     )
 
-    user_application_academic_unit_svc.create(
+    user_application_academic_unit = user_application_academic_unit_svc.create(
         obj_in=user_application_to_send, db=db,
+    )
+
+    return JSONResponse(
+        status_code=200,
+        content={
+            'message': f'User Application sent to Academic Unit '
+            f'{user_application_academic_unit.academic_unit.name}',
+        },
     )
 
 
 def send_to_user(
         *,
-        user_application_user: UserApplicationUserCreate,
+        user_application_id: UUID,
+        user_id: UUID,
         db,
-) -> None:
+) -> JSONResponse:
+    user_application_user = UserApplicationUserCreate(
+        user_application_id=user_application_id,
+        user_id=user_id,
+    )
     user_application_user_svc.create(
         obj_in=user_application_user, db=db,
+    )
+
+    return JSONResponse(
+        status_code=200,
+        content={'message': 'User assigned successfully'},
     )
 
 
