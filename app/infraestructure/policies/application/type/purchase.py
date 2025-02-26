@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import os
 from datetime import datetime
+from tempfile import NamedTemporaryFile
 from uuid import UUID
 
+from docx import Document
 from fastapi import HTTPException
 from fastapi import UploadFile
 from fastapi.responses import JSONResponse
@@ -162,3 +165,65 @@ async def flux(
         user_application_id=user_application_id,
     )
     return res
+
+
+def generate_format(purchase_dict: dict, path: str):
+
+    purchase_data = {
+        'date': 'fecha',
+        'academic_unit': 'unidad académica',
+        'cost_center': 'centro de costo',
+        'need': 'necesidad',
+        'description': 'descripción',
+        'estimated_budget': 'presupuesto estimado',
+        'marco_yes': '☒',
+        'marco_no': '☒',
+        'annual_plan': '☒',
+        'KKK': 'KKK',
+        'code_annual_plan': '☒',
+        'bank_consultation': '☒',
+        'code_bank_consultation': '☒',
+        'contract': 'contrato',
+        'signature': 'firma',
+        'signature_delegate': 'firma delegada',
+    }
+
+    try:
+        document = Document(path)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f'Error al cargar la plantilla: {str(e)}',
+        )
+
+    for table in document.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                print(repr(cell.text))
+
+    for paragraph in document.paragraphs:
+        for key, value in purchase_data.items():
+            if f'{{{{{key}}}}}' in paragraph.text:
+                paragraph.text = paragraph.text.replace(
+                    f'{{{{{key}}}}}', value,
+                )
+
+    for table in document.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                for key, value in purchase_data.items():
+                    if f'{{{{{key}}}}}' in cell.text:
+                        cell.text = cell.text.replace(f'{{{{{key}}}}}', value)
+
+    # Crear archivo temporal para guardar el documento generado
+    tmp_file = NamedTemporaryFile(delete=False, suffix='.docx')
+    document.save(tmp_file.name)
+    tmp_file.close()
+    return tmp_file.name
+
+
+def delete_file(file_path: str):
+    """Función para eliminar el archivo después de la descarga."""
+    try:
+        os.remove(file_path)
+    except FileNotFoundError:
+        print(f'Archivo no encontrado: {file_path}')

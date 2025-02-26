@@ -128,13 +128,11 @@ async def flux(
     )
 
 
-def generate_mobility_format(mobility_dict: dict, path: str):
+def generate_format(mobility_dict: dict, path: str):
 
     mobility_data = {
         'date': (
             mobility_dict['status'][0].date.strftime('%Y-%m-%d')
-            if mobility_dict['status']
-            else None
         ),
         'name': f"{mobility_dict['name']} {mobility_dict['last_name']}",
         'phone': mobility_dict['phone'],
@@ -146,14 +144,10 @@ def generate_mobility_format(mobility_dict: dict, path: str):
         'nationality': 'HAY QUE PEDIR LA NACIONALIDAD',
         'rol': (
             mobility_dict['student_rol']['name']
-            if mobility_dict['student_rol']
-            else None
         ),
         'school': mobility_dict['school'],
         'current_academic_program': (
             mobility_dict['current_program']['name']
-            if mobility_dict['current_program']
-            else None
         ),
         'semester': 'HAY QUE PEDIR EL SEMESTRE',
         'name_coordinator': 'HAY QUE INVENTARLO',

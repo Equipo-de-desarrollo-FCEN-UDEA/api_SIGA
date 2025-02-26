@@ -4,10 +4,12 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter
+from fastapi import BackgroundTasks
 from fastapi import Depends
-from fastapi import File
+from fastapi import HTTPException
 from fastapi import Security
 from fastapi import UploadFile
+from fastapi.responses import FileResponse
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
@@ -15,13 +17,15 @@ from app.api.middleware.bearer import get_current_active_user
 from app.api.middleware.mongo_db import get_mongo_db
 from app.api.middleware.postgres_db import get_db
 from app.core.config import settings
+from app.infraestructure.formats import formats_dir
+from app.infraestructure.policies.application.type.purchase import delete_file
 from app.infraestructure.policies.application.type.purchase import flux
+from app.infraestructure.policies.application.type.purchase import generate_format
 from app.protocols.db.models.application.type.purchase import ApprovedAcademicsUnits
 from app.schemas.application.type.purchase import PurchaseComplete
 from app.schemas.application.type.purchase import PurchaseCreate
 from app.schemas.users.user import User
 from app.services.application.type.purchase import purchase_svc
-
 
 router = APIRouter()
 
@@ -156,6 +160,52 @@ async def next_status(
         db_postgres=db_postgres,
         current_user=current_user,
         is_approved=is_approved,
+    )
+
+    return res
+
+
+@router.post('/generate-purchase-form/{id}')
+async def download_purchase_form(
+    id: UUID,
+    background_tasks: BackgroundTasks,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    db_mongo=Depends(get_mongo_db),
+    db_postgres: Session = Depends(get_db),
+):
+    # Obtener los datos de la movilidad
+    purchase = await purchase_svc.get(id=id, db=db_mongo)
+
+    purchase_dict = {
+        **vars(purchase),
+        # **vars(user_application.user),
+        # 'student_rol': rol,
+        # 'current_program': current_program,
+        # 'school': school,
+    }
+    # print(purchase_dict)
+
+    try:
+        # Generar archivo temporal
+        file_path = generate_format(
+            purchase_dict, formats_dir +
+            '/purchase/purchase_format.docx',
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f'Error generando el archivo: {str(e)}',
+        )
+
+    background_tasks.add_task(delete_file, file_path)
+
+    # Descargar el archivo y eliminarlo al finalizar
+    res = FileResponse(
+        file_path,
+        filename='solicitud_compra.docx',
+        media_type=(
+            'application/vnd.openxmlformats-officedocument'
+            '-wordprocessingml.document'
+        ),
     )
 
     return res
