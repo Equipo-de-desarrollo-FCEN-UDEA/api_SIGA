@@ -77,6 +77,13 @@ class Settings(BaseSettings):
     # Applications ID
     PURCHASE_ID: str
 
+    # AWS
+    aws_user: str
+    aws_access_key_id: str
+    aws_access_secret_key: str
+    aws_region_name: str
+    aws_bucket_name: str
+
 
 @lru_cache
 def get_settings() -> BaseSettings:
