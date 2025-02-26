@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from datetime import datetime
 from uuid import UUID
 
@@ -14,6 +13,7 @@ from app.infraestructure.policies.application.user_application import (
     send_to_academic_unit,
 )
 from app.infraestructure.policies.application.user_application import send_to_user
+from app.infraestructure.services.aws.s3 import s3
 from app.protocols.db.models.application.type.purchase import PurchaseStatus
 from app.schemas.application.type.purchase import PurchaseUpdate
 from app.schemas.application.user_application import UserApplicationStatus
@@ -79,23 +79,19 @@ async def flux(
             id=user_application_id,
             db=db_postgres,
         ).user_id
-        DIR = f'{settings.UPLOAD_DIR}/{str(user_id)}/{str(user_application_id)}'
-        os.makedirs(DIR, exist_ok=True)
+        DIR = f'{str(user_id)}/{str(user_application_id)}/'
 
-        file_names = ['cotizacion1.pdf', 'cotizacion2.pdf']
-        file_paths = []
+        file_names = ['pre-cotizacion1.pdf', 'pre-cotizacion2.pdf']
 
         for i, pdf in enumerate(pdfs):
-            if i >= len(file_names):
-                break
-            file_path = os.path.join(DIR, file_names[i])
-            with open(file_path, 'wb') as buffer:
-                buffer.write(await pdf.read())
-            file_paths.append(file_path)
-        return JSONResponse(
-            status_code=200,
-            content={'message': 'Files uploaded'},
-        )
+            file_path = DIR + file_names[i]
+            res = s3.push_data_to_s3_bucket(
+                bucket_name=settings.aws_bucket_name,
+                data=pdf.file,
+                file_name=file_path,
+                content_type='application/pdf',
+            )
+        return res
 
     async def complete_information():
         await purchase_svc.update(
