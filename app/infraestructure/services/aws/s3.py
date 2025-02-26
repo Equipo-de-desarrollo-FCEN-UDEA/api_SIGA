@@ -18,11 +18,6 @@ class AmazonS3:
         )
 
     def push_data_to_s3_bucket(self, bucket_name, data, file_name, content_type) -> bool:
-        print(settings.aws_user)
-        print(settings.aws_access_key_id)
-        print(settings.aws_access_secret_key)
-        print(settings.aws_region_name)
-        print(settings.aws_bucket_name)
         try:
             self.s3.Object(bucket_name, file_name).upload_fileobj(
                 data,
