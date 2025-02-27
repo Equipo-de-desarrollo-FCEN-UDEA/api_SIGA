@@ -22,6 +22,8 @@ from app.infraestructure.policies.application.type.purchase import delete_file
 from app.infraestructure.policies.application.type.purchase import flux
 from app.infraestructure.policies.application.type.purchase import generate_format
 from app.protocols.db.models.application.type.purchase import ApprovedAcademicsUnits
+from app.schemas.application.type.purchase import Material
+from app.schemas.application.type.purchase import Provider
 from app.schemas.application.type.purchase import PurchaseComplete
 from app.schemas.application.type.purchase import PurchaseCreate
 from app.schemas.users.user import User
@@ -206,6 +208,29 @@ async def download_purchase_form(
             'application/vnd.openxmlformats-officedocument'
             '-wordprocessingml.document'
         ),
+    )
+
+    return res
+
+
+@router.patch('/{id}', response_model=None, status_code=200)
+async def select_provider(
+    *,
+    id: UUID,
+    provider: Provider,
+    materials: list[Material],
+    db_mongo=Depends(get_mongo_db),
+    db_postgres: Session = Depends(get_db),
+    current_user: Annotated[User, Depends(get_current_active_user)],
+) -> JSONResponse:
+    res = await flux(
+        user_application_id=id,
+        db_mongo=db_mongo,
+        db_postgres=db_postgres,
+        current_user=current_user,
+        is_approved=True,
+        provider=provider,
+        materials=materials,
     )
 
     return res

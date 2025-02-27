@@ -18,6 +18,8 @@ from app.infraestructure.policies.application.user_application import (
 from app.infraestructure.policies.application.user_application import send_to_user
 from app.infraestructure.services.aws.s3 import s3
 from app.protocols.db.models.application.type.purchase import PurchaseStatus
+from app.schemas.application.type.purchase import Material
+from app.schemas.application.type.purchase import Provider
 from app.schemas.application.type.purchase import PurchaseUpdate
 from app.schemas.application.user_application import UserApplicationStatus
 from app.schemas.users.user import User
@@ -65,6 +67,7 @@ async def flux(
         academic_unit_id: UUID | None = None,
         obj_in: PurchaseUpdate | None = None,
         files: list[UploadFile] | None = None,
+        **kwargs,
 ) -> JSONResponse:
     _current_status = await current_status(
         user_application_id=user_application_id,
@@ -118,10 +121,50 @@ async def flux(
         )
 
     def update_documents():
-        pass
+        user_id = user_application_svc.get(
+            id=user_application_id,
+            db=db_postgres,
+        ).user_id
+        DIR = f'{str(user_id)}/{str(user_application_id)}/'
 
-    def select_provider():
-        pass
+        for i, pdf in enumerate(files[:-1]):
+            file_path = f'{DIR}cotizacion-{i}.pdf'
+            res = s3.push_data_to_s3_bucket(
+                bucket_name=settings.aws_bucket_name,
+                data=pdf.file,
+                file_name=file_path,
+                content_type='application/pdf',
+            )
+        res = s3.push_data_to_s3_bucket(
+            bucket_name=settings.aws_bucket_name,
+            data=files[-1].file,
+            file_name=f'{DIR}cuadro-comparativo.pdf',
+            content_type='application/pdf',
+        )
+        return res
+
+    async def select_provider():
+        provider: Material = kwargs.get('provider')
+        materials: Provider = kwargs.get('materials')
+
+        if not provider or not materials:
+            raise HTTPException(
+                status_code=400, detail='Provider and materials are required',
+            )
+
+        purchase_update = PurchaseUpdate(
+            selected_provider=provider,
+            materials=materials,
+        )
+        await purchase_svc.update(
+            id=user_application_id,
+            obj_in=purchase_update,
+            db_mongo=db_mongo,
+        )
+        return JSONResponse(
+            status_code=200,
+            content={'message': 'Provider selected'},
+        )
 
     def place_order():
         pass
@@ -157,6 +200,15 @@ async def flux(
 
     elif _current_status == PurchaseStatus.CDP_REQUESTED.value:
         res = approve_cdp()
+
+    elif _current_status == PurchaseStatus.CDP_APPROVED.value:
+        res = update_documents()
+
+    elif _current_status == PurchaseStatus.UPDATED_DOCUMENTS.value:
+        res = await select_provider()
+
+    if res is None:
+        raise HTTPException(status_code=400, detail='Invalid status')
 
     await purchase_svc.add_status(
         db_mongo=db_mongo,

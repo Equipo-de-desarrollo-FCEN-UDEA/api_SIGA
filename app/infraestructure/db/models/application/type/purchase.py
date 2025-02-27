@@ -9,6 +9,20 @@ from app.schemas.application.type.purchase import PriorConsultation
 from app.schemas.application.user_application import UserApplicationStatus
 
 
+class Provider(Model):
+    id: str = Field(primary_field=True)
+    name: str
+    phone: str
+    email: str
+
+
+class Material(Model):
+    id: UUID = Field(primary_field=True)
+    name: str
+    quantity: int
+    unit_price: float
+
+
 class Purchase(Model):
     id: UUID = Field(primary_field=True)
     type: str
@@ -20,3 +34,5 @@ class Purchase(Model):
     marco_agreement: bool | None = None
     status: list[UserApplicationStatus] = []
     prior_consultation: PriorConsultation | None = None
+    selected_provider: Provider | None = None
+    materials: list[Material] | None = None
