@@ -221,23 +221,78 @@ async def flux(
 
 def generate_format(purchase_dict: dict, path: str):
 
+    print(purchase_dict)
+
     purchase_data = {
-        'date': 'fecha',
-        'academic_unit': 'unidad académica',
-        'cost_center': 'centro de costo',
-        'need': 'necesidad',
-        'description': 'descripción',
-        'estimated_budget': 'presupuesto estimado',
-        'marco_yes': '☒',
-        'marco_no': '☒',
-        'annual_plan': '☒',
-        'KKK': 'KKK',
-        'code_annual_plan': '☒',
-        'bank_consultation': '☒',
-        'code_bank_consultation': '☒',
-        'contract': 'contrato',
-        'signature': 'firma',
-        'signature_delegate': 'firma delegada',
+        'date': f"{purchase_dict['status'][0].date.strftime('%Y-%m-%d')}",
+        'academic_unit': str(purchase_dict.get('academic_unit', '')),
+        'cost_center': '',
+        'need': str(purchase_dict.get('need', '')),
+        'description': str(purchase_dict.get('description', '')),
+        'estimated_budget': str(purchase_dict.get('estimated_budget', '')),
+        'marco_yes': '☒' if purchase_dict.get('marco_agreement') else '☐',
+        'marco_no': '☒' if purchase_dict.get('marco_agreement') is False else '☐',
+        'annual_plan': (
+            '☒' if (
+                hasattr(
+                    purchase_dict.get(
+                        'prior_consultation', None,
+                    ), 'annual_plan',
+                )
+                and purchase_dict[
+                    'prior_consultation'
+                ].annual_plan.is_true
+            ) else '☐'
+        ),
+        'code_annual_plan': (
+            str(purchase_dict['prior_consultation'].annual_plan.code)
+            if hasattr(
+                purchase_dict.get(
+                    'prior_consultation', None,
+                ), 'annual_plan',
+            )
+            else ''
+        ),
+        'bank_consultation': (
+            '☒' if (
+                hasattr(
+                    purchase_dict.get(
+                        'prior_consultation', None,
+                    ), 'bank_consultation',
+                )
+                and purchase_dict[
+                    'prior_consultation'
+                ].bank_consultation.is_true
+            ) else '☐'
+        ),
+        'code_bank_consultation': (
+            str(
+                purchase_dict[
+                    'prior_consultation'
+                ].bank_consultation.code,
+            )
+            if hasattr(
+                purchase_dict.get(
+                    'prior_consultation', None,
+                ), 'bank_consultation',
+            )
+            else ''
+        ),
+        'contract': (
+            str(
+                purchase_dict[
+                    'prior_consultation'
+                ].contract,
+            )
+            if hasattr(
+                purchase_dict.get(
+                    'prior_consultation', None,
+                ), 'contract',
+            )
+            else ''
+        ),
+        'signature': '',
+        'signature_delegate': '',
     }
 
     try:
@@ -246,11 +301,6 @@ def generate_format(purchase_dict: dict, path: str):
         raise HTTPException(
             status_code=500, detail=f'Error al cargar la plantilla: {str(e)}',
         )
-
-    for table in document.tables:
-        for row in table.rows:
-            for cell in row.cells:
-                print(repr(cell.text))
 
     for paragraph in document.paragraphs:
         for key, value in purchase_data.items():
