@@ -15,6 +15,9 @@ from app.api.middleware.mongo_db import get_mongo_db
 from app.api.middleware.postgres_db import get_db
 from app.core.config import settings
 from app.infraestructure.policies.application.type.purchase import flux
+from app.infraestructure.policies.application.user_application import (
+    send_to_academic_unit,
+)
 from app.protocols.db.models.application.type.purchase import ApprovedAcademicsUnits
 from app.schemas.application.type.purchase import Material
 from app.schemas.application.type.purchase import Provider
@@ -33,6 +36,7 @@ async def create_purchase(
     obj_in: PurchaseCreate,
     db_mongo=Depends(get_mongo_db),
     db_postgres: Session = Depends(get_db),
+    academic_unit_id: ApprovedAcademicsUnits,
     current_user: Annotated[
         User, Security(
             get_current_active_user,
@@ -46,6 +50,12 @@ async def create_purchase(
         db_postgres=db_postgres,
         current_user=current_user,
         application_id=settings.PURCHASE_ID,
+    )
+
+    send_to_academic_unit(
+        user_application_id=purchase_create.id,
+        academic_unit_id=UUID(academic_unit_id.value),
+        db=db_postgres,
     )
 
     return purchase_create
@@ -68,27 +78,6 @@ async def upload_files(
         current_user=current_user,
         is_approved=True,
         files=files,
-    )
-
-    return res
-
-
-@router.patch('/send/{id}', response_model=None, status_code=200)
-async def send_to_academic_unit(
-    *,
-    id: UUID,
-    academic_unit_id: ApprovedAcademicsUnits,
-    db_mongo=Depends(get_mongo_db),
-    db_postgres: Session = Depends(get_db),
-    current_user: Annotated[User, Depends(get_current_active_user)],
-) -> JSONResponse:
-    res = await flux(
-        user_application_id=id,
-        db_mongo=db_mongo,
-        db_postgres=db_postgres,
-        current_user=current_user,
-        is_approved=True,
-        academic_unit_id=UUID(academic_unit_id.value),
     )
 
     return res
