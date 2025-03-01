@@ -12,9 +12,6 @@ from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.infraestructure.policies.application.user_application import current_status
-from app.infraestructure.policies.application.user_application import (
-    send_to_academic_unit,
-)
 from app.infraestructure.policies.application.user_application import send_to_user
 from app.infraestructure.services.aws.s3 import s3
 from app.protocols.db.models.application.type.purchase import PurchaseStatus
@@ -179,13 +176,6 @@ async def flux(
         res = await upload_files()
 
     elif _current_status == PurchaseStatus.UPLOADED_FILES.value:
-        res = send_to_academic_unit(
-            user_application_id=user_application_id,
-            academic_unit_id=academic_unit_id,
-            db=db_postgres,
-        )
-
-    elif _current_status == PurchaseStatus.SENT_TO_ACADEMIC_UNIT.value:
         res = send_to_user(
             user_application_id=user_application_id,
             user_id=user_to_assign,
