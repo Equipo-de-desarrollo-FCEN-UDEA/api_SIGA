@@ -24,6 +24,7 @@ from app.services.application.type.purchase import purchase_svc
 from app.services.application.user_application import user_application_svc
 
 STATUS_LIST = list(PurchaseStatus)
+APPLICATION_PDF = 'application/pdf'
 
 
 def next_status(
@@ -62,7 +63,6 @@ async def flux(
         current_user: User,
         is_approved: bool | None = None,
         user_to_assign: UUID | None = None,
-        academic_unit_id: UUID | None = None,
         obj_in: PurchaseUpdate | None = None,
         files: list[UploadFile] | None = None,
         **kwargs,
@@ -93,7 +93,7 @@ async def flux(
                 bucket_name=settings.aws_bucket_name,
                 data=pdf.file,
                 file_name=file_path,
-                content_type='application/pdf',
+                content_type=APPLICATION_PDF,
             )
         return res
 
@@ -133,13 +133,13 @@ async def flux(
                 bucket_name=settings.aws_bucket_name,
                 data=pdf.file,
                 file_name=file_path,
-                content_type='application/pdf',
+                content_type=APPLICATION_PDF,
             )
         res = s3.push_data_to_s3_bucket(
             bucket_name=settings.aws_bucket_name,
             data=files[-1].file,
             file_name=f'{DIR}cuadro-comparativo.pdf',
-            content_type='application/pdf',
+            content_type=APPLICATION_PDF,
         )
         return res
 

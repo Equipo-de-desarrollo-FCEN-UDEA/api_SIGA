@@ -17,7 +17,12 @@ class AmazonS3:
             region_name=region_name,
         )
 
-    def push_data_to_s3_bucket(self, bucket_name, data, file_name, content_type) -> bool:
+    def push_data_to_s3_bucket(
+            self,
+            bucket_name,
+            data, file_name,
+            content_type,
+    ) -> JSONResponse:
         try:
             self.s3.Object(bucket_name, file_name).upload_fileobj(
                 data,
@@ -26,17 +31,27 @@ class AmazonS3:
                 },
             )
         except ClientError as e:
-            raise e
+            error_code = e.response['Error']['Code']
+            error_message = e.response['Error']['Message']
+            return JSONResponse(
+                status_code=400,
+                content={'error': f'S3 error: {error_code} - {error_message}'},
+            )
         return JSONResponse(
             status_code=200,
             content={'message': 'Files uploaded'},
         )
 
-    def delete_contents_s3_bucket(self, bucket_name, file_name) -> bool:
+    def delete_contents_s3_bucket(self, bucket_name, file_name) -> JSONResponse:
         try:
             self.s3.Object(bucket_name, file_name).delete()
         except ClientError as e:
-            raise e
+            error_code = e.response['Error']['Code']
+            error_message = e.response['Error']['Message']
+            return JSONResponse(
+                status_code=400,
+                content={'error': f'S3 error: {error_code} - {error_message}'},
+            )
         return JSONResponse(
             status_code=200,
             content={'message': 'Files deleted'},
