@@ -7,4 +7,4 @@ from app.schemas.application.type.purchase import PurchaseUpdate
 
 
 class CRUDPurchaseProtocol(CRUDProtocol[Purchase, PurchaseCreate, PurchaseUpdate]):
-    ...
+    pass

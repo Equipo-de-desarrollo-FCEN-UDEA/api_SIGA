@@ -51,6 +51,7 @@ def next_status(
                 )
                 return status
             raise HTTPException(status_code=400, detail='Invalid status')
+    raise HTTPException(status_code=400, detail='status not found')
 
 
 async def flux(
@@ -76,6 +77,8 @@ async def flux(
         is_approved=is_approved,
         current_user=current_user,
     )
+
+    res = None
 
     async def upload_files():
         user_id = user_application_svc.get(
@@ -126,7 +129,7 @@ async def flux(
 
         for i, pdf in enumerate(files[:-1]):
             file_path = f'{DIR}cotizacion-{i}.pdf'
-            res = s3.push_data_to_s3_bucket(
+            s3.push_data_to_s3_bucket(
                 bucket_name=settings.aws_bucket_name,
                 data=pdf.file,
                 file_name=file_path,
