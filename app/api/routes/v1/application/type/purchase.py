@@ -24,6 +24,9 @@ from app.infraestructure.policies.application.user_application import (
     send_to_academic_unit,
 )
 from app.infraestructure.policies.application.type.purchase import generate_format
+from app.infraestructure.policies.application.user_application import (
+    send_to_academic_unit,
+)
 from app.protocols.db.models.application.type.purchase import ApprovedAcademicsUnits
 from app.schemas.application.type.purchase import Material
 from app.schemas.application.type.purchase import Provider
@@ -34,6 +37,20 @@ from app.services.application.type.purchase import purchase_svc
 from app.services.application.user_application import user_application_svc
 
 router = APIRouter()
+
+
+@router.get('/{id}', response_model=PurchaseCreate, status_code=200)
+async def get_purchase(
+    *,
+    id: UUID,
+    db_mongo=Depends(get_mongo_db),
+    current_user: Annotated[
+        User, Security(
+            get_current_active_user,
+        ),
+    ] = None,
+) -> PurchaseCreate:
+    return await purchase_svc.get(id=id, db=db_mongo)
 
 
 @router.post('/create', response_model=PurchaseCreate, status_code=201)
