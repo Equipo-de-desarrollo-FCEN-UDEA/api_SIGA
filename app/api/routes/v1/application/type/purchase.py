@@ -203,18 +203,22 @@ async def download_purchase_form(
     purchase = await purchase_svc.get(id=id, db=db_mongo)
     user_application = user_application_svc.get(id=id, db=db_postgres)
 
+    # Obtener el nombre de la unidad academica
+    if not user_application.user_application_academic_units:
+        raise HTTPException(
+            status_code=500,
+            detail="La solicitud 'aún no ha sido aprobada por la unidad académica",
+        )
+
     academic_unit_name = user_application.user_application_academic_units[
         0
     ].academic_unit.name
 
+    # Diccionario con los datos necesarios del formato
     purchase_dict = {
         **vars(purchase),
         'academic_unit': academic_unit_name,
-        # 'student_rol': rol,
-        # 'current_program': current_program,
-        # 'school': school,
     }
-    print(type(purchase_dict))
 
     try:
         # Generar archivo temporal
