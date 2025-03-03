@@ -20,9 +20,6 @@ from app.core.config import settings
 from app.infraestructure.formats import formats_dir
 from app.infraestructure.policies.application.type.purchase import delete_file
 from app.infraestructure.policies.application.type.purchase import flux
-from app.infraestructure.policies.application.user_application import (
-    send_to_academic_unit,
-)
 from app.infraestructure.policies.application.type.purchase import generate_format
 from app.infraestructure.policies.application.user_application import (
     send_to_academic_unit,
@@ -209,18 +206,22 @@ async def download_purchase_form(
     purchase = await purchase_svc.get(id=id, db=db_mongo)
     user_application = user_application_svc.get(id=id, db=db_postgres)
 
+    # Obtener el nombre de la unidad academica
+    if not user_application.user_application_academic_units:
+        raise HTTPException(
+            status_code=500,
+            detail="La solicitud 'aún no ha sido aprobada por la unidad académica",
+        )
+
     academic_unit_name = user_application.user_application_academic_units[
         0
     ].academic_unit.name
 
+    # Diccionario con los datos necesarios del formato
     purchase_dict = {
         **vars(purchase),
         'academic_unit': academic_unit_name,
-        # 'student_rol': rol,
-        # 'current_program': current_program,
-        # 'school': school,
     }
-    print(type(purchase_dict))
 
     try:
         # Generar archivo temporal
