@@ -213,9 +213,7 @@ async def flux(
 
 
 def generate_format(purchase_dict: dict, path: str):
-
-    print(purchase_dict)
-
+  
     purchase_data = {
         'date': f"{purchase_dict['status'][0].date.strftime('%Y-%m-%d')}",
         'academic_unit': str(purchase_dict.get('academic_unit', '')),
