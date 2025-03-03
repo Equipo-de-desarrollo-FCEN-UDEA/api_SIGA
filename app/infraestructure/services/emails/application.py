@@ -18,32 +18,33 @@ env = Environment(
     autoescape=True,
 )
 
-
 _my_email = settings.smtp_prod_user_email
 
 
 @celery_app.task
-def confirm_email(to_name: str, token: str, email):
-    template = env.get_template('email.validar.email.html.j2')
-    link = f'{settings.APP_DOMAIN}/auth/activate-account/{token}'
+def create_application_email(
+    to_name: str,
+    to_lastname: str,
+    tipo_solicitud: str,
+    email: str,
+):
+    template = env.get_template('email.creacion.solicitud.html.j2')
+
     context = {
-        'user': {'nombre': to_name.title()},
-        'enlace': link,
+        'user': {'nombre': to_name, 'apellido': to_lastname},
+        'req': {'tipo_solicitud': tipo_solicitud},
+
     }
 
     render = template.render(context)
     msg = EmailMessage()
-    msg['Subject'] = 'Confirmación correo'
+    msg['Subject'] = 'Creación de solicitud'
     msg['From'] = _my_email
     msg['To'] = email
     msg.set_content(
         render,
         subtype='html',
     )
-
-    # with smtplib.SMTP_SSL('smtp.gmail.com', port=465) as smtp:
-    #     smtp.login(_my_email, _my_pwd)
-    #     smtp.send_message(msg)
 
     with smtplib.SMTP(
         settings.smtp_local_host_email,
@@ -57,27 +58,36 @@ def confirm_email(to_name: str, token: str, email):
 
 
 @celery_app.task
-def recovery_password_email(to_name: str, token: str, email: str):
-    template = env.get_template('email.recuperar.contraseña.html.j2')
-    link = f'{settings.APP_DOMAIN}/auth/reiniciar-contrasena/{token}'
+def update_status_email(
+    tipo_solicitud: str,
+    observacion: str,
+    nombre_estado: str,
+    uuid: str,
+    email: list[str] | str,
+):
+    template = env.get_template('email.cambio.estado.html.j2')
+    enlace = f'{settings.APP_DOMAIN}/solicitudes/{tipo_solicitud}/ver/{uuid}'
     context = {
-        'user': {'nombre': to_name.title()},
-        'enlace': link,
+        'req': {
+            'tipo_solicitud': tipo_solicitud,
+            'observacion': observacion,
+            'nombre_estado': nombre_estado,
+        },
+        'estado': {'nombre_estado': nombre_estado},
+        'Enlace': enlace,
     }
-
     render = template.render(context)
     msg = EmailMessage()
-    msg['Subject'] = 'Recuperación de contraseña'
+    msg['Subject'] = 'Actualización de estado'
     msg['From'] = _my_email
-    msg['To'] = email
+    msg['To'] = ', '.join(email) if isinstance(email, list) else email
     msg.set_content(
         render,
         subtype='html',
     )
-
     with smtplib.SMTP(
-        settings.smtp_domain_email,
-        port=settings.smtp_port_email,
+        settings.smtp_local_host_email,
+        port=settings.smtp_local_port_email,
     ) as smtp:
         smtp.send_message(
             msg=msg,

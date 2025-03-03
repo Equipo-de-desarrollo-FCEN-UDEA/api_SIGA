@@ -20,7 +20,7 @@ from app.infraestructure.formats import formats_dir
 from app.infraestructure.policies.application.type.mobility import delete_file
 from app.infraestructure.policies.application.type.mobility import flux
 from app.infraestructure.policies.application.type.mobility import (
-    generate_mobility_format,
+    generate_format,
 )
 from app.schemas.application.type.mobility import Mobility
 from app.schemas.application.type.mobility import MobilityCreate
@@ -93,7 +93,6 @@ async def update_status(
 async def download_mobility_form(
     id: UUID,
     background_tasks: BackgroundTasks,
-    current_user: Annotated[User, Depends(get_current_active_user)],
     db_mongo=Depends(get_mongo_db),
     db_postgres: Session = Depends(get_db),
 ):
@@ -129,13 +128,11 @@ async def download_mobility_form(
         'current_program': current_program,
         'school': school,
     }
-    print(mobility_dict)
 
     for i in range(1, 5):
 
         subject = mobility_dict['subjects'][
-            i -
-            1
+            i - 1
         ] if i <= len(mobility_dict['subjects']) else {}
 
         # Asignar las claves correspondientes con un valor vacío si no existe
@@ -148,9 +145,9 @@ async def download_mobility_form(
 
     try:
         # Generar archivo temporal
-        file_path = generate_mobility_format(
+        file_path = generate_format(
             mobility_dict, formats_dir +
-            '/mobility/plantilla_mobility.docx',
+            '/mobility/mobility_format.docx',
         )
     except Exception as e:
         raise HTTPException(
@@ -160,13 +157,13 @@ async def download_mobility_form(
     background_tasks.add_task(delete_file, file_path)
 
     # Descargar el archivo y eliminarlo al finalizar
-    response = FileResponse(
+    res = FileResponse(
         file_path,
-        filename='solicitud_mobility.docx',
+        filename='solicitud_de_movilidad.docx',
         media_type=(
             'application/vnd.openxmlformats-officedocument'
             '-wordprocessingml.document'
         ),
     )
 
-    return response
+    return res

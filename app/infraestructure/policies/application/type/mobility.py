@@ -122,57 +122,33 @@ async def flux(
 
     await mobility_svc.add_status(
         db_mongo=db_mongo,
+        db_postgres=db_postgres,
         new_status=status,
         user_application_id=user_application_id,
     )
 
 
-def generate_mobility_format(mobility_dict: dict, path: str):
+def generate_format(mobility_dict: dict, path: str):
 
     mobility_data = {
-        'date': (
-            mobility_dict['status'][0].date.strftime('%Y-%m-%d')
-            if mobility_dict['status']
-            else None
-        ),
+        'date': f"{mobility_dict['status'][0].date.strftime('%Y-%m-%d')}",
         'name': f"{mobility_dict['name']} {mobility_dict['last_name']}",
         'phone': mobility_dict['phone'],
         'email': mobility_dict['email'],
-        'identification_type': (
-            mobility_dict['identification_type'].value.replace('_', ' ')
-        ),
+        'identification_type': f"""
+{mobility_dict['identification_type'].value.replace('_', ' ')}""",
         'identification_number': mobility_dict['identification_number'],
         'nationality': 'HAY QUE PEDIR LA NACIONALIDAD',
-        'rol': (
-            mobility_dict['student_rol']['name']
-            if mobility_dict['student_rol']
-            else None
-        ),
+        'rol': f"{mobility_dict['student_rol']['name']}",
         'school': mobility_dict['school'],
-        'current_academic_program': (
-            mobility_dict['current_program']['name']
-            if mobility_dict['current_program']
-            else None
-        ),
+        'current_academic_program': f"{mobility_dict['current_program']['name']}",
         'semester': 'HAY QUE PEDIR EL SEMESTRE',
         'name_coordinator': 'HAY QUE INVENTARLO',
         'phone_coordinator': 'HAY QUE INVENTARLO',
         'email_coordinator': 'HAY QUE INVENTARLO',
-        'incoming_leaving': (
-            mobility_dict['type'].value.split()[0]
-            if hasattr(mobility_dict['type'], 'value')
-            else mobility_dict['type'].split()[0]
-        ),
-        'national_international': (
-            mobility_dict['type'].value.split()[1]
-            if hasattr(mobility_dict['type'], 'value')
-            else mobility_dict['type'].split()[1]
-        ),
-        'process': (
-            mobility_dict['process'].value
-            if hasattr(mobility_dict['process'], 'value')
-            else mobility_dict['process']
-        ),
+        'incoming_leaving': f"{mobility_dict['type'].split()[0]}",
+        'national_international': f"{mobility_dict['type'].split()[1]}",
+        'process': f"{mobility_dict['process']}",
         'destination_country': mobility_dict['destination_country'],
         'destination_institution': mobility_dict['destination_institution'],
         'academic_program': mobility_dict['academic_program'],

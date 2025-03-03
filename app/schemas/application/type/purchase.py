@@ -1,0 +1,72 @@
+from __future__ import annotations
+
+from uuid import UUID
+
+from pydantic import BaseModel
+
+from app.protocols.db.models.application.type.purchase import PurchaseScope
+from app.protocols.db.models.application.type.purchase import PurchaseType
+from app.schemas.application.user_application import UserApplicationStatus
+
+
+class AnnualPlan(BaseModel):
+    is_true: bool = False
+    code: str
+
+
+class BankConsultation(BaseModel):
+    is_true: bool = False
+    code: str
+
+
+class PriorConsultation(BaseModel):
+    annual_plan: AnnualPlan | None = None
+    bank_consultation: BankConsultation | None = None
+    contract: str | None = None
+
+
+class Provider(BaseModel):
+    id: str
+    name: str
+    phone: str
+    email: str
+
+
+class Material(BaseModel):
+    id: UUID
+    name: str
+    quantity: int
+    unit_price: float
+
+
+class PurchaseBase(BaseModel):
+    type: PurchaseType
+    scope: PurchaseScope
+    need: str
+    description: str
+    estimated_budget: float
+    status: list[UserApplicationStatus] | None = None
+
+
+class PurchaseCreate(PurchaseBase):
+    id: UUID | None = None
+
+
+class PurchaseUpdate(BaseModel):
+    type: PurchaseType | None = None
+    scope: PurchaseScope | None = None
+    need: str | None = None
+    description: str | None = None
+    responsible_condition: str | None = None
+    estimated_budget: float | None = None
+    marco_agreement: bool | None = None
+    status: list[UserApplicationStatus] | None = None
+    prior_consultation: list[PriorConsultation] | None = None
+    selected_provider: Provider | None = None
+    materials: list[Material] | None = None
+
+
+class PurchaseComplete(BaseModel):
+    responsible_condition: str
+    marco_agreement: bool
+    prior_consultation: PriorConsultation

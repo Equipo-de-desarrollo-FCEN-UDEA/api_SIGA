@@ -36,3 +36,6 @@ class User(BaseModel):
     )
     user_applications = relationship('UserApplication', back_populates='user')
     votes = relationship('Vote', back_populates='user')
+    user_applications_user = relationship(
+        'UserApplicationUser', back_populates='user', lazy='joined',
+    )

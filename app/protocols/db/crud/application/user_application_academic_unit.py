@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from abc import abstractmethod
 from uuid import UUID
 
 from sqlalchemy.orm import Session
@@ -19,6 +20,7 @@ class CRUDUserApplicationAcademicUnitProtocol(
         UserApplicationUpdate,
     ],
 ):
+    @abstractmethod
     def get_by_academic_unit(
             self,
             *,
@@ -30,6 +32,7 @@ class CRUDUserApplicationAcademicUnitProtocol(
             depend on the specific requirements of the application.
         """
 
+    @abstractmethod
     def get_active(
             self,
             *,
@@ -40,7 +43,7 @@ class CRUDUserApplicationAcademicUnitProtocol(
             This method is currently empty because the implementation details
             depend on the specific requirements of the application.
         """
-
+    @abstractmethod
     def get_by_user(
             self,
             *,
@@ -51,7 +54,7 @@ class CRUDUserApplicationAcademicUnitProtocol(
             This method is currently empty because the implementation details
             depend on the specific requirements of the application.
         """
-
+    @abstractmethod
     def response(
             self,
             *,
