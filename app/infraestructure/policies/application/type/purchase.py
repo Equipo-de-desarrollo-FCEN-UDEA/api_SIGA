@@ -12,9 +12,6 @@ from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.infraestructure.policies.application.user_application import current_status
-from app.infraestructure.policies.application.user_application import (
-    send_to_academic_unit,
-)
 from app.infraestructure.policies.application.user_application import send_to_user
 from app.infraestructure.services.aws.s3 import s3
 from app.protocols.db.models.application.type.purchase import PurchaseStatus
@@ -27,6 +24,7 @@ from app.services.application.type.purchase import purchase_svc
 from app.services.application.user_application import user_application_svc
 
 STATUS_LIST = list(PurchaseStatus)
+APPLICATION_PDF = 'application/pdf'
 
 
 def next_status(
@@ -54,6 +52,7 @@ def next_status(
                 )
                 return status
             raise HTTPException(status_code=400, detail='Invalid status')
+    raise HTTPException(status_code=400, detail='status not found')
 
 
 async def flux(
@@ -64,7 +63,6 @@ async def flux(
         current_user: User,
         is_approved: bool | None = None,
         user_to_assign: UUID | None = None,
-        academic_unit_id: UUID | None = None,
         obj_in: PurchaseUpdate | None = None,
         files: list[UploadFile] | None = None,
         **kwargs,
@@ -80,6 +78,8 @@ async def flux(
         current_user=current_user,
     )
 
+    res = None
+
     async def upload_files():
         user_id = user_application_svc.get(
             id=user_application_id,
@@ -93,7 +93,7 @@ async def flux(
                 bucket_name=settings.aws_bucket_name,
                 data=pdf.file,
                 file_name=file_path,
-                content_type='application/pdf',
+                content_type=APPLICATION_PDF,
             )
         return res
 
@@ -129,17 +129,17 @@ async def flux(
 
         for i, pdf in enumerate(files[:-1]):
             file_path = f'{DIR}cotizacion-{i}.pdf'
-            res = s3.push_data_to_s3_bucket(
+            s3.push_data_to_s3_bucket(
                 bucket_name=settings.aws_bucket_name,
                 data=pdf.file,
                 file_name=file_path,
-                content_type='application/pdf',
+                content_type=APPLICATION_PDF,
             )
         res = s3.push_data_to_s3_bucket(
             bucket_name=settings.aws_bucket_name,
             data=files[-1].file,
             file_name=f'{DIR}cuadro-comparativo.pdf',
-            content_type='application/pdf',
+            content_type=APPLICATION_PDF,
         )
         return res
 
@@ -179,13 +179,6 @@ async def flux(
         res = await upload_files()
 
     elif _current_status == PurchaseStatus.UPLOADED_FILES.value:
-        res = send_to_academic_unit(
-            user_application_id=user_application_id,
-            academic_unit_id=academic_unit_id,
-            db=db_postgres,
-        )
-
-    elif _current_status == PurchaseStatus.SENT_TO_ACADEMIC_UNIT.value:
         res = send_to_user(
             user_application_id=user_application_id,
             user_id=user_to_assign,
@@ -220,7 +213,7 @@ async def flux(
 
 
 def generate_format(purchase_dict: dict, path: str):
-
+  
     purchase_data = {
         'date': f"{purchase_dict['status'][0].date.strftime('%Y-%m-%d')}",
         'academic_unit': str(purchase_dict.get('academic_unit', '')),
