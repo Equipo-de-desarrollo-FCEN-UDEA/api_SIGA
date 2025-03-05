@@ -1,5 +1,11 @@
-from typing import Generic, TypeVar, Any
-from datetime import date, datetime
+from __future__ import annotations
+
+from datetime import date
+from datetime import datetime
+from typing import Any
+from typing import Generic
+from typing import TypeVar
+from uuid import UUID
 
 from fastapi import HTTPException
 from sqlalchemy import inspect
@@ -8,17 +14,15 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import ORMError
 from app.infraestructure.db.utils.base_model import BaseModel as Model
-from app.schemas.utils.base_model import UpdateSchemaType, CreateSchemaType
-from app.infraestructure.db.utils.postgres_session import SessionLocal
-
-from uuid import UUID
+from app.schemas.utils.base_model import CreateSchemaType
+from app.schemas.utils.base_model import UpdateSchemaType
 
 
-ModelType = TypeVar("ModelType", bound=Model)
+ModelType = TypeVar('ModelType', bound=Model)
 
 
 class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
-    def __init__(self, model: ModelType):
+    def __init__(self, model: type[ModelType]):
         self.model = model
 
     def create(self, *, obj_in: CreateSchemaType, db: Session) -> ModelType:
@@ -37,7 +41,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         with db:
             response = db.query(self.model).get(id)
             if not response:
-                raise HTTPException(status_code=404, detail="Object not found")
+                raise HTTPException(status_code=404, detail='Object not found')
             return response
 
     def get_multi(
@@ -49,7 +53,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         order_by: str | None = None,
         date_range: dict[str, date] | None = None,
         values: tuple[str] | None = None,
-        db: Session
+        db: Session,
     ) -> list[ModelType | dict[str, Any]]:
         with db:
             try:
@@ -64,14 +68,14 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
                 db_obj = db.get(self.model, id)
 
                 if not db_obj:
-                    raise HTTPException(status_code=404, detail="Object not found")            
+                    raise HTTPException(status_code=404, detail='Object not found')
 
                 mapper = inspect(self.model)
 
                 for field in mapper.attrs:
                     if field.key in obj_data and obj_data[field.key] is not None:
                         setattr(db_obj, field.key, obj_data[field.key])
-                setattr(db_obj, "updated_at", datetime.now())
+                setattr(db_obj, 'updated_at', datetime.now())
                 db.add(db_obj)
                 db.commit()
                 db.refresh(db_obj)
