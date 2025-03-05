@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from fastapi import HTTPException
+
 from app.infraestructure.security.jwt import jwt
 from app.infraestructure.services.emails.user import confirm_email
 from app.protocols.db.crud.users.user import CRUDUserProtocol
@@ -37,6 +39,8 @@ class UserService(
 
     def authenticate(self, *, email: str, password: str, db) -> UserInDB:
         user: User = self.observer.get_by_email(email=email, db=db)
+        if not user.is_active:
+            raise HTTPException(status_code=400, detail='Inactive user')
         crypt_svc.check_password(password, user.hashed_password)
         return user
 
