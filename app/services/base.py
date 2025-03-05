@@ -25,7 +25,7 @@ class ServiceBase(
         CrudType,
     ],
 ):
-    def __init__(self):
+    def __init__(self) -> None:
         self.observer: CrudType | None = None
 
     def register_observer(self, observer: CrudType) -> None:

@@ -7,7 +7,6 @@ from pydantic import EmailStr
 from pydantic import Field
 
 from app.infraestructure.db.models.user.user import IdentificationType
-from app.schemas.users.rol import Rol
 from app.schemas.users.user_rol_academic_unit import UserRolAcademicUnit
 from app.schemas.utils.base_model import GeneralResponse
 
@@ -77,12 +76,14 @@ class User(UserBase):
     class Config:
         from_attributes = True
 
+
 class UserPublic(BaseModel):
     name: str
     last_name: str
 
     class Config:
         from_attributes = True
+
 
 class UserSession(UserPublic):
     scopes: list[str]
