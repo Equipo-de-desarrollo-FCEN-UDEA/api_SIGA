@@ -16,6 +16,8 @@ ModelType = TypeVar('ModelType')
 
 CrudType = TypeVar('CrudType', bound=CRUDProtocol)
 
+SERVICE_NOT_AVAILABLE = 'Service not available'
+
 
 class ServiceBase(
     Generic[
@@ -38,12 +40,12 @@ class ServiceBase(
 
     def create(self, *, obj_in: CreateSchemaType, db) -> ModelType:
         if self.observer is None:
-            raise BaseErrors(code=503, detail='Service not available')
+            raise BaseErrors(code=503, detail=SERVICE_NOT_AVAILABLE)
         return self.observer.create(obj_in=obj_in, db=db)
 
     def get(self, *, id: UUID, db: Any) -> ModelType:
         if self.observer is None:
-            raise BaseErrors(code=503, detail='Service not available')
+            raise BaseErrors(code=503, detail=SERVICE_NOT_AVAILABLE)
         return self.observer.get(id=id, db=db)
 
     def get_multi(
@@ -58,7 +60,7 @@ class ServiceBase(
         db,
     ) -> list[ModelType | dict[str, Any]]:
         if self.observer is None:
-            raise BaseErrors(code=503, detail='Service not available')
+            raise BaseErrors(code=503, detail=SERVICE_NOT_AVAILABLE)
         return self.observer.get_multi(
             payload=payload,
             skip=skip,
@@ -77,10 +79,10 @@ class ServiceBase(
             db,
     ) -> ModelType:
         if self.observer is None:
-            raise BaseErrors(code=503, detail='Service not available')
+            raise BaseErrors(code=503, detail=SERVICE_NOT_AVAILABLE)
         return self.observer.update(db_obj=db_obj, obj_in=obj_in, db=db)
 
     def delete(self, *, id: UUID, db) -> int:
         if self.observer is None:
-            raise BaseErrors(code=503, detail='Service not available')
+            raise BaseErrors(code=503, detail=SERVICE_NOT_AVAILABLE)
         return self.observer.delete(id=id, db=db)
