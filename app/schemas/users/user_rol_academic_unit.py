@@ -38,6 +38,7 @@ class UserRolAcademicUnit(BaseModel):
 
 
 class UserPublic(BaseModel):
+    id: UUID
     name: str
     last_name: str
 

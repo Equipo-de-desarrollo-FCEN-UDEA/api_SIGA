@@ -107,7 +107,7 @@ async def upload_files(
 async def assing_auxiliary(
     *,
     id: UUID,
-    user_id: UUID,
+    user_id: UUID | None = None,
     is_approved: bool,
     db_mongo=Depends(get_mongo_db),
     db_postgres: Session = Depends(get_db),
@@ -244,6 +244,7 @@ async def download_purchase_form(
             'application/vnd.openxmlformats-officedocument'
             '-wordprocessingml.document'
         ),
+        headers={'Content-Disposition': 'attachment; filename=solicitud_compra.docx'},
     )
 
     return res
