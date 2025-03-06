@@ -11,12 +11,12 @@ from app.schemas.application.user_application import UserApplicationStatus
 
 class AnnualPlan(BaseModel):
     is_true: bool = False
-    code: str
+    code: str | None = None
 
 
 class BankConsultation(BaseModel):
     is_true: bool = False
-    code: str
+    code: str | None = None
 
 
 class PriorConsultation(BaseModel):

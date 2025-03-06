@@ -244,6 +244,7 @@ async def download_purchase_form(
             'application/vnd.openxmlformats-officedocument'
             '-wordprocessingml.document'
         ),
+        headers={'Content-Disposition': 'attachment; filename=solicitud_compra.docx'},
     )
 
     return res
