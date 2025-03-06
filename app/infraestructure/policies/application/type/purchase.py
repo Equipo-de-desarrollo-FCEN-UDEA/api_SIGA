@@ -234,6 +234,7 @@ def generate_format(purchase_dict: dict, path: str):
         'cost_center': '',
         'need': str(purchase_dict.get('need', '')),
         'description': str(purchase_dict.get('description', '')),
+        'responsible_condition': str(purchase_dict.get('responsible_condition', '')),
         'estimated_budget': str(purchase_dict.get('estimated_budget', '')),
         'marco_yes': '☒' if purchase_dict.get('marco_agreement') else '☐',
         'marco_no': '☒' if purchase_dict.get('marco_agreement') is False else '☐',
