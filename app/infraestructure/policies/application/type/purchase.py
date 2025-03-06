@@ -67,6 +67,7 @@ async def flux(
         files: list[UploadFile] | None = None,
         **kwargs,
 ) -> JSONResponse:
+
     _current_status = await current_status(
         user_application_id=user_application_id,
         db_mongo=db_mongo,
@@ -77,6 +78,19 @@ async def flux(
         is_approved=is_approved,
         current_user=current_user,
     )
+
+    if _next_status.name == PurchaseStatus.REJECTED.value:
+        print('entro a rejected')
+        await purchase_svc.add_status(
+            db_mongo=db_mongo,
+            db_postgres=db_postgres,
+            new_status=_next_status,
+            user_application_id=user_application_id,
+        )
+        return JSONResponse(
+            status_code=200,
+            content={'message': 'Application rejected'},
+        )
 
     res = None
 
