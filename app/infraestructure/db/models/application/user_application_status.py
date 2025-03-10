@@ -6,10 +6,10 @@ from sqlalchemy import String
 from sqlalchemy import Uuid
 from sqlalchemy.orm import relationship
 
-from app.infraestructure.db.utils.base_model import BaseModel
+from app.infraestructure.db.utils.link_model import LinkModel
 
 
-class UserApplicationStatus(BaseModel):
+class UserApplicationStatus(LinkModel):
     user_application_id = Column(
         Uuid, ForeignKey(
             'user_application.id',

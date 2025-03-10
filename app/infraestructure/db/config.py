@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from app.core.logging import get_logger
 from app.infraestructure.db.crud.application.application import application_crud
+from app.infraestructure.db.crud.application.application_status import (
+    application_status_crud,
+)
 from app.infraestructure.db.crud.application.status import status_crud
 from app.infraestructure.db.crud.application.type.commission import commission_crud
 from app.infraestructure.db.crud.application.type.mobility import mobility_crud
@@ -36,6 +39,7 @@ from app.infraestructure.db.crud.voting.voting import voting_crud
 from app.infraestructure.db.crud.voting.voting_info import voting_info_crud
 from app.infraestructure.db.utils.base import Base
 from app.services.application.application import application_svc
+from app.services.application.application_status import application_status_svc
 from app.services.application.status import status_svc
 from app.services.application.type.commission import commission_svc
 from app.services.application.type.mobility import mobility_svc
@@ -88,6 +92,7 @@ def init_db() -> None:
     # application config
     application_svc.register_observer(application_crud)
     status_svc.register_observer(status_crud)
+    application_status_svc.register_observer(application_status_crud)
     user_application_svc.register_observer(user_application_crud)
     user_application_academic_unit_svc.register_observer(
         user_application_academic_unit_crud,

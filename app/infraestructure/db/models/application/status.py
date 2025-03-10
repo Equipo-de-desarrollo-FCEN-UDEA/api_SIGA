@@ -14,3 +14,6 @@ class Status(BaseModel):
     user_application_status = relationship(
         'UserApplicationStatus', back_populates='status',
     )
+    application_status = relationship(
+        'ApplicationStatus', back_populates='status',
+    )
