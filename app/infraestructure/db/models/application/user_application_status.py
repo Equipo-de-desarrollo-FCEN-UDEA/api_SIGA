@@ -19,8 +19,10 @@ class UserApplicationStatus(LinkModel):
     updated_by = Column(Uuid, ForeignKey('user.id'), nullable=False)
     observation = Column(String, nullable=True)
 
-    status = relationship('Status', back_populates='user_application_status')
+    status = relationship(
+        'Status', back_populates='user_application_status', lazy='joined',
+    )
     user_application = relationship(
         'UserApplication', back_populates='user_application_status',
     )
-    user = relationship('User', back_populates='user_application_status')
+    user = relationship('User', back_populates='user_application_status', lazy='joined')

@@ -7,6 +7,9 @@ class StatusBase(BaseModel):
     name: str
     description: str
 
+    class Config:
+        from_attributes = True
+
 
 class StatusCreate(StatusBase):
     pass
@@ -15,3 +18,7 @@ class StatusCreate(StatusBase):
 class StatusUpdate(BaseModel):
     name: str | None
     description: str | None
+
+
+class StatusPublic(StatusBase):
+    pass

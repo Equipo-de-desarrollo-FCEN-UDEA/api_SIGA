@@ -26,5 +26,5 @@ class UserApplication(BaseModel):
     )
 
     user_application_status = relationship(
-        'UserApplicationStatus', back_populates='user_application',
+        'UserApplicationStatus', back_populates='user_application', lazy='joined',
     )

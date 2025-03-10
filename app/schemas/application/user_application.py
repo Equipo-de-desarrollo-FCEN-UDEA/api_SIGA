@@ -7,6 +7,9 @@ from pydantic import BaseModel
 
 from app.schemas.application.application import Application
 from app.schemas.application.application import ApplicationPublic
+from app.schemas.application.user_application_status import (
+    UserApplicationStatusPublic,
+)
 from app.schemas.organization.academic_unit import AcademicUnit
 from app.schemas.users.user import UserInDB
 from app.schemas.users.user import UserPublic
@@ -64,6 +67,7 @@ class UserApplicationPublic(BaseModel):
     user: UserPublic
     application: ApplicationPublic
     user_application_academic_units: list[UserApplicationAcademicUnitPublic]
+    user_application_status: list[UserApplicationStatusPublic]
 
     class Config:
         from_attributes = True
