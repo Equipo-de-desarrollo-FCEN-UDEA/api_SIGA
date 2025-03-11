@@ -30,7 +30,7 @@ class UserApplicationStatusUpdate(BaseModel):
 class UserApplicationStatusPublic(BaseModel):
     status: StatusPublic
     user: UserPublic
-    observation: str
+    observation: str | None
 
     class Config:
         from_attributes = True

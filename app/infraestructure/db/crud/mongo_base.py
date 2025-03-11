@@ -37,11 +37,11 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchema]):
     async def get_multi(
         self,
         *,
-        payload: dict[str] | None = None,
+        payload: dict[str, str] | None = None,
         skip: int | None = None,
         limit: int | None = None,
         order_by: str | None = None,
-        date_range: dict[str] | None = None,
+        date_range: dict[str, str] | None = None,
         values: tuple[str] | None = None,
         db: AIOSession,
     ) -> list[ModelType]:

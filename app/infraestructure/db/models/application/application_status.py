@@ -15,4 +15,4 @@ class ApplicationStatus(LinkModel):
     step = Column(Integer, nullable=False)
 
     application = relationship('Application', back_populates='application_status')
-    status = relationship('Status', back_populates='application_status')
+    status = relationship('Status', back_populates='application_status', lazy='joined')

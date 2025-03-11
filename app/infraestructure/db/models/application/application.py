@@ -18,4 +18,6 @@ class Application(BaseModel):
     # relations
     academic_unit = relationship('AcademicUnit', back_populates='applications')
     user_applications = relationship('UserApplication', back_populates='application')
-    application_status = relationship('ApplicationStatus', back_populates='application')
+    application_status = relationship(
+        'ApplicationStatus', back_populates='application', lazy='joined',
+    )

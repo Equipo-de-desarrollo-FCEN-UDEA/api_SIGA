@@ -6,7 +6,6 @@ from odmantic import Field
 from odmantic import Model
 
 from app.schemas.application.type.purchase import PriorConsultation
-from app.schemas.application.user_application import UserApplicationStatus
 
 
 class Provider(Model):
@@ -32,7 +31,6 @@ class Purchase(Model):
     responsible_condition: str | None = None
     estimated_budget: float
     marco_agreement: bool | None = None
-    status: list[UserApplicationStatus] = []
     prior_consultation: PriorConsultation | None = None
     selected_provider: Provider | None = None
     materials: list[Material] | None = None
