@@ -24,8 +24,11 @@ class UserApplicationCrud(
 ):
     def create(
         self,
-        *, obj_in: UserApplicationCreate, db: Session, current_user_id: UUID,
+        *, obj_in: UserApplicationCreate, db: Session, **kwargs,
     ) -> UserApplication:
+        current_user_id: UUID = kwargs.get('current_user_id')
+        if not current_user_id:
+            raise ValueError('current_user_id is required')
         user_application = super().create(obj_in=obj_in, db=db)
         application: Application = user_application.application
         user_application_id = user_application.id

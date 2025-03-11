@@ -40,9 +40,9 @@ class ApplicationTypeBaseCrud(
         )
 
         obj_in.id = user_application.id
-        obj_create = await super().create(
+        obj_create: ModelType = await super().create(
             db_mongo,
-            obj_in=obj_in,
+            obj_in=self.model(**dict(obj_in)),
         )
 
         return obj_create
