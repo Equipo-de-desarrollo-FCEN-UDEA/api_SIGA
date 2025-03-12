@@ -23,7 +23,8 @@ class PurchaseFlow(ApplicationFlow):
             db=kwargs.get('db_mongo'),
         )
 
-        obj_in: PurchaseComplete = kwargs.get('purchase_complete')
+        data = kwargs.get('purchase_complete')
+        obj_in: PurchaseComplete = PurchaseComplete(**data)
 
         await purchase_svc.update(
             db_obj=purchase,

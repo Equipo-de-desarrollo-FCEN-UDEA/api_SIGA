@@ -130,7 +130,8 @@ async def advance_application_status(
         db_postgres=db_postgres,
         current_user=current_user,
         is_approved=is_approved,
-        **request.dict(exclude_unset=True),  # Pasar solo los valores proporcionados
+        # Pasar solo los valores proporcionados
+        **request.model_dump(exclude_unset=True),
     )
 
     return response
