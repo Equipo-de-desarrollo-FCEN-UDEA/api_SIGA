@@ -66,7 +66,6 @@ services:
             - siga-fcen
         restart: on-failure
 
-
 networks:
   siga-fcen:
-      external: True
+    external: True
