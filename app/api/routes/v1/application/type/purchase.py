@@ -6,8 +6,11 @@ from uuid import UUID
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
+from fastapi import File
+from fastapi import Form
 from fastapi import HTTPException
 from fastapi import Security
+from fastapi import UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -21,6 +24,8 @@ from app.infraestructure.policies.application.type.purchase import delete_file
 from app.infraestructure.policies.application.type.purchase import generate_format
 from app.infraestructure.policies.application.type.purchase import PurchaseFlow
 from app.protocols.db.models.application.type.purchase import ApprovedAcademicsUnits
+from app.protocols.db.models.application.type.purchase import PurchaseScope
+from app.protocols.db.models.application.type.purchase import PurchaseType
 from app.schemas.application.type.purchase import PurchaseComplete
 from app.schemas.application.type.purchase import PurchaseCreate
 from app.schemas.application.user_application import UserApplicationPublic
@@ -49,7 +54,12 @@ async def get_purchase(
 @router.post('/create', response_model=UserApplicationPublic, status_code=201)
 async def create_purchase(
     *,
-    obj_in: PurchaseCreate,
+    type: Annotated[PurchaseType, Form()],
+    scope: Annotated[PurchaseScope, Form()],
+    need: Annotated[str, Form()],
+    description: Annotated[str, Form()],
+    estimated_budget: Annotated[float, Form()],
+    files: Annotated[list[UploadFile], File()],
     db_mongo=Depends(get_mongo_db),
     db_postgres: Session = Depends(get_db),
     academic_unit_id: ApprovedAcademicsUnits,
@@ -59,6 +69,19 @@ async def create_purchase(
         ),
     ] = None,
 ) -> UserApplicationPublic:
+    obj_in = PurchaseCreate(
+        type=type,
+        scope=scope,
+        need=need,
+        description=description,
+        estimated_budget=estimated_budget,
+    )
+    if len(files) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail='Se requieren al menos dos archivos para la solicitud',
+        )
+
     purchase_create = await user_application_svc.create_user_application(
         obj_in=obj_in,
         current_user_id=current_user.id,
@@ -67,6 +90,13 @@ async def create_purchase(
         db_postgres=db_postgres,
         mongo_service=purchase_svc,
         db_mongo=db_mongo,
+    )
+
+    user_application_svc.upload_files(
+        user_application_id=purchase_create.id,
+        files=files,
+        db=db_postgres,
+        prefix='precotizacion',
     )
 
     return purchase_create

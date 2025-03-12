@@ -98,7 +98,7 @@ class UserApplicationCrud(
 
         for i, pdf in enumerate(files):
             if prefix:
-                file_path = f'{user_path}{prefix}-{i}'
+                file_path = f'{user_path}{prefix}-{i+1}'
             else:
                 file_path = f'{user_path}{pdf.filename}'
             res = s3.push_data_to_s3_bucket(
