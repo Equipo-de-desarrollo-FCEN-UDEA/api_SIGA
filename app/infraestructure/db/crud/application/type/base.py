@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TypeVar
 from uuid import UUID
 
@@ -34,15 +35,21 @@ class ApplicationTypeBaseCrud(
             user_id=current_user.id, application_id=application_id,
         )
         user_application = user_application_svc.create(
-            obj_in=user_application_create,
-            db=db_postgres,
-            current_user_id=current_user.id,
+            obj_in=user_application_create, db=db_postgres,
         )
 
         obj_in.id = user_application.id
-        obj_create: ModelType = await super().create(
+
+        create_status = UserApplicationStatus(
+            name='CREADA',
+            updated_by=current_user.id,
+            date=datetime.now(),
+        )
+        obj_in.status = [create_status]
+
+        obj_create = await super().create(
             db_mongo,
-            obj_in=self.model(**dict(obj_in)),
+            obj_in=obj_in,
         )
 
         return obj_create

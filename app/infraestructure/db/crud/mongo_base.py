@@ -51,9 +51,10 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchema]):
         self,
         db: AIOSession,
         *,
-        obj_in: type[ModelType],
-    ) -> type[ModelType]:
+        obj_in: CreateSchemaType,
+    ) -> ModelType:
         try:
+            obj_in = self.model(**obj_in.model_dump())
             return await db.save(obj_in)
         except Exception as e:
             raise ODMError(str(e))
@@ -66,7 +67,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchema]):
         obj_in: UpdateSchema,
     ) -> ModelType:
         try:
-            update_data = obj_in.dict(exclude_unset=True)
+            update_data = obj_in.model_dump()
             for field, value in update_data.items():
                 setattr(db_obj, field, value)
             return await db.save(db_obj)
