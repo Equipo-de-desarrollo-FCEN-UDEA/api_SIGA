@@ -15,7 +15,7 @@ class UserApplication(BaseModel):
     # relations
     user = relationship('User', back_populates='user_applications', lazy='joined')
     application = relationship(
-        'Application', back_populates='user_applications', lazy='joined',
+        'Application', back_populates='user_applications', lazy='selectin',
     )
     user_application_academic_units = relationship(
         'UserApplicationAcademicUnit', back_populates='user_application', lazy='joined',
@@ -26,5 +26,5 @@ class UserApplication(BaseModel):
     )
 
     user_application_status = relationship(
-        'UserApplicationStatus', back_populates='user_application', lazy='joined',
+        'UserApplicationStatus', back_populates='user_application', lazy='selectin',
     )
