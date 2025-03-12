@@ -68,6 +68,7 @@ class UserApplicationPublic(BaseModel):
     application: ApplicationPublic
     user_application_academic_units: list[UserApplicationAcademicUnitPublic]
     user_application_status: list[UserApplicationStatusPublic]
+    info: dict | None = None
 
     class Config:
         from_attributes = True

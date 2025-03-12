@@ -18,7 +18,7 @@ class UserApplicationStatusBase(BaseModel):
 
 
 class UserApplicationStatusCreate(UserApplicationStatusBase):
-    pass
+    observation: str | None = None
 
 
 class UserApplicationStatusUpdate(BaseModel):

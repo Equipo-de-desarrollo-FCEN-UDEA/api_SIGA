@@ -15,5 +15,18 @@ class CRUDUserApplicationProtocol(
     def add_status(self, *, new_status, db_mongo, current_user):
         pass
 
-    def create(self, *, obj_in, db, current_user_id):
+    def create_user_application(
+        self,
+        *,
+        obj_in,
+        user_id,
+        application_id,
+        academic_unit_id,
+        db_postgres,
+        mongo_service,
+        db_mongo,
+    ):
+        pass
+
+    def upload_files(self, *, user_application_id, files, db, prefix):
         pass
