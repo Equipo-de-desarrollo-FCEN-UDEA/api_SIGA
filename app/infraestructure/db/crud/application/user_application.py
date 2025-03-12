@@ -94,13 +94,13 @@ class UserApplicationCrud(
         user_application = user_application_crud.get(id=user_application_id, db=db)
         user_id = user_application.user_id
 
-        dir = f'{str(user_id)}/{str(user_application_id)}/'
+        user_path = f'{str(user_id)}/{str(user_application_id)}/'
 
         for i, pdf in enumerate(files):
             if prefix:
-                file_path = f'{dir}{prefix}-{i}'
+                file_path = f'{user_path}{prefix}-{i}'
             else:
-                file_path = f'{dir}{pdf.filename}'
+                file_path = f'{user_path}{pdf.filename}'
             res = s3.push_data_to_s3_bucket(
                 bucket_name=settings.aws_bucket_name,
                 data=pdf.file,

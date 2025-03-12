@@ -72,7 +72,6 @@ class ApplicationFlow:
             updated_by=updated_by,
             observation=observation,
         )
-        return None
 
     # Métodos específicos de cada estado
     async def assign_user(self, **kwargs):
@@ -115,16 +114,16 @@ class ApplicationFlow:
         )
 
     async def update_documents(self):
-        pass
-
-    async def select_provider(self):
-        pass
-
-    async def place_order(self):
-        pass
+        """
+        Metodo para cargar documentos a la solicitud
+        """
 
     async def close(self):
-        pass
+        """
+        Finaliza la solicitud
+        """
 
     async def reject(self):
-        pass
+        """
+        RECHAZA LA SOLICITUD
+        """

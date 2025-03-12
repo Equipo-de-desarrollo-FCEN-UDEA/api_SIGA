@@ -13,7 +13,9 @@ class CRUDUserApplicationProtocol(
     ],
 ):
     def add_status(self, *, new_status, db_mongo, current_user):
-        pass
+        """
+        Add a new status to the user application
+        """
 
     def create_user_application(
         self,
@@ -26,7 +28,11 @@ class CRUDUserApplicationProtocol(
         mongo_service,
         db_mongo,
     ):
-        pass
+        """
+        Create a new user application with your mongo schema
+        """
 
     def upload_files(self, *, user_application_id, files, db, prefix):
-        pass
+        """
+        upload user application files
+        """
