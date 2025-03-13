@@ -34,3 +34,4 @@ class Purchase(Model):
     prior_consultation: PriorConsultation | None = None
     selected_provider: Provider | None = None
     materials: list[Material] | None = None
+    documents: list[str] | None

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from datetime import datetime
 from tempfile import NamedTemporaryFile
 
 from docx import Document
@@ -45,7 +46,7 @@ class PurchaseFlow(ApplicationFlow):
 def generate_format(purchase_dict: dict, path: str):
 
     purchase_data = {
-        'date': f"{purchase_dict['status'][0].date.strftime('%Y-%m-%d')}",
+        'date': datetime.now().date().strftime('%Y-%m-%d'),
         'academic_unit': str(purchase_dict.get('academic_unit', '')),
         'cost_center': '',
         'need': str(purchase_dict.get('need', '')),

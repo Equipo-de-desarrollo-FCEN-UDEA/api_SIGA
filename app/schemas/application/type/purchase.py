@@ -44,6 +44,7 @@ class PurchaseBase(BaseModel):
     need: str
     description: str
     estimated_budget: float
+    documents: list[str] | None = None
 
 
 class PurchaseCreate(PurchaseBase):
@@ -61,9 +62,16 @@ class PurchaseUpdate(BaseModel):
     prior_consultation: list[PriorConsultation] | None = None
     selected_provider: Provider | None = None
     materials: list[Material] | None = None
+    files: list[str] | None = None
 
 
 class PurchaseComplete(BaseModel):
     responsible_condition: str
     marco_agreement: bool
     prior_consultation: PriorConsultation
+
+
+class PurchasePublic(PurchaseBase, PurchaseComplete):
+
+    class Config:
+        orm_mode = True

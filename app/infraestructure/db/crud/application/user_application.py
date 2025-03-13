@@ -6,11 +6,8 @@ from fastapi import UploadFile
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.constants import CREATED_STATUS_ID
 from app.infraestructure.db.crud.base import CRUDBase
-from app.infraestructure.db.models.application.application import Application
-from app.infraestructure.db.models.application.application_status import (
-    ApplicationStatus,
-)
 from app.infraestructure.db.models.application.user_application import UserApplication
 from app.infraestructure.services.aws.s3 import s3
 from app.schemas.application.user_application import UserApplicationCreate
@@ -60,15 +57,12 @@ class UserApplicationCrud(
             db=db_postgres,
         )
 
-        application: Application = user_application.application
         user_application_id = user_application.id
         current_user_id = user_id
-        first_application_status: ApplicationStatus = application.application_status[0]
-        first_application_status_id = first_application_status.status_id
 
         user_application_status = UserApplicationStatusCreate(
             user_application_id=user_application_id,
-            status_id=first_application_status_id,
+            status_id=CREATED_STATUS_ID,
             updated_by=current_user_id,
         )
         obj_in.id = user_application.id

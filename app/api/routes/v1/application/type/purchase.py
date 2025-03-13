@@ -28,6 +28,7 @@ from app.protocols.db.models.application.type.purchase import PurchaseScope
 from app.protocols.db.models.application.type.purchase import PurchaseType
 from app.schemas.application.type.purchase import PurchaseComplete
 from app.schemas.application.type.purchase import PurchaseCreate
+from app.schemas.application.type.purchase import PurchasePublic
 from app.schemas.application.user_application import UserApplicationPublic
 from app.schemas.users.user import User
 from app.services.application.type.purchase import purchase_svc
@@ -36,7 +37,7 @@ from app.services.application.user_application import user_application_svc
 router = APIRouter()
 
 
-@router.get('/{id}', response_model=PurchaseCreate, status_code=200)
+@router.get('/{id}', response_model=PurchasePublic, status_code=200)
 async def get_purchase(
     *,
     id: UUID,
@@ -46,7 +47,7 @@ async def get_purchase(
             get_current_active_user,
         ),
     ] = None,
-) -> PurchaseCreate:
+) -> PurchasePublic:
     purchase = await purchase_svc.get(id=id, db=db_mongo)
     return purchase
 
@@ -69,18 +70,20 @@ async def create_purchase(
         ),
     ] = None,
 ) -> UserApplicationPublic:
+    if len(files) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail='Se requieren al menos dos archivos para la solicitud',
+        )
+
     obj_in = PurchaseCreate(
         type=type,
         scope=scope,
         need=need,
         description=description,
         estimated_budget=estimated_budget,
+        documents=[f'precotizacion-{i+1}' for i in range(len(files))],
     )
-    if len(files) < 2:
-        raise HTTPException(
-            status_code=400,
-            detail='Se requieren al menos dos archivos para la solicitud',
-        )
 
     purchase_create = await user_application_svc.create_user_application(
         obj_in=obj_in,

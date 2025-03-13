@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -31,6 +32,7 @@ class UserApplicationStatusPublic(BaseModel):
     status: StatusPublic
     user: UserPublic
     observation: str | None
+    created_at: datetime
 
     class Config:
         from_attributes = True
