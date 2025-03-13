@@ -66,9 +66,9 @@ class PurchaseUpdate(BaseModel):
 
 
 class PurchaseComplete(BaseModel):
-    responsible_condition: str
-    marco_agreement: bool
-    prior_consultation: PriorConsultation
+    responsible_condition: str | None = None
+    marco_agreement: bool | None = None
+    prior_consultation: PriorConsultation | None = None
 
 
 class PurchasePublic(PurchaseBase, PurchaseComplete):
