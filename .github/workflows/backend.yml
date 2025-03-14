@@ -28,7 +28,7 @@ jobs:
         name: Build and push
         uses: build-push-action@v3
         with:
-          context: .
-          file: .Dockerfile.prod
+          context: ./docker
+          file: .Dockerfile.dev
           push: true
           tags: ${{ secrets.DOCKER_ID }}/backend-siga:1.0.0
