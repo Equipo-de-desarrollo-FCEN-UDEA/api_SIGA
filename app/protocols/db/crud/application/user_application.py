@@ -36,3 +36,8 @@ class CRUDUserApplicationProtocol(
         """
         upload user application files
         """
+
+    def get_by_academic_unit(self, *, academic_unit_id, db):
+        """
+        Get all user applications sent to a unit academic
+        """

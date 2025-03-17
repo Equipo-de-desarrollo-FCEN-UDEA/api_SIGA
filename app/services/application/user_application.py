@@ -81,5 +81,18 @@ class UserApplicationService(
             prefix=prefix,
         )
 
+    def get_by_academic_unit(
+            self,
+            *,
+            academic_unit_id: UUID,
+            db,
+    ) -> list[UserApplication]:
+        if self.observer is None:
+            raise BaseErrors(code=503, detail=SERVICE_NOT_AVAILABLE)
+        user_applications = self.observer.get_by_academic_unit(
+            academic_unit_id=academic_unit_id, db=db,
+        )
+        return user_applications
+
 
 user_application_svc = UserApplicationService()

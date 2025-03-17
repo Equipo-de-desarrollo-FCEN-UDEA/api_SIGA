@@ -7,6 +7,9 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.constants import CREATED_STATUS_ID
+from app.infraestructure.db.crud.application.user_application_academic_unit import (
+    UserApplicationAcademicUnit,
+)
 from app.infraestructure.db.crud.base import CRUDBase
 from app.infraestructure.db.models.application.user_application import UserApplication
 from app.infraestructure.services.aws.s3 import s3
@@ -102,6 +105,18 @@ class UserApplicationCrud(
                 content_type=pdf.content_type,
             )
         return res
+
+    def get_by_academic_unit(
+            self,
+            *,
+            academic_unit_id: UUID,
+            db: Session,
+    ) -> list[UserApplication]:
+        return db.query(UserApplication).join(
+            UserApplicationAcademicUnit,
+        ).filter(
+            UserApplicationAcademicUnit.academic_unit_id == academic_unit_id,
+        ).all()
 
 
 user_application_crud = UserApplicationCrud(UserApplication)
