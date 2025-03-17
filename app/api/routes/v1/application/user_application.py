@@ -82,12 +82,28 @@ async def get_document(
     response_model=list[UserApplicationPublic],
     status_code=200,
 )
-async def get_user_application_by_academic_unit(
+async def get_user_application_to_academic_unit(
     *,
     academic_unit_id: UUID,
     db_postgres: Session = Depends(get_db),
 ) -> list[UserApplicationPublic]:
     user_applications = user_application_svc.get_by_academic_unit(
         academic_unit_id=academic_unit_id, db=db_postgres,
+    )
+    return [UserApplicationPublic.model_validate(app) for app in user_applications]
+
+
+@router.get(
+    '/user/{user_id}',
+    response_model=list[UserApplicationPublic],
+    status_code=200,
+)
+async def get_user_application_to_user(
+    *,
+    user_id: UUID,
+    db_postgres: Session = Depends(get_db),
+) -> list[UserApplicationPublic]:
+    user_applications = user_application_svc.get_to_user(
+        user_id=user_id, db=db_postgres,
     )
     return [UserApplicationPublic.model_validate(app) for app in user_applications]

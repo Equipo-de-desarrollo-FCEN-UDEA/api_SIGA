@@ -12,6 +12,9 @@ from app.infraestructure.db.crud.application.user_application_academic_unit impo
 )
 from app.infraestructure.db.crud.base import CRUDBase
 from app.infraestructure.db.models.application.user_application import UserApplication
+from app.infraestructure.db.models.application.user_application_user import (
+    UserApplicationUser,
+)
 from app.infraestructure.services.aws.s3 import s3
 from app.schemas.application.user_application import UserApplicationCreate
 from app.schemas.application.user_application import UserApplicationPublic
@@ -116,6 +119,16 @@ class UserApplicationCrud(
             UserApplicationAcademicUnit,
         ).filter(
             UserApplicationAcademicUnit.academic_unit_id == academic_unit_id,
+        ).all()
+
+    def get_to_user(
+            self,
+            *,
+            user_id: UUID,
+            db: Session,
+    ) -> list[UserApplication]:
+        return db.query(UserApplication).join(
+            UserApplicationUser, UserApplicationUser.user_id == user_id,
         ).all()
 
 

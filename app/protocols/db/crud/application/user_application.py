@@ -41,3 +41,8 @@ class CRUDUserApplicationProtocol(
         """
         Get all user applications sent to a unit academic
         """
+
+    def get_to_user(self, *, user_id, db):
+        """
+        Get all user applications sent to a user
+        """
