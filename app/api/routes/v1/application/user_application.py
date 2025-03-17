@@ -69,9 +69,9 @@ async def get_document(
         res = s3.get_data_from_s3_bucket(
             bucket_name=settings.aws_bucket_name, file_name=key,
         )
-    except Exception as e:
+    except Exception:
         return JSONResponse(
             status_code=400,
-            content={'error': f'Error: {str(e)}'},
+            content={'error al intentar obtener el archivo:'},
         )
     return StreamingResponse(content=res['Body'], media_type=res['ContentType'])
