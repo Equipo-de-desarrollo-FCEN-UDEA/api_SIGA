@@ -49,7 +49,7 @@ class ApplicationTypeBaseCrud(
 
         obj_create = await super().create(
             db_mongo,
-            obj_in=self.model(**dict(obj_in)),
+            obj_in=obj_in,
         )
 
         return obj_create
