@@ -113,6 +113,11 @@ class ApplicationFlow:
             obj_in=user_application_status, db=db_postgres,
         )
 
+        return JSONResponse(
+            status_code=200,
+            content={'message': 'Status updated successfully'},
+        )
+
     async def update_documents(self):
         """
         Metodo para cargar documentos a la solicitud

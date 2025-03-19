@@ -6,6 +6,7 @@ from tempfile import NamedTemporaryFile
 
 from docx import Document
 from fastapi import HTTPException
+from fastapi.responses import JSONResponse
 
 from app.infraestructure.policies.application.application_flow import ApplicationFlow
 from app.schemas.application.type.purchase import PurchaseComplete
@@ -40,6 +41,11 @@ class PurchaseFlow(ApplicationFlow):
 
         user_application_status_svc.create(
             obj_in=user_application_status, db=db_postgres,
+        )
+
+        return JSONResponse(
+            status_code=200,
+            content={'message': 'Purchase information completed successfully'},
         )
 
 
