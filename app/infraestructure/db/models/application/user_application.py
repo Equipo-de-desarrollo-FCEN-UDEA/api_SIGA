@@ -15,7 +15,7 @@ class UserApplication(BaseModel):
     # relations
     user = relationship('User', back_populates='user_applications', lazy='joined')
     application = relationship(
-        'Application', back_populates='user_applications', lazy='joined',
+        'Application', back_populates='user_applications', lazy='selectin',
     )
     user_application_academic_units = relationship(
         'UserApplicationAcademicUnit', back_populates='user_application', lazy='joined',
@@ -23,4 +23,11 @@ class UserApplication(BaseModel):
     votings = relationship('Voting', back_populates='user_application')
     user_application_users = relationship(
         'UserApplicationUser', back_populates='user_application', lazy='joined',
+    )
+
+    user_application_status = relationship(
+        'UserApplicationStatus',
+        back_populates='user_application',
+        lazy='selectin',
+        order_by='UserApplicationStatus.created_at.desc()',
     )

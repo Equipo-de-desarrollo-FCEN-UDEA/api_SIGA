@@ -6,11 +6,13 @@ from uuid import UUID
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
+from fastapi import File
+from fastapi import Form
 from fastapi import HTTPException
 from fastapi import Security
 from fastapi import UploadFile
 from fastapi.responses import FileResponse
-from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.middleware.bearer import get_current_active_user
@@ -19,16 +21,15 @@ from app.api.middleware.postgres_db import get_db
 from app.core.config import settings
 from app.infraestructure.formats import formats_dir
 from app.infraestructure.policies.application.type.purchase import delete_file
-from app.infraestructure.policies.application.type.purchase import flux
 from app.infraestructure.policies.application.type.purchase import generate_format
-from app.infraestructure.policies.application.user_application import (
-    send_to_academic_unit,
-)
+from app.infraestructure.policies.application.type.purchase import PurchaseFlow
 from app.protocols.db.models.application.type.purchase import ApprovedAcademicsUnits
-from app.schemas.application.type.purchase import Material
-from app.schemas.application.type.purchase import Provider
+from app.protocols.db.models.application.type.purchase import PurchaseScope
+from app.protocols.db.models.application.type.purchase import PurchaseType
 from app.schemas.application.type.purchase import PurchaseComplete
 from app.schemas.application.type.purchase import PurchaseCreate
+from app.schemas.application.type.purchase import PurchasePublic
+from app.schemas.application.user_application import UserApplicationPublic
 from app.schemas.users.user import User
 from app.services.application.type.purchase import purchase_svc
 from app.services.application.user_application import user_application_svc
@@ -36,24 +37,30 @@ from app.services.application.user_application import user_application_svc
 router = APIRouter()
 
 
-@router.get('/{id}', response_model=PurchaseCreate, status_code=200)
+@router.get('/{id}', response_model=PurchasePublic, status_code=200)
 async def get_purchase(
     *,
     id: UUID,
     db_mongo=Depends(get_mongo_db),
     current_user: Annotated[
-        User, Security(
+        User | None, Security(
             get_current_active_user,
         ),
     ] = None,
-) -> PurchaseCreate:
-    return await purchase_svc.get(id=id, db=db_mongo)
+) -> PurchasePublic:
+    purchase = await purchase_svc.get(id=id, db=db_mongo)
+    return purchase
 
 
-@router.post('/create', response_model=PurchaseCreate, status_code=201)
+@router.post('/create', response_model=UserApplicationPublic, status_code=201)
 async def create_purchase(
     *,
-    obj_in: PurchaseCreate,
+    type: Annotated[PurchaseType, Form()],
+    scope: Annotated[PurchaseScope, Form()],
+    need: Annotated[str, Form()],
+    description: Annotated[str, Form()],
+    estimated_budget: Annotated[float, Form()],
+    files: Annotated[list[UploadFile], File()],
     db_mongo=Depends(get_mongo_db),
     db_postgres: Session = Depends(get_db),
     academic_unit_id: ApprovedAcademicsUnits,
@@ -62,136 +69,75 @@ async def create_purchase(
             get_current_active_user,
         ),
     ] = None,
-) -> PurchaseCreate:
+) -> UserApplicationPublic:
+    if len(files) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail='Se requieren al menos dos archivos para la solicitud',
+        )
 
-    purchase_create = await purchase_svc.create(
-        obj_in=obj_in,
-        db_mongo=db_mongo,
-        db_postgres=db_postgres,
-        current_user=current_user,
-        application_id=settings.PURCHASE_ID,
+    obj_in = PurchaseCreate(
+        type=type,
+        scope=scope,
+        need=need,
+        description=description,
+        estimated_budget=estimated_budget,
+        documents=[f'precotizacion-{i+1}' for i in range(len(files))],
     )
 
-    send_to_academic_unit(
-        user_application_id=purchase_create.id,
+    purchase_create = await user_application_svc.create_user_application(
+        obj_in=obj_in,
+        current_user_id=current_user.id,
+        application_id=settings.PURCHASE_ID,
         academic_unit_id=UUID(academic_unit_id.value),
+        db_postgres=db_postgres,
+        mongo_service=purchase_svc,
+        db_mongo=db_mongo,
+    )
+
+    user_application_svc.upload_files(
+        user_application_id=purchase_create.id,
+        files=files,
         db=db_postgres,
+        prefix='precotizacion',
     )
 
     return purchase_create
 
 
-@router.post('/upload/{id}', response_model=None, status_code=200)
-async def upload_files(
-    *,
-    id: UUID,
-    files: list[UploadFile],
+class ApplicationRequest(BaseModel):
+    user_to_assign_id: UUID | None = None
+    observation: str | None = None
+    purchase_complete: PurchaseComplete | None = None
+
+
+@router.post('/{user_application_id}/next', response_model=None)
+async def advance_application_status(
+    user_application_id: str,
+    request: ApplicationRequest,
+    is_approved: bool = True,
     db_mongo=Depends(get_mongo_db),
-    db_postgres: Session = Depends(get_db),
-    current_user: Annotated[User, Depends(get_current_active_user)],
-) -> JSONResponse:
+    db_postgres=Depends(get_db),
+    current_user=Depends(get_current_active_user),
+):
+    """
+    Endpoint para avanzar el estado de una solicitud.
+    """
+    user_application = user_application_svc.get(id=user_application_id, db=db_postgres)
+    application_flow = PurchaseFlow(user_application)
 
-    res = await flux(
-        user_application_id=id,
-        db_mongo=db_mongo,
-        db_postgres=db_postgres,
-        current_user=current_user,
-        is_approved=True,
-        files=files,
-    )
-
-    return res
-
-
-@router.patch('/send/user/{id}', response_model=None, status_code=200)
-async def assing_auxiliary(
-    *,
-    id: UUID,
-    user_id: UUID | None = None,
-    is_approved: bool,
-    db_mongo=Depends(get_mongo_db),
-    db_postgres: Session = Depends(get_db),
-    current_user: Annotated[User, Depends(get_current_active_user)],
-) -> JSONResponse:
-    res = await flux(
-        user_application_id=id,
+    # Ejecutar la transición con los argumentos dinámicos
+    response = await application_flow.next(
+        user_application_id=user_application_id,
         db_mongo=db_mongo,
         db_postgres=db_postgres,
         current_user=current_user,
         is_approved=is_approved,
-        user_to_assign=user_id,
+        # Pasar solo los valores proporcionados
+        **request.model_dump(exclude_unset=True),
     )
 
-    return res
-
-
-@router.patch('/complete/{id}', response_model=None, status_code=200)
-async def update_purchase(
-    *,
-    id: UUID,
-    obj_in: PurchaseComplete,
-    is_approved: bool,
-    db_mongo=Depends(get_mongo_db),
-    db_postgres: Session = Depends(get_db),
-    current_user: Annotated[
-        User, Security(
-            get_current_active_user,
-        ),
-    ] = None,
-) -> JSONResponse:
-    res = await flux(
-        user_application_id=id,
-        db_mongo=db_mongo,
-        db_postgres=db_postgres,
-        current_user=current_user,
-        is_approved=is_approved,
-        obj_in=obj_in,
-    )
-
-    return res
-
-
-@router.patch('/next/{id}', response_model=None, status_code=200)
-async def next_status(
-    *,
-    id: UUID,
-    db_mongo=Depends(get_mongo_db),
-    db_postgres: Session = Depends(get_db),
-    current_user: Annotated[User, Depends(get_current_active_user)],
-    is_approved: bool,
-) -> JSONResponse:
-    res = await flux(
-        user_application_id=id,
-        db_mongo=db_mongo,
-        db_postgres=db_postgres,
-        current_user=current_user,
-        is_approved=is_approved,
-    )
-
-    return res
-
-
-@router.patch('/{id}', response_model=None, status_code=200)
-async def select_provider(
-    *,
-    id: UUID,
-    provider: Provider,
-    materials: list[Material],
-    db_mongo=Depends(get_mongo_db),
-    db_postgres: Session = Depends(get_db),
-    current_user: Annotated[User, Depends(get_current_active_user)],
-) -> JSONResponse:
-    res = await flux(
-        user_application_id=id,
-        db_mongo=db_mongo,
-        db_postgres=db_postgres,
-        current_user=current_user,
-        is_approved=True,
-        provider=provider,
-        materials=materials,
-    )
-
-    return res
+    return response
 
 
 @router.post('/generate-purchase-form/{id}')

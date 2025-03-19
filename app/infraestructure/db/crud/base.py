@@ -13,12 +13,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import ORMError
-from app.infraestructure.db.utils.base_model import BaseModel as Model
+from app.infraestructure.db.utils.base import Base
 from app.schemas.utils.base_model import CreateSchemaType
 from app.schemas.utils.base_model import UpdateSchemaType
 
 
-ModelType = TypeVar('ModelType', bound=Model)
+ModelType = TypeVar('ModelType', bound=Base)
 
 
 class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):

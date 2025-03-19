@@ -9,9 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.errors.base import BaseErrors
 from app.infraestructure.services.emails.application import update_status_email
-from app.protocols.db.crud.application.user_application import (
-    CRUDUserApplicationProtocol,
-)
+from app.protocols.db.crud.base import CRUDProtocol
 from app.schemas.application.user_application import UserApplicationStatus
 from app.schemas.utils.base_model import CreateSchemaType
 from app.schemas.utils.base_model import UpdateSchemaType
@@ -20,7 +18,7 @@ from app.services.base import ServiceBase
 
 ModelType = TypeVar('ModelType')
 
-CrudType = TypeVar('CrudType', bound=CRUDUserApplicationProtocol)
+CrudType = TypeVar('CrudType', bound=CRUDProtocol)
 
 
 class ApplicationTypeBaseService(
