@@ -16,6 +16,7 @@ from app.api.middleware.bearer import get_current_active_user
 from app.api.middleware.mongo_db import get_mongo_db
 from app.api.middleware.postgres_db import get_db
 from app.api.middleware.scopes import has_role
+from app.core import constants
 from app.infraestructure.formats import formats_dir
 from app.infraestructure.policies.application.type.mobility import delete_file
 from app.infraestructure.policies.application.type.mobility import flux
@@ -24,10 +25,12 @@ from app.infraestructure.policies.application.type.mobility import (
 )
 from app.schemas.application.type.mobility import Mobility
 from app.schemas.application.type.mobility import MobilityCreate
+from app.schemas.application.user_application import UserApplicationPublic
 from app.schemas.users.user import User
 from app.services.application.type.mobility import mobility_svc
 from app.services.application.user_application import user_application_svc
 from app.services.organization.academic_unit import academic_unit_svc
+from app.services.users.user_rol_academic_unit import user_rol_academic_unit_svc
 
 
 router = APIRouter()
@@ -46,7 +49,7 @@ async def get_mobility(
     return Mobility(**vars(mobility))
 
 
-@router.post('/create', response_model=MobilityCreate, status_code=201)
+@router.post('/create', response_model=UserApplicationPublic, status_code=201)
 async def create_mobility(
     *,
     obj_in: MobilityCreate,
@@ -58,14 +61,20 @@ async def create_mobility(
             get_current_active_user,
         ),
     ] = None,
-) -> MobilityCreate:
+) -> UserApplicationPublic:
 
-    mobility_create = await mobility_svc.create(
-        db_mongo=db_mongo,
+    committee = user_rol_academic_unit_svc.get_student_committee(
+        user_id=current_user.id, db=db_postgres,
+    )
+
+    mobility_create = await user_application_svc.create_user_application(
         obj_in=obj_in,
+        current_user_id=current_user.id,
+        application_id=constants.MOBILITY_ID,
+        academic_unit_id=committee,
         db_postgres=db_postgres,
-        current_user=current_user,
-        application_id='1c779ce5-ce77-49ea-87e2-69a2388e53f2',
+        mongo_service=mobility_svc,
+        db_mongo=db_mongo,
     )
 
     return mobility_create
