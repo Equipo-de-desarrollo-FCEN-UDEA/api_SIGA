@@ -62,7 +62,7 @@ class PurchaseUpdate(BaseModel):
     prior_consultation: list[PriorConsultation] | None = None
     selected_provider: Provider | None = None
     materials: list[Material] | None = None
-    files: list[str] | None = None
+    documents: list[str] | None = None
 
 
 class PurchaseComplete(BaseModel):

@@ -1,13 +1,17 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
+from fastapi import File
+from fastapi import Form
 from fastapi import HTTPException
 from fastapi import Security
+from fastapi import UploadFile
 from fastapi.responses import FileResponse
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -23,6 +27,9 @@ from app.infraestructure.policies.application.type.mobility import flux
 from app.infraestructure.policies.application.type.mobility import (
     generate_format,
 )
+from app.protocols.db.models.application.type.mobility import MobilityPurpose
+from app.protocols.db.models.application.type.mobility import MobilityType
+from app.protocols.db.models.application.type.mobility import Process
 from app.schemas.application.type.mobility import Mobility
 from app.schemas.application.type.mobility import MobilityCreate
 from app.schemas.application.user_application import UserApplicationPublic
@@ -52,7 +59,21 @@ async def get_mobility(
 @router.post('/create', response_model=UserApplicationPublic, status_code=201)
 async def create_mobility(
     *,
-    obj_in: MobilityCreate,
+    process: Annotated[Process, Form()],
+    type: Annotated[MobilityType, Form()],
+    purpose: Annotated[MobilityPurpose, Form()],
+    destination_country: Annotated[str, Form()],
+    destination_institution: Annotated[str, Form()],
+    academic_program: Annotated[str, Form()],
+    name_contact_person: Annotated[str, Form()],
+    cellphone_contact_person: Annotated[str, Form()],
+    email_contact_person: Annotated[str, Form()],
+    date_start: Annotated[datetime, Form()],
+    date_end: Annotated[datetime, Form()],
+    admission_letter: Annotated[UploadFile, File()],
+    enrollment_certificate: Annotated[UploadFile, File()],
+    insurance: Annotated[UploadFile | None, File()] = None,
+    passaport: Annotated[UploadFile | None, File()] = None,
     db_mongo=Depends(get_mongo_db),
     db_postgres: Session = Depends(get_db),
     permissions: Annotated[bool, Security(has_role, scopes=['estudiante'])] = False,
@@ -62,6 +83,24 @@ async def create_mobility(
         ),
     ] = None,
 ) -> UserApplicationPublic:
+    documents = [admission_letter, enrollment_certificate, insurance, passaport]
+    documents = [doc for doc in documents if doc is not None]
+
+    obj_in = MobilityCreate(
+        process=process,
+        type=type,
+        purpose=purpose,
+        destination_country=destination_country,
+        destination_institution=destination_institution,
+        academic_program=academic_program,
+        name_contact_person=name_contact_person,
+        cellphone_contact_person=cellphone_contact_person,
+        email_contact_person=email_contact_person,
+        date_start=date_start,
+        date_end=date_end,
+        documents=[document.filename for document in documents],
+        total_time=(date_end - date_start).days,
+    )
 
     committee = user_rol_academic_unit_svc.get_student_committee(
         user_id=current_user.id, db=db_postgres,
@@ -75,6 +114,13 @@ async def create_mobility(
         db_postgres=db_postgres,
         mongo_service=mobility_svc,
         db_mongo=db_mongo,
+    )
+
+    user_application_svc.upload_files(
+        user_application_id=mobility_create.id,
+        files=documents,
+        db=db_postgres,
+        prefix=None,
     )
 
     return mobility_create

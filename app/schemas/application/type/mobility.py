@@ -32,6 +32,7 @@ class MobilityBase(BaseModel):
     date_end: datetime
     subjects: list[Subject] | None = []
     status: list[UserApplicationStatus] | None = []
+    documents: list[str] | None = None
 
 
 class MobilityCreate(MobilityBase):
@@ -54,6 +55,7 @@ class MobilityUpdate(BaseModel):
     total_time: int | None = None
     date_report: datetime | None = None
     subjects: list[Subject] | None = None
+    documents: list[str] | None = None
 
 
 class Mobility(MobilityBase):
