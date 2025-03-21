@@ -71,6 +71,11 @@ class PurchaseComplete(BaseModel):
     prior_consultation: PriorConsultation | None = None
 
 
+class SelectedProvider(BaseModel):
+    provider: Provider
+    materials: list[Material]
+
+
 class PurchasePublic(PurchaseBase, PurchaseComplete):
 
     class Config:
