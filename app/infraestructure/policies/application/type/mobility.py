@@ -8,6 +8,7 @@ from docx import Document
 from fastapi import HTTPException
 
 from app.core.config import settings
+from app.infraestructure.policies.application.application_flow import ApplicationFlow
 from app.infraestructure.policies.application.user_application import (
     create_voting,
 )
@@ -20,12 +21,44 @@ from app.infraestructure.policies.application.user_application import (
 from app.protocols.db.models.application.application import (
     ApplicationStatusType,
 )
+from app.schemas.application.type.mobility import MobilityCreate
 from app.schemas.application.user_application import UserApplicationStatus
 from app.schemas.users.user import User
 from app.services.application.type.mobility import mobility_svc
+from app.services.application.user_application_status import user_application_status_svc
 from app.services.users.user_rol_academic_unit import (
     user_rol_academic_unit_svc,
 )
+
+
+class MobilityFlow(ApplicationFlow):
+    def __init__(self, user_application):
+        super().__init__(user_application)
+
+    async def complete_information(self, **kwargs):
+        db_postgres = kwargs.get('db_postgres')
+        mobility = await mobility_svc.get(
+            id=self.user_application.id,
+            db=kwargs.get('db_mongo'),
+        )
+
+        data = kwargs.get('mobility_complete')
+        obj_in: MobilityCreate = MobilityCreate(**data)
+
+        await mobility_svc.update(
+            db_obj=mobility,
+            obj_in=obj_in,
+            db=kwargs.get('db_mongo'),
+        )
+
+        user_application_status = self.get_next_status(
+            updated_by=kwargs.get('current_user').id,
+            observation=kwargs.get('observation'),
+        )
+
+        user_application_status_svc.create(
+            obj_in=user_application_status, db=db_postgres,
+        )
 
 
 def next_status(current_status: str, response: str | None = None) -> str:

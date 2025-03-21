@@ -13,7 +13,7 @@ from fastapi import HTTPException
 from fastapi import Security
 from fastapi import UploadFile
 from fastapi.responses import FileResponse
-from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.middleware.bearer import get_current_active_user
@@ -23,10 +23,10 @@ from app.api.middleware.scopes import has_role
 from app.core import constants
 from app.infraestructure.formats import formats_dir
 from app.infraestructure.policies.application.type.mobility import delete_file
-from app.infraestructure.policies.application.type.mobility import flux
 from app.infraestructure.policies.application.type.mobility import (
     generate_format,
 )
+from app.infraestructure.policies.application.type.mobility import MobilityFlow
 from app.protocols.db.models.application.type.mobility import MobilityPurpose
 from app.protocols.db.models.application.type.mobility import MobilityType
 from app.protocols.db.models.application.type.mobility import Process
@@ -38,6 +38,7 @@ from app.services.application.type.mobility import mobility_svc
 from app.services.application.user_application import user_application_svc
 from app.services.organization.academic_unit import academic_unit_svc
 from app.services.users.user_rol_academic_unit import user_rol_academic_unit_svc
+# from app.infraestructure.policies.application.type.mobility import flux
 
 
 router = APIRouter()
@@ -126,22 +127,56 @@ async def create_mobility(
     return mobility_create
 
 
-@router.patch('/update/{id}', response_model=str, status_code=200)
-async def update_status(
-    *,
-    id: UUID,
-    db_mongo=Depends(get_mongo_db),
-    db_postgres: Session = Depends(get_db),
-    current_user: Annotated[User, Depends(get_current_active_user)],
-) -> Mobility:
+# @router.patch('/update/{id}', response_model=str, status_code=200)
+# async def update_status(
+#     *,
+#     id: UUID,
+#     db_mongo=Depends(get_mongo_db),
+#     db_postgres: Session = Depends(get_db),
+#     current_user: Annotated[User, Depends(get_current_active_user)],
+# ) -> Mobility:
 
-    await flux(
-        user_application_id=id,
+#     await flux(
+#         user_application_id=id,
+#         db_mongo=db_mongo,
+#         db_postgres=db_postgres,
+#         current_user=current_user,
+#     )
+#     return JSONResponse(content='Status updated', status_code=200)
+
+class ApplicationRequest(BaseModel):
+    academic_unit_id: UUID | None = None
+
+
+@router.post('/{user_application_id}/next', response_model=None)
+async def advance_application_status(
+    user_application_id: str,
+    request: ApplicationRequest,
+    is_approved: bool = True,
+    db_mongo=Depends(get_mongo_db),
+    db_postgres=Depends(get_db),
+    current_user=Depends(get_current_active_user),
+):
+    """
+    Endpoint para avanzar el estado de una solicitud de movilidad.
+    """
+    # Obtener la solicitud
+    user_application = user_application_svc.get(id=user_application_id, db=db_postgres)
+
+    # Instanciar el flujo de movilidad
+    application_flow = MobilityFlow(user_application)
+
+    # Ejecutar la transición
+    response = await application_flow.next(
+        user_application_id=user_application_id,
         db_mongo=db_mongo,
         db_postgres=db_postgres,
         current_user=current_user,
+        is_approved=is_approved,
+        **request.model_dump(exclude_unset=True),
     )
-    return JSONResponse(content='Status updated', status_code=200)
+
+    return response
 
 
 @router.post('/generate-mobility-form/{id}')

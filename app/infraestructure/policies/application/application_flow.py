@@ -10,8 +10,10 @@ from app.infraestructure.db.models.application.application_status import (
 from app.infraestructure.db.models.application.user_application import UserApplication
 from app.schemas.application.user_application_status import UserApplicationStatusCreate
 from app.schemas.application.user_application_user import UserApplicationUserCreate
+from app.schemas.voting.voting import VotingCreate
 from app.services.application.user_application_status import user_application_status_svc
 from app.services.application.user_application_user import user_application_user_svc
+from app.services.voting.voting import voting_svc
 
 
 class ApplicationFlow:
@@ -117,6 +119,21 @@ class ApplicationFlow:
         """
         Metodo para cargar documentos a la solicitud
         """
+
+    async def create_voting(self, **kwargs):
+        academic_unit_id = kwargs.get('academic_unit_id')
+        db_postgres = kwargs.get('db_postgres')
+        obj_in: VotingCreate = VotingCreate(
+            academic_unit_id=academic_unit_id,
+            user_application_id=self.user_application.id,
+        )
+
+        voting_svc.create(obj_in=obj_in, db=db_postgres)
+
+        return JSONResponse(
+            status_code=200,
+            content={'message': 'Voting created successfully'},
+        )
 
     async def close(self):
         """
