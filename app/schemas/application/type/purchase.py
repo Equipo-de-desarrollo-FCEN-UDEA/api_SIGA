@@ -6,7 +6,6 @@ from pydantic import BaseModel
 
 from app.protocols.db.models.application.type.purchase import PurchaseScope
 from app.protocols.db.models.application.type.purchase import PurchaseType
-from app.schemas.application.user_application import UserApplicationStatus
 
 
 class AnnualPlan(BaseModel):
@@ -45,7 +44,7 @@ class PurchaseBase(BaseModel):
     need: str
     description: str
     estimated_budget: float
-    status: list[UserApplicationStatus] | None = None
+    documents: list[str] | None = None
 
 
 class PurchaseCreate(PurchaseBase):
@@ -60,13 +59,19 @@ class PurchaseUpdate(BaseModel):
     responsible_condition: str | None = None
     estimated_budget: float | None = None
     marco_agreement: bool | None = None
-    status: list[UserApplicationStatus] | None = None
     prior_consultation: list[PriorConsultation] | None = None
     selected_provider: Provider | None = None
     materials: list[Material] | None = None
+    files: list[str] | None = None
 
 
 class PurchaseComplete(BaseModel):
-    responsible_condition: str
-    marco_agreement: bool
-    prior_consultation: PriorConsultation
+    responsible_condition: str | None = None
+    marco_agreement: bool | None = None
+    prior_consultation: PriorConsultation | None = None
+
+
+class PurchasePublic(PurchaseBase, PurchaseComplete):
+
+    class Config:
+        orm_mode = True
