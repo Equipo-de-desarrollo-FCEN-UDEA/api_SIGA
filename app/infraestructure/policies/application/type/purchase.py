@@ -58,9 +58,11 @@ class PurchaseFlow(ApplicationFlow):
             db=kwargs.get('db_mongo'),
         )
 
-        provider: Provider = Provider(**kwargs.get('provider'))
         materials: list[Material] = kwargs.get('materials', [])
-        obj_in = SelectedProvider(provider=provider, materials=materials)
+        selected_provider: Provider = Provider(**kwargs.get('selected_provider'))
+        obj_in = SelectedProvider(
+            selected_provider=selected_provider, materials=materials,
+        )
 
         await purchase_svc.update(
             db_obj=purchase,

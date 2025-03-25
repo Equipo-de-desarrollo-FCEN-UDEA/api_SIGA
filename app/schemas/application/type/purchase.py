@@ -32,7 +32,6 @@ class Provider(BaseModel):
 
 
 class Material(BaseModel):
-    id: UUID
     name: str
     quantity: int
     unit_price: float
@@ -72,7 +71,7 @@ class PurchaseComplete(BaseModel):
 
 
 class SelectedProvider(BaseModel):
-    provider: Provider
+    selected_provider: Provider
     materials: list[Material]
 
 

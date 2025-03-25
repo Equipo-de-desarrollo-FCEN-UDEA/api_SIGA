@@ -111,7 +111,7 @@ class ApplicationRequest(BaseModel):
     user_to_assign_id: UUID | None = None
     observation: str | None = None
     purchase_complete: PurchaseComplete | None = None
-    provider: Provider | None = None
+    selected_provider: Provider | None = None
     materials: list[Material] | None = None
 
 
