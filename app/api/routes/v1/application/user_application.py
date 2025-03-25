@@ -44,7 +44,12 @@ async def get_user_application(
     db_postgres: Session = Depends(get_db),
 ) -> UserApplicationPublic:
     user_application = user_application_svc.get(id=id, db=db_postgres)
-    return UserApplicationPublic(**vars(user_application))
+    documents = s3.list_documents(
+        bucket_name=settings.aws_bucket_name,
+        user_id=user_application.user_id,
+        user_application_id=user_application.id,
+    )
+    return UserApplicationPublic(**vars(user_application), documents=documents)
 
 
 @router.post('/{user_application_id}/next', response_model=None, status_code=200)

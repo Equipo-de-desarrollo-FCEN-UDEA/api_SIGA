@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from boto3 import client
 from boto3 import resource
 from botocore.exceptions import ClientError
 from fastapi.responses import JSONResponse
@@ -15,6 +16,12 @@ class AmazonS3:
             aws_access_key_id=aws_access_key_id,
             aws_secret_access_key=aws_secret_access_key,
             region_name=region_name,
+        )
+
+        self.s3_client = client(
+            's3', region_name=region_name,
+            aws_access_key_id=aws_access_key_id,
+            aws_secret_access_key=aws_secret_access_key,
         )
 
     def push_data_to_s3_bucket(
@@ -62,6 +69,28 @@ class AmazonS3:
 
     def empty_bucket(self, bucket_name):
         self.s3.Bucket(bucket_name).objects.all().delete()
+
+    def list_documents(self, bucket_name, user_id, user_application_id):
+        folder = f'{user_id}/{user_application_id}/'
+        bucket = self.s3.Bucket(bucket_name)
+
+        archivos = []
+        for obj in bucket.objects.filter(Prefix=folder):
+            key = obj.key
+            if key.endswith('/'):
+                continue  # omitir "carpetas vacías"
+
+            signed_url = self.s3_client.generate_presigned_url(
+                'get_object',
+                Params={'Bucket': bucket_name, 'Key': key},
+                ExpiresIn=3600,
+            )
+            archivos.append({
+                'name': key.replace(folder, ''),  # nombre limpio
+                'url': signed_url,
+            })
+
+        return archivos
 
 
 s3 = AmazonS3(
