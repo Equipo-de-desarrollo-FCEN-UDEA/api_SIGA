@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import Form
 from fastapi import UploadFile
 from fastapi.responses import JSONResponse
 from fastapi.responses import StreamingResponse
@@ -57,12 +59,15 @@ async def advance_application_status(
     user_application_id: UUID,
     db_postgres: Session = Depends(get_db),
     current_user: UUID = Depends(get_current_active_user),
+    is_approved: bool = True,
+    observation: Annotated[str, Form()] = '',
 ) -> JSONResponse:
     user_application = user_application_svc.get(id=user_application_id, db=db_postgres)
     application_flow = ApplicationFlow(user_application)
 
     response = await application_flow.next(
-        is_approved=True,
+        is_approved=is_approved,
+        observation=observation,
         db_postgres=db_postgres,
         current_user=current_user,
     )
