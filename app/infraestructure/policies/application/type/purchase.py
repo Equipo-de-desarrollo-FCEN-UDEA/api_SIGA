@@ -6,9 +6,13 @@ from tempfile import NamedTemporaryFile
 
 from docx import Document
 from fastapi import HTTPException
+from fastapi.responses import JSONResponse
 
 from app.infraestructure.policies.application.application_flow import ApplicationFlow
+from app.schemas.application.type.purchase import Material
+from app.schemas.application.type.purchase import Provider
 from app.schemas.application.type.purchase import PurchaseComplete
+from app.schemas.application.type.purchase import SelectedProvider
 from app.services.application.type.purchase import purchase_svc
 from app.services.application.user_application_status import user_application_status_svc
 
@@ -40,6 +44,44 @@ class PurchaseFlow(ApplicationFlow):
 
         user_application_status_svc.create(
             obj_in=user_application_status, db=db_postgres,
+        )
+
+        return JSONResponse(
+            status_code=200,
+            content={'message': 'Purchase information completed successfully'},
+        )
+
+    async def select_provider(self, **kwargs):
+        db_postgres = kwargs.get('db_postgres')
+        purchase = await purchase_svc.get(
+            id=self.user_application.id,
+            db=kwargs.get('db_mongo'),
+        )
+
+        materials: list[Material] = kwargs.get('materials', [])
+        selected_provider: Provider = Provider(**kwargs.get('selected_provider'))
+        obj_in = SelectedProvider(
+            selected_provider=selected_provider, materials=materials,
+        )
+
+        await purchase_svc.update(
+            db_obj=purchase,
+            obj_in=obj_in,
+            db=kwargs.get('db_mongo'),
+        )
+
+        user_application_status = self.get_next_status(
+            updated_by=kwargs.get('current_user').id,
+            observation=kwargs.get('observation'),
+        )
+
+        user_application_status_svc.create(
+            obj_in=user_application_status, db=db_postgres,
+        )
+
+        return JSONResponse(
+            status_code=200,
+            content={'message': 'Provider selected successfully'},
         )
 
 

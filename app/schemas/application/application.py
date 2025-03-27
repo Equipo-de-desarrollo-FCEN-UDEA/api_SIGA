@@ -32,6 +32,7 @@ class Application(ApplicationBase):
 
 
 class ApplicationPublic(BaseModel):
+    id: UUID
     name: str
     description: str
 
