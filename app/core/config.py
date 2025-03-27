@@ -55,7 +55,6 @@ class Settings(BaseSettings):
     smtp_prod_user_email: str
     smtp_prod_user_password: SecretStr
     smtp_prod_host_email: str
-
     smtp_from_email: str
 
     # SMTP Local
