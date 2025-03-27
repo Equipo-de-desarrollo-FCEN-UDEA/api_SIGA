@@ -26,6 +26,8 @@ from app.infraestructure.policies.application.type.purchase import PurchaseFlow
 from app.protocols.db.models.application.type.purchase import ApprovedAcademicsUnits
 from app.protocols.db.models.application.type.purchase import PurchaseScope
 from app.protocols.db.models.application.type.purchase import PurchaseType
+from app.schemas.application.type.purchase import Material
+from app.schemas.application.type.purchase import Provider
 from app.schemas.application.type.purchase import PurchaseComplete
 from app.schemas.application.type.purchase import PurchaseCreate
 from app.schemas.application.type.purchase import PurchasePublic
@@ -109,6 +111,8 @@ class ApplicationRequest(BaseModel):
     user_to_assign_id: UUID | None = None
     observation: str | None = None
     purchase_complete: PurchaseComplete | None = None
+    selected_provider: Provider | None = None
+    materials: list[Material] | None = None
 
 
 @router.post('/{user_application_id}/next', response_model=None)

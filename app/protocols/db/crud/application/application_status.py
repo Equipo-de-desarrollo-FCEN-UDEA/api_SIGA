@@ -10,4 +10,7 @@ class CRUDApplicationStatusProtocol(
     CRUDProtocol
     [ApplicationStatus, ApplicationStatusCreate, ApplicationStatusUpdate],
 ):
-    pass
+    def get_next_step(self, current_step, application_id, db) -> str:
+        """
+            Get the next step of the application
+        """

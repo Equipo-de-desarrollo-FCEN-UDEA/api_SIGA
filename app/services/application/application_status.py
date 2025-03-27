@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from sqlalchemy.orm import Session
+
+from app.core.constants import SERVICE_NOT_AVAILABLE
+from app.errors.base import BaseErrors
 from app.protocols.db.crud.application.application_status import (
     CRUDApplicationStatusProtocol,
 )
@@ -17,7 +21,10 @@ class ApplicationStatusService(
         CRUDApplicationStatusProtocol,
     ],
 ):
-    pass
+    def get_next_step(self, current_step: int, application_id: str, db: Session) -> str:
+        if self.observer is None:
+            raise BaseErrors(code=503, detail=SERVICE_NOT_AVAILABLE)
+        return self.observer.get_next_step(current_step, application_id, db)
 
 
 application_status_svc = ApplicationStatusService()

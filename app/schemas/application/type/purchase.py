@@ -32,7 +32,6 @@ class Provider(BaseModel):
 
 
 class Material(BaseModel):
-    id: UUID
     name: str
     quantity: int
     unit_price: float
@@ -69,6 +68,11 @@ class PurchaseComplete(BaseModel):
     responsible_condition: str | None = None
     marco_agreement: bool | None = None
     prior_consultation: PriorConsultation | None = None
+
+
+class SelectedProvider(BaseModel):
+    selected_provider: Provider
+    materials: list[Material]
 
 
 class PurchasePublic(PurchaseBase, PurchaseComplete):
