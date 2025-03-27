@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
+from odmantic import EmbeddedModel
 from odmantic import Field
 from odmantic import Model
 
@@ -15,8 +16,7 @@ class Provider(Model):
     email: str
 
 
-class Material(Model):
-    id: UUID = Field(primary_field=True)
+class Material(EmbeddedModel):
     name: str
     quantity: int
     unit_price: float

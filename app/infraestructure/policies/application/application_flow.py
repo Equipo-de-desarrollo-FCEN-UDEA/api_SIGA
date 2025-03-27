@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 
+from app.core.constants import REJECTED_STATUS_ID
 from app.infraestructure.db.models.application.application import Application
 from app.infraestructure.db.models.application.application_status import (
     ApplicationStatus,
@@ -113,6 +114,11 @@ class ApplicationFlow:
             obj_in=user_application_status, db=db_postgres,
         )
 
+        return JSONResponse(
+            status_code=200,
+            content={'message': 'Status updated successfully'},
+        )
+
     async def update_documents(self):
         """
         Metodo para cargar documentos a la solicitud
@@ -123,7 +129,19 @@ class ApplicationFlow:
         Finaliza la solicitud
         """
 
-    async def reject(self):
-        """
-        RECHAZA LA SOLICITUD
-        """
+    async def reject(self, **kwargs):
+        user_application_status = UserApplicationStatusCreate(
+            user_application_id=self.user_application.id,
+            status_id=REJECTED_STATUS_ID,
+            updated_by=kwargs.get('current_user').id,
+            observation=kwargs.get('observation'),
+        )
+
+        user_application_status_svc.create(
+            obj_in=user_application_status, db=kwargs.get('db_postgres'),
+        )
+
+        return JSONResponse(
+            status_code=200,
+            content={'message': 'Application rejected successfully'},
+        )
