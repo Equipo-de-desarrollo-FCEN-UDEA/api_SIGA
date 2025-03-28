@@ -159,6 +159,15 @@ class ApplicationFlow:
             db=db_mongo,
         )
 
+        user_application_status = self.get_next_status(
+            updated_by=kwargs.get('current_user').id,
+            observation=kwargs.get('observation'),
+        )
+
+        user_application_status_svc.create(
+            obj_in=user_application_status, db=db_postgres,
+        )
+
         return JSONResponse(
             status_code=200,
             content={'message': 'Voting created successfully'},
