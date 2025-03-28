@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 
@@ -9,12 +11,16 @@ from app.infraestructure.db.models.application.application_status import (
     ApplicationStatus,
 )
 from app.infraestructure.db.models.application.user_application import UserApplication
+from app.infraestructure.db.models.voting.voting_info import VotingInfo
 from app.schemas.application.user_application_status import UserApplicationStatusCreate
 from app.schemas.application.user_application_user import UserApplicationUserCreate
 from app.schemas.voting.voting import VotingCreate
+from app.schemas.voting.voting_info import VotingInfoCreate
+from app.schemas.voting.voting_info import VotingStatus
 from app.services.application.user_application_status import user_application_status_svc
 from app.services.application.user_application_user import user_application_user_svc
 from app.services.voting.voting import voting_svc
+from app.services.voting.voting_info import voting_info_svc
 
 
 class ApplicationFlow:
@@ -129,12 +135,29 @@ class ApplicationFlow:
     async def create_voting(self, **kwargs):
         academic_unit_id = kwargs.get('academic_unit_id')
         db_postgres = kwargs.get('db_postgres')
+        db_mongo = kwargs.get('db_mongo')
         obj_in: VotingCreate = VotingCreate(
             academic_unit_id=academic_unit_id,
             user_application_id=self.user_application.id,
         )
 
-        voting_svc.create(obj_in=obj_in, db=db_postgres)
+        voting_create = voting_svc.create(obj_in=obj_in, db=db_postgres)
+
+        id = voting_create.id
+        status = VotingStatus(
+            result='PENDIENTE',
+            date=datetime.now(),
+            observation=None,
+        )
+
+        voting_info_to_create = VotingInfoCreate(
+            id=id,
+            statuses=[status],
+        )
+        await voting_info_svc.create(
+            obj_in=VotingInfo(**dict(voting_info_to_create)),
+            db=db_mongo,
+        )
 
         return JSONResponse(
             status_code=200,

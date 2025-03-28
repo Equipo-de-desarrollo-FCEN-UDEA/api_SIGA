@@ -28,4 +28,3 @@ class Mobility(Model):
     subjects: list[Subject]
     date_report: datetime
     status: list[UserApplicationStatus]
-    documents: list[str] | None

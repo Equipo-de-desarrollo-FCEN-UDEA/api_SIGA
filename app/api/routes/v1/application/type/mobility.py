@@ -99,7 +99,6 @@ async def create_mobility(
         email_contact_person=email_contact_person,
         date_start=date_start,
         date_end=date_end,
-        documents=[document.filename for document in documents],
         total_time=(date_end - date_start).days,
     )
 
