@@ -38,7 +38,6 @@ from app.services.application.type.mobility import mobility_svc
 from app.services.application.user_application import user_application_svc
 from app.services.organization.academic_unit import academic_unit_svc
 from app.services.users.user_rol_academic_unit import user_rol_academic_unit_svc
-# from app.infraestructure.policies.application.type.mobility import flux
 
 
 router = APIRouter()
@@ -125,23 +124,6 @@ async def create_mobility(
 
     return mobility_create
 
-
-# @router.patch('/update/{id}', response_model=str, status_code=200)
-# async def update_status(
-#     *,
-#     id: UUID,
-#     db_mongo=Depends(get_mongo_db),
-#     db_postgres: Session = Depends(get_db),
-#     current_user: Annotated[User, Depends(get_current_active_user)],
-# ) -> Mobility:
-
-#     await flux(
-#         user_application_id=id,
-#         db_mongo=db_mongo,
-#         db_postgres=db_postgres,
-#         current_user=current_user,
-#     )
-#     return JSONResponse(content='Status updated', status_code=200)
 
 class ApplicationRequest(BaseModel):
     academic_unit_id: UUID | None = None

@@ -1,164 +1,17 @@
 from __future__ import annotations
 
 import os
-from datetime import datetime
 from tempfile import NamedTemporaryFile
 
 from docx import Document
 from fastapi import HTTPException
 
-from app.core.config import settings
 from app.infraestructure.policies.application.application_flow import ApplicationFlow
-from app.infraestructure.policies.application.user_application import (
-    create_voting,
-)
-from app.infraestructure.policies.application.user_application import (
-    current_status,
-)
-from app.infraestructure.policies.application.user_application import (
-    send_to_academic_unit,
-)
-from app.protocols.db.models.application.application import (
-    ApplicationStatusType,
-)
-from app.schemas.application.type.mobility import MobilityCreate
-from app.schemas.application.user_application import UserApplicationStatus
-from app.schemas.users.user import User
-from app.services.application.type.mobility import mobility_svc
-from app.services.application.user_application_status import user_application_status_svc
-from app.services.users.user_rol_academic_unit import (
-    user_rol_academic_unit_svc,
-)
 
 
 class MobilityFlow(ApplicationFlow):
     def __init__(self, user_application):
         super().__init__(user_application)
-
-    async def complete_information(self, **kwargs):
-        db_postgres = kwargs.get('db_postgres')
-        mobility = await mobility_svc.get(
-            id=self.user_application.id,
-            db=kwargs.get('db_mongo'),
-        )
-
-        data = kwargs.get('mobility_complete')
-        obj_in: MobilityCreate = MobilityCreate(**data)
-
-        await mobility_svc.update(
-            db_obj=mobility,
-            obj_in=obj_in,
-            db=kwargs.get('db_mongo'),
-        )
-
-        user_application_status = self.get_next_status(
-            updated_by=kwargs.get('current_user').id,
-            observation=kwargs.get('observation'),
-        )
-
-        user_application_status_svc.create(
-            obj_in=user_application_status, db=db_postgres,
-        )
-
-
-def next_status(current_status: str, response: str | None = None) -> str:
-    if current_status == ApplicationStatusType.CREATE.value:
-        return ApplicationStatusType.IN_COMMITEE.value
-    elif current_status == ApplicationStatusType.IN_COMMITEE.value:
-        if (response == 'APROBADA'):
-            return ApplicationStatusType.IN_INTERNATIONAL.value
-        elif (response == 'RECHAZADA'):
-            return ApplicationStatusType.RETURNED.value
-        else:
-            return ApplicationStatusType.REJECTED.value
-    elif current_status == ApplicationStatusType.IN_INTERNATIONAL.value:
-        if (response == 'APROBADA'):
-            return ApplicationStatusType.IN_DEAN.value
-        elif (response == 'RECHAZADA'):
-            return ApplicationStatusType.REJECTED.value
-    elif current_status == ApplicationStatusType.IN_DEAN.value:
-        if (response == 'APROBADA'):
-            return ApplicationStatusType.APPROVED.value
-        elif (response == 'RECHAZADA'):
-            return ApplicationStatusType.REJECTED.value
-    else:
-        return None
-
-
-async def flux(
-    *,
-    user_application_id,
-    db_mongo,
-    db_postgres,
-    current_user: User,
-    response: str | None = None,
-) -> str:
-    _current_status = await current_status(
-        user_application_id,
-        db_mongo, mobility_svc,
-    )
-    if _current_status == ApplicationStatusType.APPROVED.value:
-        raise HTTPException(
-            status_code=400, detail='Solicitud ya aprobada',
-        )
-    elif _current_status == ApplicationStatusType.REJECTED.value:
-        raise HTTPException(
-            status_code=400, detail='Solicitud ya rechazada',
-        )
-    _next_status = next_status(_current_status, response)
-
-    if _next_status == ApplicationStatusType.IN_COMMITEE.value:
-        committee = user_rol_academic_unit_svc.get_student_committee(
-            user_id=current_user.id, db=db_postgres,
-        )
-        send_to_academic_unit(
-            academic_unit_id=committee,
-            user_application_id=user_application_id, db=db_postgres,
-        )
-        await create_voting(
-            academic_unit_id=committee,
-            user_application_id=user_application_id,
-            db_postgres=db_postgres,
-            db_mongo=db_mongo,
-        )
-        status = UserApplicationStatus(
-            name=_next_status,
-            updated_by=current_user.id, date=datetime.now(),
-        )
-
-    elif _current_status == ApplicationStatusType.IN_COMMITEE.value:
-        if response == 'APROBADA':
-            send_to_academic_unit(
-                academic_unit_id=settings.INTERNAL_FCEN,
-                user_application_id=user_application_id, db=db_postgres,
-            )
-        status = UserApplicationStatus(
-            name=_next_status,
-            updated_by=current_user.id, date=datetime.now(),
-        )
-
-    elif _current_status == ApplicationStatusType.IN_INTERNATIONAL.value:
-        if response == 'APROBADA':
-            send_to_academic_unit(
-                academic_unit_id=settings.FCEN,
-                user_application_id=user_application_id, db=db_postgres,
-            )
-        status = UserApplicationStatus(
-            name=_next_status,
-            updated_by=current_user.id, date=datetime.now(),
-        )
-    elif _current_status == ApplicationStatusType.IN_DEAN.value:
-        status = UserApplicationStatus(
-            name=_next_status,
-            updated_by=current_user.id, date=datetime.now(),
-        )
-
-    await mobility_svc.add_status(
-        db_mongo=db_mongo,
-        db_postgres=db_postgres,
-        new_status=status,
-        user_application_id=user_application_id,
-    )
 
 
 def generate_format(mobility_dict: dict, path: str):

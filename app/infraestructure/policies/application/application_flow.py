@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from datetime import datetime
 
 from fastapi import HTTPException
@@ -12,11 +13,17 @@ from app.infraestructure.db.models.application.application_status import (
 )
 from app.infraestructure.db.models.application.user_application import UserApplication
 from app.infraestructure.db.models.voting.voting_info import VotingInfo
+from app.schemas.application.user_application_academic_unit import (
+    UserApplicationAcademicUnitCreate,
+)
 from app.schemas.application.user_application_status import UserApplicationStatusCreate
 from app.schemas.application.user_application_user import UserApplicationUserCreate
 from app.schemas.voting.voting import VotingCreate
 from app.schemas.voting.voting_info import VotingInfoCreate
 from app.schemas.voting.voting_info import VotingStatus
+from app.services.application.user_application_academic_unit import (
+    user_application_academic_unit_svc,
+)
 from app.services.application.user_application_status import user_application_status_svc
 from app.services.application.user_application_user import user_application_user_svc
 from app.services.voting.voting import voting_svc
@@ -43,7 +50,20 @@ class ApplicationFlow:
         if action is None:
             raise HTTPException(status_code=400, detail='Invalid transition')
 
-        return await getattr(self, action)(**kwargs)
+        patterns = re.match(r'(\w+)(?:\((.*)\))?', action)
+
+        if not patterns:
+            return await getattr(self, action)(**kwargs)
+
+        action_name, param_str = patterns.groups()
+
+        parsed_params = {}
+        if param_str:
+            # Busca `param = "value"`
+            param_matches = re.findall(r"(\w+)\s*=\s*\"([^\"]*)\"", param_str)
+            parsed_params = {key: value for key, value in param_matches}
+
+        return await getattr(self, action_name)(**{**kwargs, **parsed_params})
 
     def get_action(self, is_approved) -> str | None:
         """
@@ -82,6 +102,22 @@ class ApplicationFlow:
             observation=observation,
         )
 
+    async def next_status(self, **kwargs):
+        db_postgres = kwargs.get('db_postgres')
+        user_application_status = self.get_next_status(
+            updated_by=kwargs.get('current_user').id,
+            observation=kwargs.get('observation'),
+        )
+
+        user_application_status_svc.create(
+            obj_in=user_application_status, db=db_postgres,
+        )
+
+        return JSONResponse(
+            status_code=200,
+            content={'message': 'Status updated successfully'},
+        )
+
     # Métodos específicos de cada estado
     async def assign_user(self, **kwargs):
         user_application_id = self.user_application.id
@@ -111,8 +147,20 @@ class ApplicationFlow:
             content={'message': 'User assigned successfully'},
         )
 
-    async def next_status(self, **kwargs):
+    async def send_to_academic_unit(self, **kwargs):
         db_postgres = kwargs.get('db_postgres')
+        academic_unit_id = kwargs.get('academic_unit_id')
+
+        user_application_academic_unit = UserApplicationAcademicUnitCreate(
+            user_application_id=self.user_application.id,
+            academic_unit_id=academic_unit_id,
+        )
+
+        user_application_academic_unit_svc.create(
+            obj_in=user_application_academic_unit,
+            db=db_postgres,
+        )
+
         user_application_status = self.get_next_status(
             updated_by=kwargs.get('current_user').id,
             observation=kwargs.get('observation'),
@@ -122,18 +170,11 @@ class ApplicationFlow:
             obj_in=user_application_status, db=db_postgres,
         )
 
-        return JSONResponse(
-            status_code=200,
-            content={'message': 'Status updated successfully'},
-        )
-
-    async def update_documents(self):
-        """
-        Metodo para cargar documentos a la solicitud
-        """
+        return None
 
     async def create_voting(self, **kwargs):
-        academic_unit_id = kwargs.get('academic_unit_id')
+        user_app_acad_un = self.user_application.user_application_academic_units[0]
+        academic_unit_id = user_app_acad_un.academic_unit_id
         db_postgres = kwargs.get('db_postgres')
         db_mongo = kwargs.get('db_mongo')
         obj_in: VotingCreate = VotingCreate(

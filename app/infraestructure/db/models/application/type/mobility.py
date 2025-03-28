@@ -7,7 +7,6 @@ from odmantic import Field
 from odmantic import Model
 
 from app.schemas.application.type.mobility import Subject
-from app.schemas.application.user_application import UserApplicationStatus
 
 
 class Mobility(Model):
@@ -27,4 +26,3 @@ class Mobility(Model):
     date_report: datetime = datetime.now()
     subjects: list[Subject]
     date_report: datetime
-    status: list[UserApplicationStatus]
