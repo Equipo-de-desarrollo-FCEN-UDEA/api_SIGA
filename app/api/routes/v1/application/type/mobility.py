@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from typing import Annotated
 from uuid import UUID
@@ -32,6 +33,7 @@ from app.protocols.db.models.application.type.mobility import MobilityType
 from app.protocols.db.models.application.type.mobility import Process
 from app.schemas.application.type.mobility import Mobility
 from app.schemas.application.type.mobility import MobilityCreate
+from app.schemas.application.type.mobility import Subject
 from app.schemas.application.user_application import UserApplicationPublic
 from app.schemas.users.user import User
 from app.services.application.type.mobility import mobility_svc
@@ -70,6 +72,7 @@ async def create_mobility(
     email_contact_person: Annotated[str, Form()],
     date_start: Annotated[datetime, Form()],
     date_end: Annotated[datetime, Form()],
+    subjects: Annotated[list[str], Form()] = [],
     admission_letter: Annotated[UploadFile, File()],
     enrollment_certificate: Annotated[UploadFile, File()],
     insurance: Annotated[UploadFile | None, File()] = None,
@@ -85,6 +88,13 @@ async def create_mobility(
 ) -> UserApplicationPublic:
     documents = [admission_letter, enrollment_certificate, insurance, passaport]
     documents = [doc for doc in documents if doc is not None]
+    parsed_subjects = []
+    if subjects:
+        subjects_str = f'[{subjects[0]}]'
+        try:
+            parsed_subjects = [Subject(**item) for item in json.loads(subjects_str)]
+        except Exception:
+            raise HTTPException(status_code=422, detail="Formato inválido de 'subjects'")
 
     obj_in = MobilityCreate(
         process=process,
@@ -99,6 +109,7 @@ async def create_mobility(
         date_start=date_start,
         date_end=date_end,
         total_time=(date_end - date_start).days,
+        subjects=parsed_subjects,
     )
 
     committee = user_rol_academic_unit_svc.get_student_committee(
