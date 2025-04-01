@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from app.api.middleware.bearer import get_current_active_user
 from app.api.middleware.mongo_db import get_mongo_db
 from app.api.middleware.postgres_db import get_db
+from app.api.middleware.scopes import has_role
 from app.infraestructure.policies.application.type.commission import flux
 from app.schemas.application.type.commission import CommissionCreate
 from app.schemas.application.type.commission import CommissionResponse
@@ -29,7 +30,7 @@ router = APIRouter()
 
 
 @router.post(
-    '/',
+    '/create',
     response_model=CommissionCreate,
     status_code=HTTPStatus.CREATED.value,
     summary='Create a new commission',
@@ -76,6 +77,7 @@ async def create_commission(
     obj_in: CommissionCreate,
     db_mongo: Any = Depends(get_mongo_db),
     db_postgres: Session = Depends(get_db),
+    permissions: Annotated[bool, Security(has_role, scopes=['profesor'])] = False,
     current_user: Annotated[
         User, Security(
             get_current_active_user,
