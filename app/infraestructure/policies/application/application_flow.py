@@ -34,6 +34,10 @@ class ApplicationFlow:
     def __init__(self, user_application: UserApplication):
         self.user_application = user_application
 
+    def extract_params(self, param_str):
+        param_matches = re.findall(r"(\w+)\s*=\s*\"([\w\s.,-]+)\"", param_str)
+        return param_matches
+
     async def next(self, **kwargs):
         """
         Avanza al siguiente estado según la transición definida.
@@ -60,7 +64,7 @@ class ApplicationFlow:
         parsed_params = {}
         if param_str:
             # Busca `param = "value"`
-            param_matches = re.findall(r"(\w+)\s*=\s*\"([^\"]*)\"", param_str)
+            param_matches = self.extract_params(param_str)
             parsed_params = {key: value for key, value in param_matches}
 
         return await getattr(self, action_name)(**{**kwargs, **parsed_params})
