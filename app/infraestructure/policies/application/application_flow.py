@@ -1,0 +1,147 @@
+from __future__ import annotations
+
+from fastapi import HTTPException
+from fastapi.responses import JSONResponse
+
+from app.core.constants import REJECTED_STATUS_ID
+from app.infraestructure.db.models.application.application import Application
+from app.infraestructure.db.models.application.application_status import (
+    ApplicationStatus,
+)
+from app.infraestructure.db.models.application.user_application import UserApplication
+from app.schemas.application.user_application_status import UserApplicationStatusCreate
+from app.schemas.application.user_application_user import UserApplicationUserCreate
+from app.services.application.user_application_status import user_application_status_svc
+from app.services.application.user_application_user import user_application_user_svc
+
+
+class ApplicationFlow:
+    def __init__(self, user_application: UserApplication):
+        self.user_application = user_application
+
+    async def next(self, **kwargs):
+        """
+        Avanza al siguiente estado según la transición definida.
+        :param user_application_id: ID de la aplicación del usuario.
+        :param db_mongo: Conexión a MongoDB.
+        :param db_postgres: Conexión a PostgreSQL.
+        :param current_user: Usuario que ejecuta la acción.
+        :param is_approved: Indica si la transición es aprobada o no.
+        :return: Respuesta de la acción ejecutada.
+        """
+
+        action = self.get_action(kwargs.get('is_approved'))
+
+        if action is None:
+            raise HTTPException(status_code=400, detail='Invalid transition')
+
+        return await getattr(self, action)(**kwargs)
+
+    def get_action(self, is_approved) -> str | None:
+        """
+        Obtiene el siguiente estado válido según la transición permitida.
+        :param current_status: Estado actual de la aplicación.
+        :param is_approved: Indica si la transición es aprobada.
+        :return: Nombre del siguiente estado.
+        """
+        if not is_approved:
+            return 'reject'
+
+        application: Application = self.user_application.application
+        current_status: int = len(self.user_application.user_application_status)
+        application_status: list[ApplicationStatus] = application.application_status
+        for app_status in application_status:
+            if app_status.step == current_status:
+                return app_status.action
+        return None
+
+    def get_next_status(
+            self,
+            updated_by,
+            observation,
+    ) -> UserApplicationStatusCreate | None:
+        application: Application = self.user_application.application
+        current_status: int = len(self.user_application.user_application_status)
+        application_status: list[ApplicationStatus] = application.application_status
+        for app_status in application_status:
+            if app_status.step == current_status+1:
+                next_status = app_status.status
+
+        return UserApplicationStatusCreate(
+            user_application_id=self.user_application.id,
+            status_id=next_status.id,
+            updated_by=updated_by,
+            observation=observation,
+        )
+
+    # Métodos específicos de cada estado
+    async def assign_user(self, **kwargs):
+        user_application_id = self.user_application.id
+        user_to_assign_id = kwargs.get('user_to_assign_id')
+        db_postgres = kwargs.get('db_postgres')
+
+        user_application_user = UserApplicationUserCreate(
+            user_application_id=user_application_id,
+            user_id=user_to_assign_id,
+        )
+
+        user_application_user_svc.create(
+            obj_in=user_application_user, db=db_postgres,
+        )
+
+        user_application_status = self.get_next_status(
+            updated_by=kwargs.get('current_user').id,
+            observation=kwargs.get('observation'),
+        )
+
+        user_application_status_svc.create(
+            obj_in=user_application_status, db=db_postgres,
+        )
+
+        return JSONResponse(
+            status_code=200,
+            content={'message': 'User assigned successfully'},
+        )
+
+    async def next_status(self, **kwargs):
+        db_postgres = kwargs.get('db_postgres')
+        user_application_status = self.get_next_status(
+            updated_by=kwargs.get('current_user').id,
+            observation=kwargs.get('observation'),
+        )
+
+        user_application_status_svc.create(
+            obj_in=user_application_status, db=db_postgres,
+        )
+
+        return JSONResponse(
+            status_code=200,
+            content={'message': 'Status updated successfully'},
+        )
+
+    async def update_documents(self):
+        """
+        Metodo para cargar documentos a la solicitud
+        """
+
+    async def close(self):
+        """
+        Finaliza la solicitud
+        """
+
+    async def reject(self, **kwargs):
+        user_application_status = UserApplicationStatusCreate(
+            user_application_id=self.user_application.id,
+            status_id=REJECTED_STATUS_ID,
+            updated_by=kwargs.get('current_user').id,
+            observation=kwargs.get('observation'),
+        )
+
+        user_application_status_svc.create(
+            obj_in=user_application_status, db=kwargs.get('db_postgres'),
+        )
+
+        return JSONResponse(
+            status_code=200,
+            content={'message': 'Application rejected successfully'},
+        )

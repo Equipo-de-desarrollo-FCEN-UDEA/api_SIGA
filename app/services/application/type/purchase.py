@@ -4,11 +4,11 @@ from app.protocols.db.crud.application.type.purchase import CRUDPurchaseProtocol
 from app.protocols.db.models.application.type.purchase import Purchase
 from app.schemas.application.type.purchase import PurchaseCreate
 from app.schemas.application.type.purchase import PurchaseUpdate
-from app.services.application.type.base import ApplicationTypeBaseService
+from app.services.base import ServiceBase
 
 
 class PurchaseService(
-    ApplicationTypeBaseService[
+    ServiceBase[
         Purchase,
         PurchaseCreate,
         PurchaseUpdate,

@@ -55,11 +55,11 @@ services:
         build:
             context: ..
             dockerfile: docker/Dockerfile.dev
+        command: uvicorn app.main:app --reload --workers 1 --host 0.0.0.0 --port 8003
         volumes:
             - ../:/usr/src/app/
         ports:
             - "8003:8003"
-            - "10001:10001"
         expose:
             - "8003"
         env_file:
