@@ -202,7 +202,7 @@ class ApplicationFlow:
 
         voting_create = voting_svc.create(obj_in=obj_in, db=db_postgres)
 
-        id = voting_create.id
+        voting_id = voting_create.id
         status = VotingStatus(
             result='PENDIENTE',
             date=datetime.now(),
@@ -210,7 +210,7 @@ class ApplicationFlow:
         )
 
         voting_info_to_create = VotingInfoCreate(
-            id=id,
+            id=voting_id,
             statuses=[status],
         )
         await voting_info_svc.create(

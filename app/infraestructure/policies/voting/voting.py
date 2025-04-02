@@ -51,7 +51,6 @@ async def voting_result(votes: list[Vote]) -> VotingResult:
 async def update_application_status(
         *,
         voting: Voting,
-        db_mongo,
         db_postgres,
         current_user,
         result,
