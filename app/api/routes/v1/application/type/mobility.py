@@ -76,7 +76,7 @@ async def create_mobility(
     admission_letter: Annotated[UploadFile, File()],
     enrollment_certificate: Annotated[UploadFile, File()],
     insurance: Annotated[UploadFile | None, File()] = None,
-    passaport: Annotated[UploadFile | None, File()] = None,
+    passport: Annotated[UploadFile | None, File()] = None,
     db_mongo=Depends(get_mongo_db),
     db_postgres: Session = Depends(get_db),
     permissions: Annotated[bool, Security(has_role, scopes=['estudiante'])] = False,
