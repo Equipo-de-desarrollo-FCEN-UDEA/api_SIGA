@@ -35,7 +35,7 @@ class ApplicationFlow:
         self.user_application = user_application
 
     def extract_params(self, param_str):
-        param_matches = re.findall(r"(\w+)\s*=\s*\"([\w\s.,-]+)\"", param_str)
+        param_matches = re.findall(r"(\w+)\s*=\s*\"([^\"]*)\"", param_str)
         return param_matches
 
     async def next(self, **kwargs):

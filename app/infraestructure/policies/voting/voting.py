@@ -59,7 +59,7 @@ async def update_application_status(
     user_application = voting.user_application
     application_flow = ApplicationFlow(user_application)
 
-    response = application_flow.next(
+    await application_flow.next(
         is_approved=result == VotingResult.APPROVED,
         db_postgres=db_postgres,
         current_user=current_user,
