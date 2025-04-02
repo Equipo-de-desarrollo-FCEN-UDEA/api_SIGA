@@ -35,7 +35,11 @@ class ApplicationFlow:
         self.user_application = user_application
 
     def extract_params(self, param_str):
-        param_matches = re.findall(r"(\w+)\s*=\s*\"([^\"]*)\"", param_str)
+        if not re.match(r'^[\w\s=,"-]*$', param_str):
+            raise ValueError('Invalid characters in parameter string')
+
+        # Usar una expresión regular más segura
+        param_matches = re.findall(r'(\w+)\s*=\s*"([^"]*)"', param_str)
         return param_matches
 
     async def next(self, **kwargs):
