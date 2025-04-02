@@ -1,33 +1,45 @@
 from __future__ import annotations
 
+import json
+from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
+from fastapi import File
+from fastapi import Form
 from fastapi import HTTPException
 from fastapi import Security
+from fastapi import UploadFile
 from fastapi.responses import FileResponse
-from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.middleware.bearer import get_current_active_user
 from app.api.middleware.mongo_db import get_mongo_db
 from app.api.middleware.postgres_db import get_db
 from app.api.middleware.scopes import has_role
+from app.core import constants
 from app.infraestructure.formats import formats_dir
 from app.infraestructure.policies.application.type.mobility import delete_file
-from app.infraestructure.policies.application.type.mobility import flux
 from app.infraestructure.policies.application.type.mobility import (
     generate_format,
 )
+from app.infraestructure.policies.application.type.mobility import MobilityFlow
+from app.protocols.db.models.application.type.mobility import MobilityPurpose
+from app.protocols.db.models.application.type.mobility import MobilityType
+from app.protocols.db.models.application.type.mobility import Process
 from app.schemas.application.type.mobility import Mobility
 from app.schemas.application.type.mobility import MobilityCreate
+from app.schemas.application.type.mobility import Subject
+from app.schemas.application.user_application import UserApplicationPublic
 from app.schemas.users.user import User
 from app.services.application.type.mobility import mobility_svc
 from app.services.application.user_application import user_application_svc
 from app.services.organization.academic_unit import academic_unit_svc
+from app.services.users.user_rol_academic_unit import user_rol_academic_unit_svc
 
 
 router = APIRouter()
@@ -46,10 +58,25 @@ async def get_mobility(
     return Mobility(**vars(mobility))
 
 
-@router.post('/create', response_model=MobilityCreate, status_code=201)
+@router.post('/create', response_model=UserApplicationPublic, status_code=201)
 async def create_mobility(
     *,
-    obj_in: MobilityCreate,
+    process: Annotated[Process, Form()],
+    type: Annotated[MobilityType, Form()],
+    purpose: Annotated[MobilityPurpose, Form()],
+    destination_country: Annotated[str, Form()],
+    destination_institution: Annotated[str, Form()],
+    academic_program: Annotated[str, Form()],
+    name_contact_person: Annotated[str, Form()],
+    cellphone_contact_person: Annotated[str, Form()],
+    email_contact_person: Annotated[str, Form()],
+    date_start: Annotated[datetime, Form()],
+    date_end: Annotated[datetime, Form()],
+    subjects: Annotated[list[str], Form()] = [],
+    admission_letter: Annotated[UploadFile, File()],
+    enrollment_certificate: Annotated[UploadFile, File()],
+    insurance: Annotated[UploadFile | None, File()] = None,
+    passport: Annotated[UploadFile | None, File()] = None,
     db_mongo=Depends(get_mongo_db),
     db_postgres: Session = Depends(get_db),
     permissions: Annotated[bool, Security(has_role, scopes=['estudiante'])] = False,
@@ -58,35 +85,90 @@ async def create_mobility(
             get_current_active_user,
         ),
     ] = None,
-) -> MobilityCreate:
+) -> UserApplicationPublic:
+    documents = [admission_letter, enrollment_certificate, insurance, passaport]
+    documents = [doc for doc in documents if doc is not None]
+    parsed_subjects = []
+    if subjects:
+        subjects_str = f'[{subjects[0]}]'
+        try:
+            parsed_subjects = [Subject(**item) for item in json.loads(subjects_str)]
+        except Exception:
+            raise HTTPException(status_code=422, detail="Formato inválido de 'subjects'")
 
-    mobility_create = await mobility_svc.create(
-        db_mongo=db_mongo,
+    obj_in = MobilityCreate(
+        process=process,
+        type=type,
+        purpose=purpose,
+        destination_country=destination_country,
+        destination_institution=destination_institution,
+        academic_program=academic_program,
+        name_contact_person=name_contact_person,
+        cellphone_contact_person=cellphone_contact_person,
+        email_contact_person=email_contact_person,
+        date_start=date_start,
+        date_end=date_end,
+        total_time=(date_end - date_start).days,
+        subjects=parsed_subjects,
+    )
+
+    committee = user_rol_academic_unit_svc.get_student_committee(
+        user_id=current_user.id, db=db_postgres,
+    )
+
+    mobility_create = await user_application_svc.create_user_application(
         obj_in=obj_in,
+        current_user_id=current_user.id,
+        application_id=constants.MOBILITY_ID,
+        academic_unit_id=committee,
         db_postgres=db_postgres,
-        current_user=current_user,
-        application_id='1c779ce5-ce77-49ea-87e2-69a2388e53f2',
+        mongo_service=mobility_svc,
+        db_mongo=db_mongo,
+    )
+
+    user_application_svc.upload_files(
+        user_application_id=mobility_create.id,
+        files=documents,
+        db=db_postgres,
+        prefix=None,
     )
 
     return mobility_create
 
 
-@router.patch('/update/{id}', response_model=str, status_code=200)
-async def update_status(
-    *,
-    id: UUID,
-    db_mongo=Depends(get_mongo_db),
-    db_postgres: Session = Depends(get_db),
-    current_user: Annotated[User, Depends(get_current_active_user)],
-) -> Mobility:
+class ApplicationRequest(BaseModel):
+    academic_unit_id: UUID | None = None
 
-    await flux(
-        user_application_id=id,
+
+@router.post('/{user_application_id}/next', response_model=None)
+async def advance_application_status(
+    user_application_id: str,
+    request: ApplicationRequest,
+    is_approved: bool = True,
+    db_mongo=Depends(get_mongo_db),
+    db_postgres=Depends(get_db),
+    current_user=Depends(get_current_active_user),
+):
+    """
+    Endpoint para avanzar el estado de una solicitud de movilidad.
+    """
+    # Obtener la solicitud
+    user_application = user_application_svc.get(id=user_application_id, db=db_postgres)
+
+    # Instanciar el flujo de movilidad
+    application_flow = MobilityFlow(user_application)
+
+    # Ejecutar la transición
+    response = await application_flow.next(
+        user_application_id=user_application_id,
         db_mongo=db_mongo,
         db_postgres=db_postgres,
         current_user=current_user,
+        is_approved=is_approved,
+        **request.model_dump(exclude_unset=True),
     )
-    return JSONResponse(content='Status updated', status_code=200)
+
+    return response
 
 
 @router.post('/generate-mobility-form/{id}')
