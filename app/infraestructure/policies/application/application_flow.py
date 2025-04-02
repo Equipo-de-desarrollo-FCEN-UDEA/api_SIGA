@@ -37,9 +37,19 @@ class ApplicationFlow:
     def extract_params(self, param_str):
         if not re.match(r'^[\w\s=,"-]*$', param_str):
             raise ValueError('Invalid characters in parameter string')
-
-        # Usar una expresión regular más segura
-        param_matches = re.findall(r'(\w+)\s*=\s*"([^"]*)"', param_str)
+        # Split the string into key-value pairs based on the comma delimiter.
+        params = param_str.split(',')
+        param_matches = []
+        for param in params:
+            # For each key-value pair,
+            # split it into key and value based on the equals sign.
+            parts = param.split('=')
+            if len(parts) == 2:
+                key = parts[0].strip()
+                # Remove quotes from the value and unescape any escaped quotes.
+                value = parts[1].strip().strip('"').replace('\\"', '"')
+                if re.match(r'^\w+$', key):
+                    param_matches.append((key, value))
         return param_matches
 
     async def next(self, **kwargs):
