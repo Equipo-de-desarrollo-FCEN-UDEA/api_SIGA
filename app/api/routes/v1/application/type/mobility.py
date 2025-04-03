@@ -86,7 +86,7 @@ async def create_mobility(
         ),
     ] = None,
 ) -> UserApplicationPublic:
-    documents = [admission_letter, enrollment_certificate, insurance, passaport]
+    documents = [admission_letter, enrollment_certificate, insurance, passport]
     documents = [doc for doc in documents if doc is not None]
     parsed_subjects = []
     if subjects:
