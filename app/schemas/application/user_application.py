@@ -64,6 +64,7 @@ class UserApplicationAcademicUnitPublic(BaseModel):
 
 class UserApplicationPublic(BaseModel):
     id: UUID
+    consecutive: int
     user: UserPublic
     application: ApplicationPublic
     user_application_academic_units: list[UserApplicationAcademicUnitPublic]
