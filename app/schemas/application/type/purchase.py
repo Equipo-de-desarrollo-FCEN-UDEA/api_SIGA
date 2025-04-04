@@ -76,6 +76,8 @@ class SelectedProvider(BaseModel):
 
 
 class PurchasePublic(PurchaseBase, PurchaseComplete):
+    selected_provider: Provider | None = None
+    materials: list[Material] | None = None
 
     class Config:
         orm_mode = True
