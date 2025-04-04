@@ -3,6 +3,7 @@ from __future__ import annotations
 from uuid import UUID
 
 from fastapi import UploadFile
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -119,6 +120,8 @@ class UserApplicationCrud(
             UserApplicationAcademicUnit,
         ).filter(
             UserApplicationAcademicUnit.academic_unit_id == academic_unit_id,
+        ).order_by(
+            desc(UserApplication.consecutive),
         ).all()
 
     def get_to_user(
