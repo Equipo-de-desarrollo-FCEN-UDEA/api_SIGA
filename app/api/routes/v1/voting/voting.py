@@ -101,7 +101,6 @@ async def close_voting(
     voting = voting_svc.get(id=voting_id, db=db_postgres)
     await update_application_status(
         voting=voting,
-        db_mongo=db_mongo,
         db_postgres=db_postgres,
         current_user=current_user,
         result=result,
