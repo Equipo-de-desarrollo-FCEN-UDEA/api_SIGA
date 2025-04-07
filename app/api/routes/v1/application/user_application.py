@@ -17,6 +17,7 @@ from app.api.middleware.postgres_db import get_db
 from app.core.config import settings
 from app.infraestructure.policies.application.application_flow import ApplicationFlow
 from app.infraestructure.services.aws.s3 import s3
+from app.protocols.db.models.users.user import User
 from app.schemas.application.user_application import UserApplicationPublic
 from app.services.application.application_status import application_status_svc
 from app.services.application.type.purchase import purchase_svc
@@ -37,6 +38,22 @@ APPLICATIONS_IDS = {
 
 
 router = APIRouter()
+
+
+@router.get(
+    '/me',
+    response_model=list[UserApplicationPublic],
+    status_code=200,
+)
+async def get_my_applications(
+    *,
+    current_user: User = Depends(get_current_active_user),
+    db_postgres: Session = Depends(get_db),
+) -> list[UserApplicationPublic]:
+    user_applications = user_application_svc.get_by_user_id(
+        user_id=current_user.id, db=db_postgres,
+    )
+    return [UserApplicationPublic.model_validate(app) for app in user_applications]
 
 
 @router.get('/{id}', response_model=UserApplicationPublic, status_code=200)

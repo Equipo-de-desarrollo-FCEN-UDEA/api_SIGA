@@ -134,5 +134,17 @@ class UserApplicationCrud(
             UserApplicationUser, UserApplicationUser.user_id == user_id,
         ).all()
 
+    def get_by_user_id(
+            self,
+            *,
+            user_id: UUID,
+            db: Session,
+    ) -> list[UserApplication]:
+        with db:
+            response = db.query(UserApplication).filter(
+                UserApplication.user_id == user_id,
+            ).all()
+        return response
+
 
 user_application_crud = UserApplicationCrud(UserApplication)
