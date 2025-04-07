@@ -94,6 +94,19 @@ class UserApplicationService(
         )
         return user_applications
 
+    def get_by_user_id(
+            self,
+            *,
+            user_id: UUID,
+            db,
+    ) -> list[UserApplication]:
+        if self.observer is None:
+            raise BaseErrors(code=503, detail=SERVICE_NOT_AVAILABLE)
+        user_applications = self.observer.get_by_user_id(
+            user_id=user_id, db=db,
+        )
+        return user_applications
+
     def get_to_user(
             self,
             *,
