@@ -55,6 +55,7 @@ services:
             context: ..
             dockerfile: docker/Dockerfile.dev
         command: uvicorn app.main:app --reload --workers 1 --host 0.0.0.0 --port 8010
+        container_name: backend
         volumes:
             - ../:/usr/src/app/
         ports:
