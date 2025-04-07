@@ -77,7 +77,11 @@ async def create_commission(
     obj_in: CommissionCreate,
     db_mongo: Any = Depends(get_mongo_db),
     db_postgres: Session = Depends(get_db),
-    permissions: Annotated[bool, Security(has_role, scopes=['profesor'])] = False,
+    permissions: Annotated[
+        bool, Security(
+        has_role, scopes=['profesor'],
+        ),
+    ] = False,
     current_user: Annotated[
         User, Security(
             get_current_active_user,
