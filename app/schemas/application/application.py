@@ -1,7 +1,9 @@
-from pydantic import BaseModel
+from __future__ import annotations
+
 from uuid import UUID
 
-from app.schemas.utils.base_model import GeneralResponse
+from pydantic import BaseModel
+
 
 class ApplicationBase(BaseModel):
     name: str
@@ -11,13 +13,16 @@ class ApplicationBase(BaseModel):
     class config:
         from_attributes = True
 
+
 class ApplicationCreate(ApplicationBase):
     pass
+
 
 class ApplicationUpdate(BaseModel):
     name: str | None
     description: str | None
     academic_unit_id: UUID | None
+
 
 class Application(ApplicationBase):
     id: UUID
@@ -26,3 +31,10 @@ class Application(ApplicationBase):
         from_attributes = True
 
 
+class ApplicationPublic(BaseModel):
+    id: UUID
+    name: str
+    description: str
+
+    class Config:
+        from_attributes = True

@@ -1,0 +1,4 @@
+#!/bin/bash
+if git diff --name-only HEAD@{1} HEAD | grep -q 'alembic/versions/'; then
+    echo "⚠️ Cambiaste de rama y hay migraciones nuevas. Ejecuta 'alembic upgrade head'."
+fi

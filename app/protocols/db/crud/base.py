@@ -14,10 +14,10 @@ ModelType = TypeVar('ModelType')
 
 
 class CRUDProtocol(Protocol[ModelType, CreateSchemaType, UpdateSchemaType]):
-    def create(self, *, obj_in: CreateSchemaType) -> ModelType:
+    def create(self, *, obj_in: CreateSchemaType, db) -> ModelType:
         ...
 
-    def get(self, *, id: UUID) -> ModelType:
+    def get(self, *, id: UUID, db) -> ModelType:
         ...
 
     def get_multi(
@@ -29,11 +29,15 @@ class CRUDProtocol(Protocol[ModelType, CreateSchemaType, UpdateSchemaType]):
         order_by: str | None = None,
         date_range: dict[str, date] | None = None,
         values: tuple[str] | None = None,
+        db,
     ) -> list[ModelType | dict[str, Any]]:
         ...
 
-    def update(self, *, id: UUID, obj_in: UpdateSchemaType) -> ModelType:
+    def update(
+        self,
+        *, obj_in: UpdateSchemaType, db_obj, db,
+    ) -> ModelType:
         ...
 
-    def delete(self, *, id: UUID) -> int:
+    def delete(self, *, id: UUID, db) -> int:
         ...

@@ -19,8 +19,8 @@ from app.services.users.user_rol_academic_unit import user_rol_academic_unit_svc
 
 def get_next_status(
     current_status: str,
-    start_date: datetime,
-    end_date: datetime,
+    start_date: datetime | None,
+    end_date: datetime | None,
     response: str | None = None,
 ) -> str | None:
     """
@@ -69,8 +69,8 @@ def create_user_application_status(name: str, updated_by: UUID) -> UserApplicati
 
 async def flux(
     *,
-    start_date: datetime,
-    end_date: datetime,
+    start_date: datetime | None,
+    end_date: datetime | None,
     user_application_id: UUID,
     db_mongo: AIOSession,
     db_postgres: Session,

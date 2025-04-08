@@ -51,13 +51,16 @@ class Settings(BaseSettings):
     redis_url: str
     redis_backend: str
 
-    # SMTP
-    smtp_user_email: str
-    smtp_user_password: SecretStr
-    smtp_host_email: str
+    # SMTP PRODUCTION
+    smtp_prod_user_email: str
+    smtp_prod_user_password: SecretStr
+    smtp_prod_host_email: str
+
     smtp_from_email: str
-    smtp_domain_email: str
-    smtp_port_email: int
+
+    # SMTP Local
+    smtp_local_host_email: str
+    smtp_local_port_email: int
 
     # URLs front
     URL_LAB: str
@@ -67,6 +70,19 @@ class Settings(BaseSettings):
 
     # Academic units Ids
     INTERNAL_FCEN: str
+    EXTENSION_ID: str
+    CIEN_ID: str
+    FCEN: str
+
+    # Applications ID
+    PURCHASE_ID: str
+
+    # AWS
+    aws_user: str
+    aws_access_key_id: str
+    aws_access_secret_key: str
+    aws_region_name: str
+    aws_bucket_name: str
 
 
 @lru_cache

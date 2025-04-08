@@ -8,7 +8,6 @@ from pydantic import BaseModel
 from app.protocols.db.models.application.type.mobility import MobilityPurpose
 from app.protocols.db.models.application.type.mobility import MobilityType
 from app.protocols.db.models.application.type.mobility import Process
-from app.schemas.application.user_application import UserApplicationStatus
 
 
 class Subject(BaseModel):
@@ -31,7 +30,6 @@ class MobilityBase(BaseModel):
     date_start: datetime
     date_end: datetime
     subjects: list[Subject] | None = []
-    status: list[UserApplicationStatus] | None = []
 
 
 class MobilityCreate(MobilityBase):
@@ -59,15 +57,3 @@ class MobilityUpdate(BaseModel):
 class Mobility(MobilityBase):
     id: UUID
     date_report: datetime | None = None
-
-
-class MobilityWithUser(Mobility):
-    name: str
-    last_name: str
-    student_rol: str
-    school: str
-    current_program: str
-    phone: str
-    email: str
-    identification_type: str
-    identification_number: str
