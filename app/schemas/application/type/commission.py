@@ -20,7 +20,7 @@ class CommissionBase(BaseModel):
     date_end: datetime
     reason: str = Field(max_length=500, min_length=5)
     justification: str = Field(max_length=500, min_length=5)
-    status: list[UserApplicationStatus] = Field(default_factory=list)
+    # status: list[UserApplicationStatus] = Field(default_factory=list)
     documents: list[Any] = Field(default_factory=list)
 
 

@@ -9,7 +9,10 @@ from uuid import UUID
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import File
+from fastapi import Form
 from fastapi import Security
+from fastapi import UploadFile
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
@@ -21,76 +24,134 @@ from app.infraestructure.policies.application.type.commission import flux
 from app.schemas.application.type.commission import CommissionCreate
 from app.schemas.application.type.commission import CommissionResponse
 from app.schemas.application.type.commission import CommissionUpdate
+from app.schemas.application.user_application import UserApplicationPublic
 from app.schemas.users.user import User
 from app.services.application.type.commission import commission_svc
+from app.services.application.user_application import user_application_svc
+from app.services.users.user_rol_academic_unit import user_rol_academic_unit_svc
+# from app.core.config import settings
+# from app.schemas.application.user_application import UserApplicationStatus
 
 log = logging.getLogger(__name__)
 
 router = APIRouter()
 
 
-@router.post(
-    '/create',
-    response_model=CommissionCreate,
-    status_code=HTTPStatus.CREATED.value,
-    summary='Create a new commission',
-    description=(
-        'Create a new commission by providing the necessary details. '
-        'Authentication is required, and only users with the appropriate scope '
-        'for professors or administrative personnel can access this endpoint.'
-    ),
-    responses={
-        201: {
-            'description': 'Commission successfully created.',
-            'content': {
-                'application/json': {
-                    'example': {
-                        'id': '3fa85f64-5717-4562-b3fc-2c963f66afa6',
-                        'country': 'Colombia',
-                        'state': 'Antioquia',
-                        'city': 'Medellin',
-                        'date_start': '2025-01-16T15:57:37.890Z',
-                        'date_end': '2025-01-16T15:57:37.890Z',
-                        'reason': 'string',
-                        'justification': 'string',
-                        'status': [
-                            {
-                                'name': 'CREADA',
-                                'updated_by': '3fa85f64-5717-4562-b3fc-2c963f66afa6',
-                                'date': '2025-01-16T15:57:37.890Z',
-                            },
-                        ],
-                        'documents': [
-                            'string',
-                        ],
-                    },
-                },
-            },
-        },
-        400: {'description': 'Invalid data provided.'},
-        401: {'description': 'User not authenticated.'},
-        500: {'description': 'Internal server error.'},
-    },
-)
+@router.post('/create', response_model=UserApplicationPublic, status_code=201)
 async def create_commission(
     *,
-    obj_in: CommissionCreate,
-    db_mongo: Any = Depends(get_mongo_db),
-    db_postgres: Session = Depends(get_db),
+    country: Annotated[str, Form()],
+    state: Annotated[str, Form()],
+    city: Annotated[str, Form()],
+    date_start: Annotated[datetime, Form()],
+    date_end: Annotated[datetime, Form()],
+    reason: Annotated[str, Form()],
+    justification: Annotated[str, Form()],
+    # status: Annotated[list[UserApplicationStatus], Form()],
+    documents: Annotated[list[UploadFile], File()],
     permissions: Annotated[bool, Security(has_role, scopes=['profesor'])] = False,
+    db_mongo=Depends(get_mongo_db),
+    db_postgres: Session = Depends(get_db),
     current_user: Annotated[
         User, Security(
             get_current_active_user,
         ),
     ] = None,
-) -> CommissionCreate:
-    return await commission_svc.create(
-        db_mongo=db_mongo,
-        obj_in=obj_in,
-        db_postgres=db_postgres,
-        current_user=current_user,
-        application_id='21444ff5-eecc-4365-aad9-ccce45b7d48f',
+) -> UserApplicationPublic:
+    obj_in = CommissionCreate(
+        country=country,
+        state=state,
+        city=city,
+        date_start=date_start,
+        date_end=date_end,
+        reason=reason,
+        justification=justification,
+        # status=status,
+        documents=documents,
     )
+
+    get_units = user_rol_academic_unit_svc.get_academic_units_by_user_id_and_rol_id
+
+    academic_unit_id = get_units(
+        user_id=current_user.id,
+        rol_id=current_user.user_roles_academic_units,
+    )
+
+    commission_create = await user_application_svc.create_user_application(
+        obj_in=obj_in,
+        current_user_id=current_user.id,
+        application_id='21444ff5-eecc-4365-aad9-ccce45b7d48f',
+        academic_unit_id=academic_unit_id,
+        db_postgres=db_postgres,
+        mongo_service=commission_svc,
+        db_mongo=db_mongo,
+    )
+
+    return commission_create
+
+
+# @router.post(
+#     '/create',
+#     response_model=CommissionCreate,
+#     status_code=HTTPStatus.CREATED.value,
+#     summary='Create a new commission',
+#     description=(
+#         'Create a new commission by providing the necessary details. '
+#         'Authentication is required, and only users with the appropriate scope '
+#         'for professors or administrative personnel can access this endpoint.'
+#     ),
+#     responses={
+#         201: {
+#             'description': 'Commission successfully created.',
+#             'content': {
+#                 'application/json': {
+#                     'example': {
+#                         'id': '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+#                         'country': 'Colombia',
+#                         'state': 'Antioquia',
+#                         'city': 'Medellin',
+#                         'date_start': '2025-01-16T15:57:37.890Z',
+#                         'date_end': '2025-01-16T15:57:37.890Z',
+#                         'reason': 'string',
+#                         'justification': 'string',
+#                         'status': [
+#                             {
+#                                 'name': 'CREADA',
+#                                 'updated_by': '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+#                                 'date': '2025-01-16T15:57:37.890Z',
+#                             },
+#                         ],
+#                         'documents': [
+#                             'string',
+#                         ],
+#                     },
+#                 },
+#             },
+#         },
+#         400: {'description': 'Invalid data provided.'},
+#         401: {'description': 'User not authenticated.'},
+#         500: {'description': 'Internal server error.'},
+#     },
+# )
+# async def create_commission(
+#     *,
+#     obj_in: CommissionCreate,
+#     db_mongo: Any = Depends(get_mongo_db),
+#     db_postgres: Session = Depends(get_db),
+#     permissions: Annotated[bool, Security(has_role, scopes=['profesor'])] = False,
+#     current_user: Annotated[
+#         User, Security(
+#             get_current_active_user,
+#         ),
+#     ] = None,
+# ) -> CommissionCreate:
+#     return await commission_svc.create(
+#         db_mongo=db_mongo,
+#         obj_in=obj_in,
+#         db_postgres=db_postgres,
+#         current_user=current_user,
+#         application_id='21444ff5-eecc-4365-aad9-ccce45b7d48f',
+#     )
 
 
 @router.get(
@@ -178,7 +239,10 @@ async def delete_commission(
 ) -> str:
     await commission_svc.delete(id=id, db=db_mongo)
 
-    return JSONResponse(content='Commission successfully deleted.', status_code=HTTPStatus.OK.value)
+    return JSONResponse(
+        content='Commission successfully deleted.',
+        status_code=HTTPStatus.OK.value,
+    )
 
 
 @router.put(
