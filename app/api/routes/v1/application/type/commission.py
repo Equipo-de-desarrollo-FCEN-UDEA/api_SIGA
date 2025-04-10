@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
+from datetime import timedelta
 from http import HTTPStatus
 from typing import Annotated
 from typing import Any
@@ -19,7 +20,6 @@ from sqlalchemy.orm import Session
 from app.api.middleware.bearer import get_current_active_user
 from app.api.middleware.mongo_db import get_mongo_db
 from app.api.middleware.postgres_db import get_db
-from app.api.middleware.scopes import has_role
 from app.infraestructure.policies.application.type.commission import flux
 from app.schemas.application.type.commission import CommissionCreate
 from app.schemas.application.type.commission import CommissionResponse
@@ -29,6 +29,7 @@ from app.schemas.users.user import User
 from app.services.application.type.commission import commission_svc
 from app.services.application.user_application import user_application_svc
 from app.services.users.user_rol_academic_unit import user_rol_academic_unit_svc
+# from app.api.middleware.scopes import has_role
 # from app.core.config import settings
 # from app.schemas.application.user_application import UserApplicationStatus
 
@@ -47,9 +48,8 @@ async def create_commission(
     date_end: Annotated[datetime, Form()],
     reason: Annotated[str, Form()],
     justification: Annotated[str, Form()],
-    # status: Annotated[list[UserApplicationStatus], Form()],
     documents: Annotated[list[UploadFile], File()],
-    permissions: Annotated[bool, Security(has_role, scopes=['profesor'])] = False,
+    # permissions: Annotated[bool, Security(has_role, scopes=['profesor'])] = False,
     db_mongo=Depends(get_mongo_db),
     db_postgres: Session = Depends(get_db),
     current_user: Annotated[
@@ -66,22 +66,32 @@ async def create_commission(
         date_end=date_end,
         reason=reason,
         justification=justification,
-        # status=status,
         documents=documents,
     )
 
-    get_units = user_rol_academic_unit_svc.get_academic_units_by_user_id_and_rol_id
+    if (date_end - date_start) >= timedelta(days=30):
+        committee = user_rol_academic_unit_svc.get_student_committee(
+            user_id=current_user.id, db=db_postgres,
+        )
+        academic_unit_id = committee
 
-    academic_unit_id = get_units(
-        user_id=current_user.id,
-        rol_id=current_user.user_roles_academic_units,
-    )
+    # else:
+    #     get_units = user_rol_academic_unit_svc.get_academic_units_by_user_id_and_rol_id
+
+    #     academic_unit_id = get_units(
+    #         user_id=current_user.id,
+    #         rol_id=current_user.user_roles_academic_units,
+    #         db=db_postgres,
+    #     )
+
+    #     print('academic_unit_id', academic_unit_id)
 
     commission_create = await user_application_svc.create_user_application(
         obj_in=obj_in,
         current_user_id=current_user.id,
-        application_id='21444ff5-eecc-4365-aad9-ccce45b7d48f',
-        academic_unit_id=academic_unit_id,
+        application_id=UUID('190040d8-557e-4f41-92da-9916c1050e76'),
+        # inst. de física, de momento
+        academic_unit_id=UUID('41be94bc-e796-454b-9ea6-6a47c8276493'),
         db_postgres=db_postgres,
         mongo_service=commission_svc,
         db_mongo=db_mongo,

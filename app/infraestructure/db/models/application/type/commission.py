@@ -7,8 +7,6 @@ from uuid import UUID
 from odmantic import Field
 from odmantic import Model
 
-from app.schemas.application.user_application import UserApplicationStatus
-
 
 class Commission(Model):
     id: UUID = Field(primary_field=True)
@@ -22,4 +20,3 @@ class Commission(Model):
     documents: list[Any] | None
     resolution: str | None = None
     compliment: Any | None = None
-    status: list[UserApplicationStatus]
