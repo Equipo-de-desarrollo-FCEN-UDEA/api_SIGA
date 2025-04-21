@@ -8,8 +8,6 @@ from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
 
-from app.schemas.application.user_application import UserApplicationStatus
-
 
 class CommissionBase(BaseModel):
     id: UUID | None = None
@@ -20,7 +18,6 @@ class CommissionBase(BaseModel):
     date_end: datetime
     reason: str = Field(max_length=500, min_length=5)
     justification: str = Field(max_length=500, min_length=5)
-    status: list[UserApplicationStatus] = Field(default_factory=list)
     documents: list[Any] = Field(default_factory=list)
 
 
@@ -36,7 +33,6 @@ class CommissionUpdate(BaseModel):
     date_end: datetime | None
     reason: str | None = Field(max_length=100, min_length=5)
     justification: str | None = Field(max_length=250, min_length=5)
-    status: list[UserApplicationStatus] = Field(default_factory=list)
     documents: list[Any] | None
 
 

@@ -22,4 +22,3 @@ class Commission(Model):
     documents: list[Any] | None
     resolution: str | None = None
     compliment: Any | None = None
-    status: list[UserApplicationStatus]
