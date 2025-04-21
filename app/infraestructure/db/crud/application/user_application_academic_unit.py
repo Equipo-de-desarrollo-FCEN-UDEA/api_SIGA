@@ -7,15 +7,15 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import ORMError
 from app.infraestructure.db.crud.base import CRUDBase
-from app.infraestructure.db.models import application
+from app.infraestructure.db.models.application.user_application_academic_unit import (
+    UserApplicationAcademicUnit,
+)
 from app.schemas.application.user_application_academic_unit import (
     UserApplicationAcademicUnitCreate,
 )
 from app.schemas.application.user_application_academic_unit import (
     UserApplicationAcademicUnitUpdate,
 )
-usAppacademinUt = application.user_application_academic_unit
-UserApplicationAcademicUnit = usAppacademinUt.UserApplicationAcademicUnit
 
 
 class UserApplicationAcademicUnitCrud(

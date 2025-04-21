@@ -78,6 +78,7 @@ class User(UserBase):
 
 
 class UserPublic(BaseModel):
+    id: UUID | None = None
     name: str
     last_name: str
 

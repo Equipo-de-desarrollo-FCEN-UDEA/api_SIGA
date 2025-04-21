@@ -40,16 +40,16 @@ class ApplicationTypeBaseCrud(
 
         obj_in.id = user_application.id
 
-        create_status = UserApplicationStatus(
-            name='CREADA',
-            updated_by=current_user.id,
-            date=datetime.now(),
-        )
-        obj_in.status = [create_status]
+        # create_status = UserApplicationStatus(
+        #     name='CREADA',
+        #     updated_by=current_user.id,
+        #     date=datetime.now(),
+        # )
+        # obj_in.status = [create_status]
 
         obj_create = await super().create(
             db_mongo,
-            obj_in=self.model(**dict(obj_in)),
+            obj_in=obj_in,
         )
 
         return obj_create

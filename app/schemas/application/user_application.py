@@ -7,6 +7,9 @@ from pydantic import BaseModel
 
 from app.schemas.application.application import Application
 from app.schemas.application.application import ApplicationPublic
+from app.schemas.application.user_application_status import (
+    UserApplicationStatusPublic,
+)
 from app.schemas.organization.academic_unit import AcademicUnit
 from app.schemas.users.user import UserInDB
 from app.schemas.users.user import UserPublic
@@ -61,9 +64,13 @@ class UserApplicationAcademicUnitPublic(BaseModel):
 
 class UserApplicationPublic(BaseModel):
     id: UUID
+    consecutive: int
     user: UserPublic
     application: ApplicationPublic
     user_application_academic_units: list[UserApplicationAcademicUnitPublic]
+    user_application_status: list[UserApplicationStatusPublic]
+    documents: list[dict] | None = None
+    info: dict | None = None
 
     class Config:
         from_attributes = True

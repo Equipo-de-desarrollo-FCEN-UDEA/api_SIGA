@@ -50,7 +50,7 @@ def login_access_token(
     access_token = jwt_service.create_access_token(
         data={
             'sub': user_id,
-            'info': UserPublic.model_validate(user).model_dump(),
+            'info': UserPublic.model_validate(user).model_dump(exclude={'id'}),
             'scopes': scopes,
         },
         expires=settings.ACCESS_TOKEN_EXPIRE_MINUTES,
@@ -64,7 +64,12 @@ def login_access_token(
         samesite=None,     # Ayuda a prevenir ataques CSRF
         path='/',
     )
-    return {'User': UserPublic.model_validate(user).model_dump()}
+    return {
+        'User': {
+            **UserPublic.model_validate(user).model_dump(),
+            'scopes': scopes,
+        },
+    }
 
 # Active account with token
 

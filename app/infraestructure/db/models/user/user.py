@@ -39,3 +39,7 @@ class User(BaseModel):
     user_applications_user = relationship(
         'UserApplicationUser', back_populates='user', lazy='joined',
     )
+
+    user_application_status = relationship(
+        'UserApplicationStatus', back_populates='user',
+    )
