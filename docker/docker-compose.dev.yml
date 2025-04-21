@@ -51,7 +51,7 @@ services:
             - siga-fcen
 
     backend:
-        container_name: 'backend'
+        container_name: 'backend-siga'
         build:
             context: ..
             dockerfile: docker/Dockerfile.dev
