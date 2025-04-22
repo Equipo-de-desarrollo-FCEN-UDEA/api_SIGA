@@ -69,22 +69,28 @@ async def create_commission(
         documents=[f'documento-{i+1}' for i in range(len(documents))],
     )
 
-    # if (date_end - date_start) >= timedelta(days=30):
-    #     committee = user_rol_academic_unit_svc.get_student_committee(
-    #         user_id=current_user.id, db=db_postgres,
-    #     )
-    #     academic_unit_id = committee
+    if (date_end - date_start) >= timedelta(days=30):
+        committee = user_rol_academic_unit_svc.get_student_committee(
+            user_id=current_user.id, db=db_postgres,
+        )
+        academic_unit_id = committee
 
-    # else:
-    #     get_units = user_rol_academic_unit_svc.get_academic_units_by_user_id_and_rol_id
+        print('date_end - date_start', date_end - date_start)
+        print('academic_unit_id', academic_unit_id)
 
-    #     academic_unit_id = get_units(
-    #         user_id=current_user.id,
-    #         rol_id=current_user.user_roles_academic_units,
-    #         db=db_postgres,
-    #     )
+    else:
+        get_units = user_rol_academic_unit_svc.get_academic_units_by_user_id_and_rol_id
 
-    #     print('academic_unit_id', academic_unit_id)
+        academic_units_ids = get_units(
+            user_id=current_user.id,
+            rol_id=UUID('0c1875e9-50b8-4590-80d1-6afce3ea152b'),  # id de Rol de profesor
+            db=db_postgres,
+        )
+
+        academic_unit_id = [unit.id for unit in academic_units_ids]
+
+        print('date_end - date_start', date_end - date_start)
+        print('academic_unit_id', academic_unit_id)
 
     commission_create = await user_application_svc.create_user_application(
         obj_in=obj_in,
