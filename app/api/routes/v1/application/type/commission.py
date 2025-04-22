@@ -66,14 +66,14 @@ async def create_commission(
         date_end=date_end,
         reason=reason,
         justification=justification,
-        documents=documents,
+        documents=[f'documento-{i+1}' for i in range(len(documents))],
     )
 
-    if (date_end - date_start) >= timedelta(days=30):
-        committee = user_rol_academic_unit_svc.get_student_committee(
-            user_id=current_user.id, db=db_postgres,
-        )
-        academic_unit_id = committee
+    # if (date_end - date_start) >= timedelta(days=30):
+    #     committee = user_rol_academic_unit_svc.get_student_committee(
+    #         user_id=current_user.id, db=db_postgres,
+    #     )
+    #     academic_unit_id = committee
 
     # else:
     #     get_units = user_rol_academic_unit_svc.get_academic_units_by_user_id_and_rol_id
