@@ -47,6 +47,12 @@ class CommissionInDB(CommissionBase):
     compliment: Compliment | None = None
 
 
+class Commission(CommissionBase):
+    id: UUID
+    resolution: str | None = None
+    compliment: Compliment | None = None
+
+
 class CommissionResponse(CommissionInDB):
     ...
 

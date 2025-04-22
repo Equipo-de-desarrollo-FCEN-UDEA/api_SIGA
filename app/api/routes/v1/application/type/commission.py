@@ -21,6 +21,7 @@ from app.api.middleware.bearer import get_current_active_user
 from app.api.middleware.mongo_db import get_mongo_db
 from app.api.middleware.postgres_db import get_db
 from app.api.middleware.scopes import has_role
+from app.schemas.application.type.commission import Commission
 from app.schemas.application.type.commission import CommissionCreate
 from app.schemas.application.type.commission import CommissionResponse
 from app.schemas.application.type.commission import CommissionUpdate
@@ -36,6 +37,18 @@ from app.services.users.user_rol_academic_unit import user_rol_academic_unit_svc
 log = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+@router.get('/{id}', response_model=Commission, status_code=200)
+async def get_commission(
+    *,
+    id: UUID,
+    db_mongo=Depends(get_mongo_db),
+    current_user: Annotated[User, Depends(get_current_active_user)],
+) -> Commission:
+    commission = await commission_svc.get(id=id, db=db_mongo)
+
+    return Commission(**vars(commission))
 
 
 @router.post('/create', response_model=UserApplicationPublic, status_code=201)
