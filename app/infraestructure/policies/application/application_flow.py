@@ -105,12 +105,13 @@ class ApplicationFlow:
             self,
             updated_by,
             observation,
+            jump: int = 0,
     ) -> UserApplicationStatusCreate | None:
         application: Application = self.user_application.application
         current_status: int = len(self.user_application.user_application_status)
         application_status: list[ApplicationStatus] = application.application_status
         for app_status in application_status:
-            if app_status.step == current_status+1:
+            if app_status.step == current_status+1+jump:
                 next_status = app_status.status
 
         return UserApplicationStatusCreate(
@@ -168,6 +169,7 @@ class ApplicationFlow:
     async def send_to_academic_unit(self, **kwargs):
         db_postgres = kwargs.get('db_postgres')
         academic_unit_id = kwargs.get('academic_unit_id')
+        jump = kwargs.get('jump', 0)
 
         user_application_academic_unit = UserApplicationAcademicUnitCreate(
             user_application_id=self.user_application.id,
@@ -182,13 +184,17 @@ class ApplicationFlow:
         user_application_status = self.get_next_status(
             updated_by=kwargs.get('current_user').id,
             observation=kwargs.get('observation'),
+            jump=jump,
         )
 
         user_application_status_svc.create(
             obj_in=user_application_status, db=db_postgres,
         )
 
-        return None
+        return JSONResponse(
+            status_code=200,
+            content={'message': 'Application sent to academic unit successfully'},
+        )
 
     async def create_voting(self, **kwargs):
         user_app_acad_un = self.user_application.user_application_academic_units[0]

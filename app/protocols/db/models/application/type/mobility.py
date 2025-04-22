@@ -3,7 +3,6 @@ from __future__ import annotations
 from datetime import datetime
 from enum import Enum
 
-from app.protocols.db.utils.link_model import LinkModel
 from app.protocols.db.utils.mongo_model import MongoModel
 
 
@@ -31,12 +30,6 @@ class Subject:
     intern_name: str
 
 
-class Status(LinkModel):
-    name: str
-    updated_by: str
-    date: datetime
-
-
 class Mobility(MongoModel):
     proccess: Process
     type: MobilityType
@@ -52,4 +45,3 @@ class Mobility(MongoModel):
     total_time: int  # tiempo total en meses
     date_report: datetime
     subjects: list[Subject]
-    status: list[Status]

@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from app.infraestructure.db.crud.application.type.base import (
-    ApplicationTypeBaseCrud,
-)
+from app.infraestructure.db.crud.mongo_base import CRUDBase
 from app.infraestructure.db.models.application.type.commission import (
     Commission,
 )
@@ -11,7 +9,7 @@ from app.schemas.application.type.commission import CommissionUpdate
 
 
 class CommissionCrud(
-    ApplicationTypeBaseCrud[Commission, CommissionCreate, CommissionUpdate],
+    CRUDBase[Commission, CommissionCreate, CommissionUpdate],
 ):
     """
     A specialized CRUD class for managing `Commission` entities.

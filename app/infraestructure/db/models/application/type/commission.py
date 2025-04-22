@@ -7,8 +7,6 @@ from uuid import UUID
 from odmantic import Field
 from odmantic import Model
 
-from app.schemas.application.user_application import UserApplicationStatus
-
 
 class Commission(Model):
     id: UUID = Field(primary_field=True)
