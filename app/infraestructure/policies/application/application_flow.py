@@ -6,7 +6,9 @@ from datetime import datetime
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 
+from app.core.constants import CREATED_STATUS_ID
 from app.core.constants import REJECTED_STATUS_ID
+from app.core.constants import SEND_BACK_STATUS_ID
 from app.infraestructure.db.models.application.application import Application
 from app.infraestructure.db.models.application.application_status import (
     ApplicationStatus,
@@ -34,23 +36,44 @@ class ApplicationFlow:
     def __init__(self, user_application: UserApplication):
         self.user_application = user_application
 
+    # Función que elimina caracteres especiales
     def extract_params(self, param_str):
         if not re.match(r'^[\w\s=,"-]*$', param_str):
             raise ValueError('Invalid characters in parameter string')
-        # Split the string into key-value pairs based on the comma delimiter.
+
         params = param_str.split(',')
         param_matches = []
         for param in params:
-            # For each key-value pair,
-            # split it into key and value based on the equals sign.
             parts = param.split('=')
             if len(parts) == 2:
                 key = parts[0].strip()
-                # Remove quotes from the value and unescape any escaped quotes.
                 value = parts[1].strip().strip('"').replace('\\"', '"')
                 if re.match(r'^\w+$', key):
                     param_matches.append((key, value))
+
         return param_matches
+
+    def get_action(self, is_approved, is_returned) -> str | None:
+        """
+        Obtiene el siguiente estado válido según la transición permitida.
+        :param current_status: Estado actual de la aplicación.
+        :param is_approved: Indica si la transición es aprobada.
+        :return: Nombre del siguiente estado.
+        """
+
+        if is_returned:
+            return 'send_back'
+
+        elif not is_approved:
+            return 'reject'
+
+        application: Application = self.user_application.application
+        current_status: int = len(self.user_application.user_application_status)
+        application_status: list[ApplicationStatus] = application.application_status
+        for app_status in application_status:
+            if app_status.step == current_status:
+                return app_status.action
+        return None
 
     async def next(self, **kwargs):
         """
@@ -60,10 +83,14 @@ class ApplicationFlow:
         :param db_postgres: Conexión a PostgreSQL.
         :param current_user: Usuario que ejecuta la acción.
         :param is_approved: Indica si la transición es aprobada o no.
+        :param is_returned: Indica si la transición es retornada o no.
         :return: Respuesta de la acción ejecutada.
         """
 
-        action = self.get_action(kwargs.get('is_approved'))
+        action = self.get_action(
+            kwargs.get('is_approved'),
+            kwargs.get('is_returned'),
+        )
 
         if action is None:
             raise HTTPException(status_code=400, detail='Invalid transition')
@@ -82,24 +109,6 @@ class ApplicationFlow:
             parsed_params = {key: value for key, value in param_matches}
 
         return await getattr(self, action_name)(**{**kwargs, **parsed_params})
-
-    def get_action(self, is_approved) -> str | None:
-        """
-        Obtiene el siguiente estado válido según la transición permitida.
-        :param current_status: Estado actual de la aplicación.
-        :param is_approved: Indica si la transición es aprobada.
-        :return: Nombre del siguiente estado.
-        """
-        if not is_approved:
-            return 'reject'
-
-        application: Application = self.user_application.application
-        current_status: int = len(self.user_application.user_application_status)
-        application_status: list[ApplicationStatus] = application.application_status
-        for app_status in application_status:
-            if app_status.step == current_status:
-                return app_status.action
-        return None
 
     def get_next_status(
             self,
@@ -242,6 +251,48 @@ class ApplicationFlow:
         """
         Finaliza la solicitud
         """
+
+    async def first_status(self, **kwargs):
+        """
+        Función que envía cualquier solicitud al primer estado
+        """
+        user_application_status = UserApplicationStatusCreate(
+            user_application_id=self.user_application.id,
+            status_id=CREATED_STATUS_ID,
+            updated_by=kwargs.get('current_user').id,
+            observation=kwargs.get('observation'),
+        )
+
+        user_application_status_svc.create(
+            obj_in=user_application_status, db=kwargs.get('db_postgres'),
+        )
+
+        return JSONResponse(
+            status_code=200,
+            content={'message': 'Application sent to first status successfully'},
+        )
+
+    async def send_back(self, **kwargs):
+        """
+        Envía la solicitud de vuelta al usuario
+        """
+        user_application_status = UserApplicationStatusCreate(
+            user_application_id=self.user_application.id,
+            status_id=SEND_BACK_STATUS_ID,
+            updated_by=kwargs.get('current_user').id,
+            observation=kwargs.get('observation'),
+        )
+
+        user_application_status_svc.create(
+            obj_in=user_application_status, db=kwargs.get('db_postgres'),
+        )
+
+        await self.first_status(**kwargs)
+
+        return JSONResponse(
+            status_code=200,
+            content={'message': 'Application sent back successfully'},
+        )
 
     async def reject(self, **kwargs):
         user_application_status = UserApplicationStatusCreate(
