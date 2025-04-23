@@ -15,14 +15,16 @@ from fastapi import Form
 from fastapi import Security
 from fastapi import UploadFile
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.middleware.bearer import get_current_active_user
 from app.api.middleware.mongo_db import get_mongo_db
 from app.api.middleware.postgres_db import get_db
 from app.api.middleware.scopes import has_role
-from app.core.constants import COMMISION_ID
+from app.core.constants import COMMISSION_ID
 from app.core.constants import PROFESSOR_ROL_ID
+from app.infraestructure.policies.application.type.commission import CommissionFlow
 from app.schemas.application.type.commission import Commission
 from app.schemas.application.type.commission import CommissionCreate
 from app.schemas.application.type.commission import CommissionUpdate
@@ -84,6 +86,8 @@ async def create_commission(
         documents=[f'documento-{i+1}' for i in range(len(documents))],
     )
 
+    # Si el rango de fechas es mayor a 30 días, se manda a votación
+
     if (date_end - date_start) >= timedelta(days=30):
         committee = user_rol_academic_unit_svc.get_student_committee(
             user_id=current_user.id, db=db_postgres,
@@ -104,7 +108,7 @@ async def create_commission(
     commission_create = await user_application_svc.create_user_application(
         obj_in=obj_in,
         current_user_id=current_user.id,
-        application_id=UUID(COMMISION_ID),
+        application_id=UUID(COMMISSION_ID),
         academic_unit_id=academic_unit_id,
         db_postgres=db_postgres,
         mongo_service=commission_svc,
@@ -112,6 +116,41 @@ async def create_commission(
     )
 
     return commission_create
+
+
+class ApplicationRequest(BaseModel):
+    academic_unit_id: UUID | None = None
+
+
+@router.post('/{user_application_id}/next', response_model=None)
+async def advance_application_status(
+    user_application_id: str,
+    request: ApplicationRequest,
+    is_returned: bool = False,
+    is_approved: bool = True,
+    db_mongo=Depends(get_mongo_db),
+    db_postgres=Depends(get_db),
+    current_user=Depends(get_current_active_user),
+):
+    """
+    Endpoint para avanzar el estado de una solicitud.
+    """
+    user_application = user_application_svc.get(id=user_application_id, db=db_postgres)
+    application_flow = CommissionFlow(user_application)
+
+    # Ejecutar la transición con los argumentos dinámicos
+    response = await application_flow.next(
+        user_application_id=user_application_id,
+        db_mongo=db_mongo,
+        db_postgres=db_postgres,
+        current_user=current_user,
+        is_returned=is_returned,
+        is_approved=is_approved,
+        # Pasar solo los valores proporcionados
+        **request.model_dump(exclude_unset=True),
+    )
+
+    return response
 
 
 @router.delete(
@@ -219,42 +258,3 @@ async def update_commission(
         db_mongo=db_mongo,
         obj_in=obj_in,
     )
-
-
-# @router.patch(
-#     '/update-status/{id}',
-#     response_model=str,
-#     status_code=HTTPStatus.OK.value,
-#     summary='Update the status of a commission',
-#     description=(
-#         'Update the status of a specific commission by its unique ID. '
-#         'Authentication is required, and only users with the appropriate scope '
-#         'for professors or administrative personnel can access this endpoint.'
-#     ),
-#     responses={
-#         200: {'description': 'Commission status successfully updated.'},
-#         401: {'description': 'User not authenticated.'},
-#         404: {'description': 'Commission not found.'},
-#         500: {'description': 'Internal server error.'},
-#     },
-# )
-# async def update_status(
-#     *,
-#     id: UUID,
-#     start_date: datetime | None,
-#     end_date: datetime | None,
-#     response: str,
-#     db_mongo=Depends(get_mongo_db),
-#     db_postgres: Session = Depends(get_db),
-#     current_user: Annotated[User, Depends(get_current_active_user)],
-# ) -> str:
-#     await flux(
-#         start_date=start_date,
-#         end_date=end_date,
-#         user_application_id=id,
-#         db_mongo=db_mongo,
-#         db_postgres=db_postgres,
-#         current_user=current_user,
-#         response=response,
-#     )
-#     return JSONResponse(content='Status updated', status_code=HTTPStatus.OK.value)

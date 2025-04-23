@@ -76,6 +76,7 @@ async def advance_application_status(
     user_application_id: UUID,
     db_postgres: Session = Depends(get_db),
     current_user: UUID = Depends(get_current_active_user),
+    is_returned: bool = False,
     is_approved: bool = True,
     observation: Annotated[str, Form()] = '',
 ) -> JSONResponse:
@@ -83,6 +84,7 @@ async def advance_application_status(
     application_flow = ApplicationFlow(user_application)
 
     response = await application_flow.next(
+        is_returned=is_returned,
         is_approved=is_approved,
         observation=observation,
         db_postgres=db_postgres,

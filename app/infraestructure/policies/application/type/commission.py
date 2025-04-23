@@ -1,17 +1,39 @@
-# from __future__ import annotations
-# from datetime import datetime
-# from datetime import timedelta
-# from uuid import UUID
-# from odmantic.session import AIOSession
-# from sqlalchemy.orm import Session
-# from app.infraestructure.policies.application.user_application import create_voting
-# from app.infraestructure.policies.application.user_application import current_status
-# from app.infraestructure.policies.application.user_application import send_to_academic_unit
-# from app.protocols.db.models.application.application import ApplicationStatusType
-# from app.schemas.application.user_application import UserApplicationStatus
-# from app.schemas.users.user import User
-# from app.services.application.type.commission import commission_svc
+from __future__ import annotations
+
+from datetime import datetime
+from datetime import timedelta
+
+from app.infraestructure.db.models.application.type.commission import Commission
+from app.infraestructure.policies.application.application_flow import ApplicationFlow
+from app.services.application.type.commission import commission_svc
 # from app.services.users.user_rol_academic_unit import user_rol_academic_unit_svc
+# from app.services.application.user_application_status import (
+#     user_application_status_svc,
+# )
+
+
+class CommissionFlow(ApplicationFlow):
+    def __init__(self, user_application):
+        super().__init__(user_application)
+
+    async def choose_step(self, **kwargs):
+        # db_postgres = kwargs.get('db_postgres')
+        commission: Commission = await commission_svc.get(
+            id=self.user_application.id,
+            db=kwargs.get('db_mongo'),
+        )
+
+        date_start = commission.date_start
+        date_end = commission.date_end
+
+        if (date_end - date_start) >= timedelta(days=30):
+            response = await self.create_voting(**kwargs)
+
+        else:
+            response = await self.send_to_academic_unit(jump=1, **kwargs)
+
+        return response
+
 # def get_next_status(
 #     current_status: str,
 #     start_date: datetime | None,
@@ -109,4 +131,4 @@
 #             )
 #         return 'terminado'
 #     return 'actualizado'
-from __future__ import annotations
+# from __future__ import annotations
