@@ -13,3 +13,6 @@ class CRUDUserProtocol(CRUDProtocol[User, UserCreateInDB, UserUpdate]):
 
     def get_by_identification(self, *, identification_number: str) -> User:
         ...
+
+    def get_multi(self, *, skip: int = 0, limit: int = 10) -> list[User]:
+        ...
