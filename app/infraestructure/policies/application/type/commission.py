@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
 from datetime import timedelta
 
 from app.infraestructure.db.models.application.type.commission import Commission
@@ -16,7 +15,7 @@ class CommissionFlow(ApplicationFlow):
     def __init__(self, user_application):
         super().__init__(user_application)
 
-    async def choose_step(self, **kwargs):
+    async def more_than_thirty_days(self, **kwargs):
         # db_postgres = kwargs.get('db_postgres')
         commission: Commission = await commission_svc.get(
             id=self.user_application.id,
@@ -30,7 +29,11 @@ class CommissionFlow(ApplicationFlow):
             response = await self.create_voting(**kwargs)
 
         else:
-            response = await self.send_to_academic_unit(jump=1, **kwargs)
+            response = await self.send_to_academic_unit(jump=2, **kwargs)
+            ''''
+            jump 2, porque se salta la votación y el paso por instituto
+            y decanatura, y va directo a aprobado
+            '''
 
         return response
 
