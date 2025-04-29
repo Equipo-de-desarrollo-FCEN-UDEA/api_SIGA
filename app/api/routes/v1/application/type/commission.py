@@ -3,9 +3,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from datetime import timedelta
-from http import HTTPStatus
 from typing import Annotated
-from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter
@@ -14,7 +12,6 @@ from fastapi import File
 from fastapi import Form
 from fastapi import Security
 from fastapi import UploadFile
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -27,7 +24,6 @@ from app.core.constants import PROFESSOR_ROL_ID
 from app.infraestructure.policies.application.type.commission import CommissionFlow
 from app.schemas.application.type.commission import Commission
 from app.schemas.application.type.commission import CommissionCreate
-from app.schemas.application.type.commission import CommissionUpdate
 from app.schemas.application.user_application import UserApplicationPublic
 from app.schemas.users.user import User
 from app.services.application.type.commission import commission_svc
@@ -154,110 +150,3 @@ async def advance_application_status(
     )
 
     return response
-
-
-@router.delete(
-    '/{id}',
-    response_model=str,
-    status_code=HTTPStatus.OK.value,
-    summary='Delete a commission by ID',
-    description=(
-        'Delete a specific commission by its unique ID. '
-        'Authentication is required, and only users with the appropriate scope '
-        'for professors or administrative personnel can access this endpoint.'
-    ),
-    responses={
-        200: {'description': 'Commission successfully deleted.'},
-        401: {'description': 'User not authenticated.'},
-        404: {'description': 'Commission not found.'},
-        500: {'description': 'Internal server error.'},
-    },
-)
-async def delete_commission(
-    *,
-    id: UUID,
-    db_mongo=Depends(get_mongo_db),
-    permissions: Annotated[
-        bool, Security(
-        has_role, scopes=['profesor'],
-        ),
-    ] = False,
-    current_user: Annotated[
-        User, Security(
-            get_current_active_user,
-        ),
-    ] = None,
-) -> str:
-    await commission_svc.delete(id=id, db=db_mongo)
-
-    return JSONResponse(
-        content='Comision eliminada correctamente',
-        status_code=HTTPStatus.OK.value,
-    )
-
-
-@router.put(
-    '/{id}',
-    response_model=CommissionUpdate,
-    status_code=HTTPStatus.OK.value,
-    summary='Update a commission by ID',
-    description=(
-        'Update a specific commission by its unique ID. '
-        'Authentication is required, and only users with the appropriate scope '
-        'for professors or administrative personnel can access this endpoint.'
-    ),
-    responses={
-        200: {
-            'description': 'Commission successfully updated.',
-            'content': {
-                'application/json': {
-                    'example': {
-                        'id': '3fa85f64-5717-4562-b3fc-2c963f66afa6',
-                        'country': 'Colombia',
-                        'state': 'Antioquia',
-                        'city': 'Medellin',
-                        'date_start': '2025-01-16T15:57:37.890Z',
-                        'date_end': '2025-01-16T15:57:37.890Z',
-                        'reason': 'string',
-                        'justification': 'string',
-                        'status': [
-                            {
-                                'name': 'CREADA',
-                                'updated_by': '3fa85f64-5717-4562-b3fc-2c963f66afa6',
-                                'date': '2025-01-16T15:57:37.890Z',
-                            },
-                        ],
-                        'documents': [
-                            'string',
-                        ],
-                    },
-                },
-            },
-        },
-        400: {'description': 'Invalid data provided.'},
-        401: {'description': 'User not authenticated.'},
-        404: {'description': 'Commission not found.'},
-        500: {'description': 'Internal server error.'},
-    },
-)
-async def update_commission(
-    *,
-    id: UUID,
-    obj_in: CommissionUpdate,
-    db_mongo: Any = Depends(get_mongo_db),
-    permissions: Annotated[
-        bool, Security(
-        has_role, scopes=['profesor'],
-        ),
-    ] = False,
-    current_user: Annotated[
-        User, Security(
-            get_current_active_user,
-        ),
-    ] = None,
-) -> CommissionUpdate:
-    return await commission_svc.update(
-        id=id,
-        db_mongo=db_mongo,
-        obj_in=obj_in,
-    )
