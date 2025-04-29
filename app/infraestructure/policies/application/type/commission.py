@@ -26,7 +26,7 @@ class CommissionFlow(ApplicationFlow):
 
         else:
             response = await self.next_status(jump=3, **kwargs)
-            ''''
+            '''
             jump 3, porque se salta la votación y el paso por instituto
             y decanatura, y va directo a aprobado
             '''
