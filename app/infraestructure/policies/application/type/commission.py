@@ -12,7 +12,6 @@ class CommissionFlow(ApplicationFlow):
         super().__init__(user_application)
 
     async def more_than_thirty_days(self, **kwargs):
-        # db_postgres = kwargs.get('db_postgres')
         commission: Commission = await commission_svc.get(
             id=self.user_application.id,
             db=kwargs.get('db_mongo'),
