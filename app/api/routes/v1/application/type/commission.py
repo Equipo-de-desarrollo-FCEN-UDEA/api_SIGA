@@ -135,7 +135,11 @@ async def advance_application_status(
     """
     Endpoint para avanzar el estado de una solicitud.
     """
+
+    # Obtener la solicitud
     user_application = user_application_svc.get(id=user_application_id, db=db_postgres)
+
+    # Instanciar el flujo de movilidad
     application_flow = CommissionFlow(user_application)
 
     # Ejecutar la transición con los argumentos dinámicos
@@ -146,7 +150,6 @@ async def advance_application_status(
         current_user=current_user,
         is_returned=is_returned,
         is_approved=is_approved,
-        # Pasar solo los valores proporcionados
         **request.model_dump(exclude_unset=True),
     )
 
