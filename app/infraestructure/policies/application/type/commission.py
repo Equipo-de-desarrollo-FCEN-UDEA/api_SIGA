@@ -5,10 +5,6 @@ from datetime import timedelta
 from app.infraestructure.db.models.application.type.commission import Commission
 from app.infraestructure.policies.application.application_flow import ApplicationFlow
 from app.services.application.type.commission import commission_svc
-# from app.services.users.user_rol_academic_unit import user_rol_academic_unit_svc
-# from app.services.application.user_application_status import (
-#     user_application_status_svc,
-# )
 
 
 class CommissionFlow(ApplicationFlow):
@@ -31,7 +27,7 @@ class CommissionFlow(ApplicationFlow):
         else:
             response = await self.next_status(jump=3, **kwargs)
             ''''
-            jump 2, porque se salta la votación y el paso por instituto
+            jump 3, porque se salta la votación y el paso por instituto
             y decanatura, y va directo a aprobado
             '''
 

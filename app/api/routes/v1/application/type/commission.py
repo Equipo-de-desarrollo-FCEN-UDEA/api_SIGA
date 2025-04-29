@@ -126,7 +126,6 @@ class ApplicationRequest(BaseModel):
 async def advance_application_status(
     user_application_id: str,
     request: ApplicationRequest,
-    is_returned: bool = False,
     is_approved: bool = True,
     db_mongo=Depends(get_mongo_db),
     db_postgres=Depends(get_db),
@@ -148,7 +147,6 @@ async def advance_application_status(
         db_mongo=db_mongo,
         db_postgres=db_postgres,
         current_user=current_user,
-        is_returned=is_returned,
         is_approved=is_approved,
         **request.model_dump(exclude_unset=True),
     )
