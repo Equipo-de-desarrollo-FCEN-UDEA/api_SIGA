@@ -132,9 +132,12 @@ class ApplicationFlow:
 
     async def next_status(self, **kwargs):
         db_postgres = kwargs.get('db_postgres')
+        jump = kwargs.get('jump', 0)
+
         user_application_status = self.get_next_status(
             updated_by=kwargs.get('current_user').id,
             observation=kwargs.get('observation'),
+            jump=jump,
         )
 
         user_application_status_svc.create(
@@ -151,6 +154,7 @@ class ApplicationFlow:
         user_application_id = self.user_application.id
         user_to_assign_id = kwargs.get('user_to_assign_id')
         db_postgres = kwargs.get('db_postgres')
+        jump = kwargs.get('jump', 0)
 
         user_application_user = UserApplicationUserCreate(
             user_application_id=user_application_id,
@@ -164,6 +168,7 @@ class ApplicationFlow:
         user_application_status = self.get_next_status(
             updated_by=kwargs.get('current_user').id,
             observation=kwargs.get('observation'),
+            jump=jump,
         )
 
         user_application_status_svc.create(
@@ -210,6 +215,8 @@ class ApplicationFlow:
         academic_unit_id = user_app_acad_un.academic_unit_id
         db_postgres = kwargs.get('db_postgres')
         db_mongo = kwargs.get('db_mongo')
+        jump = kwargs.get('jump', 0)
+
         obj_in: VotingCreate = VotingCreate(
             academic_unit_id=academic_unit_id,
             user_application_id=self.user_application.id,
@@ -236,6 +243,7 @@ class ApplicationFlow:
         user_application_status = self.get_next_status(
             updated_by=kwargs.get('current_user').id,
             observation=kwargs.get('observation'),
+            jump=jump,
         )
 
         user_application_status_svc.create(
