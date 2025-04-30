@@ -22,6 +22,8 @@ from app.schemas.users.user_rol_academic_unit import UserRolAcademicUnit
 from app.schemas.users.user_rol_academic_unit import UserRolAcademicUnitCreate
 from app.services.users.user import user_svc
 from app.services.users.user_rol_academic_unit import user_rol_academic_unit_svc
+from app.schemas.users.user_pagination import PaginatedUsers
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
@@ -42,40 +44,38 @@ def create_user(
     return user
 
 
-@router.get('', response_model=list[UserInDB], status_code=200)
+@router.get('', status_code=200)
 def get_all_user(
-    *, skip: int = 0,
+    skip: int = 0,
     limit: int = 10,
-    db_postgres=Depends(get_db),
-    current_user: Annotated[
-        User, Security(
-        has_role, scopes=['admin'],
-        ),
-    ] = None,
-) -> list[UserInDB]:
-    return user_svc.get_multi(skip=skip, limit=limit, db=db_postgres)
+    db: Session = Depends(get_db),
+    current_user: Annotated[User, Security(has_role, scopes=["admin"])] = None,
+):
+    total = user_svc.count(db)
+    users = user_svc.get_multi(skip=skip, limit=limit, db=db)
+
+    return {
+        "total": total,
+        "total_pages": (total + limit - 1) // limit,
+        "users": [UserInDB.model_validate(user).model_dump() for user in users],
+    }
 
 
-@router.get('/{id}', response_model=User, status_code=200)
-def get_user(*, id: UUID, db_postgres=Depends(get_db)) -> User:
-    user = user_svc.get(id=id, db=db_postgres)
-    if not user:
-        raise HTTPException(404, 'User not found')
-    user = UserInDB.model_validate(user)
-    roles = user_rol_academic_unit_svc.get_by_user_id(
-        user_id=id, db=db_postgres,
+@router.get('', response_model=PaginatedUsers, status_code=200)
+def get_all_user(
+    skip: int = 0,
+    limit: int = 10,
+    db: Session = Depends(get_db),
+    current_user: Annotated[User, Security(has_role, scopes=["admin"])] = None,
+) -> PaginatedUsers:
+    total = user_svc.count(db)
+    users = user_svc.get_multi(skip=skip, limit=limit, db=db)
+
+    return PaginatedUsers(
+        total=total,
+        total_pages=(total + limit - 1) // limit,
+        users=[UserInDB.model_validate(user) for user in users]
     )
-
-    user_roles_academic_units = [
-        UserRolAcademicUnit.model_validate(role) for role in roles
-    ]
-
-    response = User(
-        **user.model_dump(),
-        user_roles_academic_units=user_roles_academic_units,
-    )
-    return response
-
 
 @router.patch('/{id}', response_model=None)
 def update_user(*, obj_in: UserUpdate, id: int) -> None:

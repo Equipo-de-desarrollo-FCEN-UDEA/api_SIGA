@@ -34,23 +34,41 @@ class ApplicationFlow:
     def __init__(self, user_application: UserApplication):
         self.user_application = user_application
 
+    # Función que elimina caracteres especiales
     def extract_params(self, param_str):
         if not re.match(r'^[\w\s=,"-]*$', param_str):
             raise ValueError('Invalid characters in parameter string')
-        # Split the string into key-value pairs based on the comma delimiter.
+
         params = param_str.split(',')
         param_matches = []
         for param in params:
-            # For each key-value pair,
-            # split it into key and value based on the equals sign.
             parts = param.split('=')
             if len(parts) == 2:
                 key = parts[0].strip()
-                # Remove quotes from the value and unescape any escaped quotes.
                 value = parts[1].strip().strip('"').replace('\\"', '"')
                 if re.match(r'^\w+$', key):
                     param_matches.append((key, value))
+
         return param_matches
+
+    def get_action(self, is_approved) -> str | None:
+        """
+        Obtiene el siguiente estado válido según la transición permitida.
+        :param current_status: Estado actual de la aplicación.
+        :param is_approved: Indica si la transición es aprobada.
+        :return: Nombre del siguiente estado.
+        """
+
+        if not is_approved:
+            return 'reject'
+
+        application: Application = self.user_application.application
+        current_status: int = len(self.user_application.user_application_status)
+        application_status: list[ApplicationStatus] = application.application_status
+        for app_status in application_status:
+            if app_status.step == current_status:
+                return app_status.action
+        return None
 
     async def next(self, **kwargs):
         """
@@ -59,11 +77,12 @@ class ApplicationFlow:
         :param db_mongo: Conexión a MongoDB.
         :param db_postgres: Conexión a PostgreSQL.
         :param current_user: Usuario que ejecuta la acción.
-        :param is_approved: Indica si la transición es aprobada o no.
         :return: Respuesta de la acción ejecutada.
         """
 
-        action = self.get_action(kwargs.get('is_approved'))
+        action = self.get_action(
+            kwargs.get('is_approved'),
+        )
 
         if action is None:
             raise HTTPException(status_code=400, detail='Invalid transition')
@@ -83,34 +102,17 @@ class ApplicationFlow:
 
         return await getattr(self, action_name)(**{**kwargs, **parsed_params})
 
-    def get_action(self, is_approved) -> str | None:
-        """
-        Obtiene el siguiente estado válido según la transición permitida.
-        :param current_status: Estado actual de la aplicación.
-        :param is_approved: Indica si la transición es aprobada.
-        :return: Nombre del siguiente estado.
-        """
-        if not is_approved:
-            return 'reject'
-
-        application: Application = self.user_application.application
-        current_status: int = len(self.user_application.user_application_status)
-        application_status: list[ApplicationStatus] = application.application_status
-        for app_status in application_status:
-            if app_status.step == current_status:
-                return app_status.action
-        return None
-
     def get_next_status(
             self,
             updated_by,
             observation,
+            jump: int = 0,
     ) -> UserApplicationStatusCreate | None:
         application: Application = self.user_application.application
         current_status: int = len(self.user_application.user_application_status)
         application_status: list[ApplicationStatus] = application.application_status
         for app_status in application_status:
-            if app_status.step == current_status+1:
+            if app_status.step == current_status+1+jump:
                 next_status = app_status.status
 
         return UserApplicationStatusCreate(
@@ -122,9 +124,12 @@ class ApplicationFlow:
 
     async def next_status(self, **kwargs):
         db_postgres = kwargs.get('db_postgres')
+        jump = kwargs.get('jump', 0)
+
         user_application_status = self.get_next_status(
             updated_by=kwargs.get('current_user').id,
             observation=kwargs.get('observation'),
+            jump=jump,
         )
 
         user_application_status_svc.create(
@@ -141,6 +146,7 @@ class ApplicationFlow:
         user_application_id = self.user_application.id
         user_to_assign_id = kwargs.get('user_to_assign_id')
         db_postgres = kwargs.get('db_postgres')
+        jump = kwargs.get('jump', 0)
 
         user_application_user = UserApplicationUserCreate(
             user_application_id=user_application_id,
@@ -154,6 +160,7 @@ class ApplicationFlow:
         user_application_status = self.get_next_status(
             updated_by=kwargs.get('current_user').id,
             observation=kwargs.get('observation'),
+            jump=jump,
         )
 
         user_application_status_svc.create(
@@ -168,6 +175,7 @@ class ApplicationFlow:
     async def send_to_academic_unit(self, **kwargs):
         db_postgres = kwargs.get('db_postgres')
         academic_unit_id = kwargs.get('academic_unit_id')
+        jump = kwargs.get('jump', 0)
 
         user_application_academic_unit = UserApplicationAcademicUnitCreate(
             user_application_id=self.user_application.id,
@@ -182,19 +190,25 @@ class ApplicationFlow:
         user_application_status = self.get_next_status(
             updated_by=kwargs.get('current_user').id,
             observation=kwargs.get('observation'),
+            jump=jump,
         )
 
         user_application_status_svc.create(
             obj_in=user_application_status, db=db_postgres,
         )
 
-        return None
+        return JSONResponse(
+            status_code=200,
+            content={'message': 'Application sent to academic unit successfully'},
+        )
 
     async def create_voting(self, **kwargs):
         user_app_acad_un = self.user_application.user_application_academic_units[0]
         academic_unit_id = user_app_acad_un.academic_unit_id
         db_postgres = kwargs.get('db_postgres')
         db_mongo = kwargs.get('db_mongo')
+        jump = kwargs.get('jump', 0)
+
         obj_in: VotingCreate = VotingCreate(
             academic_unit_id=academic_unit_id,
             user_application_id=self.user_application.id,
@@ -221,6 +235,7 @@ class ApplicationFlow:
         user_application_status = self.get_next_status(
             updated_by=kwargs.get('current_user').id,
             observation=kwargs.get('observation'),
+            jump=jump,
         )
 
         user_application_status_svc.create(

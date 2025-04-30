@@ -5,14 +5,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from app.protocols.db.utils.link_model import LinkModel
 from app.protocols.db.utils.mongo_model import MongoModel
-
-
-class Status(LinkModel):
-    name: str
-    updated_by: str
-    date: datetime
 
 
 class Compliment(BaseModel):
@@ -29,7 +22,6 @@ class Commission(MongoModel):
     date_end: datetime
     reason: str
     justification: str
-    status: list[Status]
     documents: list[Any] | None = None
     resolution: str | None = None
     compliment: Compliment | None = None
