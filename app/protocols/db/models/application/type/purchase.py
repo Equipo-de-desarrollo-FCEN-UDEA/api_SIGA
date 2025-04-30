@@ -48,7 +48,6 @@ class Purchase(MongoModel):
     responsible_condition: str
     estimated_budget: float
     marco_agreement: bool | None
-    status: list[Status]
     prior_consultation: PriorConsultation
 
 
