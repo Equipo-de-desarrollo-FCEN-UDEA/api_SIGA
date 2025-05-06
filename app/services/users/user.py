@@ -6,12 +6,14 @@ from app.infraestructure.security.jwt import jwt
 from app.infraestructure.services.emails.user import confirm_email
 from app.protocols.db.crud.users.user import CRUDUserProtocol
 from app.protocols.db.models.users.user import User
+from app.infraestructure.db.models.user.user import User as UserORM
 from app.schemas.users.user import UserCreate
 from app.schemas.users.user import UserCreateInDB
 from app.schemas.users.user import UserInDB
 from app.schemas.users.user import UserUpdate
 from app.services.base import ServiceBase
 from app.services.crypt import crypt_svc
+from sqlalchemy import select, func
 
 
 class UserService(
@@ -54,6 +56,10 @@ class UserService(
             identification_number=identification_number,
             db=db,
         )
+    def count(self, db):
+        stmt = select(func.count()).select_from(UserORM)
+        result = db.execute(stmt)
+        return result.scalar_one()
 
 
 user_svc = UserService()
