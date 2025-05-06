@@ -46,8 +46,8 @@ def confirm_email(to_name: str, token: str, email):
     #     smtp.send_message(msg)
 
     with smtplib.SMTP(
-        settings.smtp_local_host_email,
-        port=settings.smtp_local_port_email,
+        settings.smtp_prod_host_email,
+        port=settings.smtp_prod_port_email,
     ) as smtp:
         smtp.send_message(
             msg=msg,

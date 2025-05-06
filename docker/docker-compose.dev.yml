@@ -62,14 +62,12 @@ services:
             - "8003"
         ports:
             - "8003:8003"
-            - "10001:10001"
         env_file:
             - ../.env
         networks:
             - backend-red
             - db-red
         restart: on-failure
-
 
 networks:
   backend-red:
