@@ -5,7 +5,7 @@ services:
         ports:
             - "6379:6379"
         networks:
-            - siga-fcen
+            - backend-red
 
     celery_worker:
         container_name: "celery_worker"
@@ -19,7 +19,7 @@ services:
             - redis
             - backend
         networks:
-            - siga-fcen
+            - backend-red
 
     celery_beat:
         container_name: 'celery_beat'
@@ -33,7 +33,7 @@ services:
             - redis
             - backend
         networks:
-            - siga-fcen
+            - backend-red
 
     flower:
         container_name: "flower"
@@ -48,26 +48,29 @@ services:
         depends_on:
             - celery_worker
         networks:
-            - siga-fcen
+            - backend-red
 
     backend:
-        container_name: 'backend-siga'
+        container_name: "backend"
         build:
             context: ..
             dockerfile: docker/Dockerfile.dev
         command: uvicorn app.main:app --reload --workers 1 --host 0.0.0.0 --port 8003
         volumes:
             - ../:/usr/src/app/
-        ports:
-            - "8003:8003"
         expose:
             - "8003"
+        ports:
+            - "8003:8003"
         env_file:
             - ../.env
         networks:
-            - siga-fcen
+            - backend-red
+            - db-red
         restart: on-failure
 
 networks:
-  siga-fcen:
-    external: True
+  backend-red:
+      external: True
+  db-red:
+      external: True
