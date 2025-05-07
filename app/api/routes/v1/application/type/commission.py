@@ -71,6 +71,7 @@ async def create_commission(
         ),
     ] = None,
 ) -> UserApplicationPublic:
+
     obj_in = CommissionCreate(
         country=country,
         state=state,
@@ -89,6 +90,8 @@ async def create_commission(
             user_id=current_user.id, db=db_postgres,
         )
         academic_unit_id = committee
+
+    # Si el rango de fechas es menor a 30 días, se manda a la unidad académica
 
     else:
         get_units = user_rol_academic_unit_svc.get_academic_units_by_user_id_and_rol_id
@@ -109,6 +112,13 @@ async def create_commission(
         db_postgres=db_postgres,
         mongo_service=commission_svc,
         db_mongo=db_mongo,
+    )
+
+    user_application_svc.upload_files(
+        user_application_id=commission_create.id,
+        files=documents,
+        db=db_postgres,
+        prefix='documento',
     )
 
     return commission_create
