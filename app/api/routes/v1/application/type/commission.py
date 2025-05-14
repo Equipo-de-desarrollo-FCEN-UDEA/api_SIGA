@@ -91,7 +91,7 @@ async def create_commission(
         )
         academic_unit_id = committee
 
-    # Si el rango de fechas es menor a 30 días, se manda a la unidad académica
+    # If the date range is less than 30 days, it is sent to the academic unit
 
     else:
         get_units = user_rol_academic_unit_svc.get_academic_units_by_user_id_and_rol_id
