@@ -70,8 +70,6 @@ class UserService(
 
         if name:
             query = query.filter(func.lower(UserORM.name) == name.strip().lower())
-            print(f"Filtrando por nombre: {name}")
-            print(query)
         if email:
             query = query.filter(func.lower(UserORM.email) == email.strip().lower())
         if identification_number:
@@ -80,8 +78,6 @@ class UserService(
         total = query.count()
         users = query.offset(skip).limit(limit).all()
 
-        print("Entroooo a get_filtered_users")
-        print(f"Total de usuarios: {total}")
         return total, users
 
 
