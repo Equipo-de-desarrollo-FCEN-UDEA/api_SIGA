@@ -14,6 +14,9 @@ from app.schemas.users.user import UserUpdate
 from app.services.base import ServiceBase
 from app.services.crypt import crypt_svc
 from sqlalchemy import select, func
+from typing import Optional
+from sqlalchemy.orm import Session
+
 
 
 class UserService(
@@ -60,6 +63,27 @@ class UserService(
         stmt = select(func.count()).select_from(UserORM)
         result = db.execute(stmt)
         return result.scalar_one()
+    
+    
+    def get_filtered_users(self, skip: int, limit: int, name: Optional[str], email: Optional[str], identification_number: Optional[str], db: Session):
+        query = db.query(UserORM)
+
+        if name:
+            query = query.filter(func.lower(UserORM.name) == name.strip().lower())
+            print(f"Filtrando por nombre: {name}")
+            print(query)
+        if email:
+            query = query.filter(func.lower(UserORM.email) == email.strip().lower())
+        if identification_number:
+            query = query.filter(UserORM.identification_number == identification_number.strip())
+
+        total = query.count()
+        users = query.offset(skip).limit(limit).all()
+
+        print("Entroooo a get_filtered_users")
+        print(f"Total de usuarios: {total}")
+        return total, users
+
 
 
 user_svc = UserService()
