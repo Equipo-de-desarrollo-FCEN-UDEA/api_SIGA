@@ -26,7 +26,7 @@ services:
   celery_worker:
     container_name: "celery_worker"
     image: alwos19/siga-backend:1.0.0
-    command: celery -A app.core.celery_worker.celery_app worker --loglevel=info -Q test-queue -c 1
+    command: celery -A app.core.celery_worker.celery_app beat --loglevel=info -Q test-queue -c 1
     env_file:
       - prod.env
     environment:
@@ -39,7 +39,7 @@ services:
 celery-beat:
     container_name: 'celery_beat'
     image: alwos19/siga-backend:1.0.0
-    command: celery -A app.core.celery_worker.celery_app worker --loglevel=info
+    command: celery -A app.core.celery_worker.celery_app beat --loglevel=info
     env_file:
       - prod.env
     environment:
