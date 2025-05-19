@@ -1,0 +1,56 @@
+services:
+  backend:
+    image: alwos19/siga-backend:1.0.0
+    env_file:
+      - prod.env
+    restart: always
+    command: gunicorn -k uvicorn.workers.UvicornWorker -w 1 --bind=0.0.0.0:8003 app.main:app
+    expose:
+      - "8003"
+    ports:
+      - "8003:8003"
+    mem_limit: 300m
+    networks:
+      - backend-red
+      - db-red
+
+  redis:
+    container_name: 'redis'
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    mem_limit: 50m
+    networks:
+      - backend-red
+
+  celery_worker:
+    container_name: "celery_worker"
+    image: alwos19/siga-backend:1.0.0
+    command: celery -A app.core.celery_worker.celery_app beat --loglevel=info -Q test-queue -c 1
+    env_file:
+      - prod.env
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    mem_limit: 350m
+    networks:
+      - backend-red
+
+celery_beat:
+    container_name: 'celery_beat'
+    image: alwos19/siga-backend:1.0.0
+    command: celery -A app.core.celery_worker.celery_app beat --loglevel=info
+    env_file:
+      - prod.env
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    mem_limit: 350m
+    networks:
+      - backend-red
+
+networks:
+  backend-red:
+      external: True
+  db-red:
+      external: True
