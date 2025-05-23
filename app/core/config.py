@@ -56,6 +56,7 @@ class Settings(BaseSettings):
     smtp_port_email: int
     smtp_from_email: str
     smtp_password_email: SecretStr
+    smtp_user_email: str
 
     # URLs front
     URL_LAB: str

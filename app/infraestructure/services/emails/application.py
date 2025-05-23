@@ -18,7 +18,7 @@ env = Environment(
     autoescape=True,
 )
 
-_my_email = settings.smtp_prod_user_email
+_my_email = settings.smtp_user_email
 
 
 @celery_app.task

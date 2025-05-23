@@ -1,13 +1,11 @@
 FROM python:3.10 as python-base
 
-# Poetry configuration
+# Configuración de entorno y Poetry
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    \
     PIP_NO_CACHE_DIR=off \
     PIP_DISABLE_PIP_VERSION_CHECK=on \
     PIP_DEFAULT_TIMEOUT=100 \
-    \
     POETRY_VERSION=1.2.0 \
     POETRY_HOME="/opt/poetry" \
     POETRY_VIRTUALENVS_IN_PROJECT=true \
@@ -20,7 +18,7 @@ ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 # Instalar Alembic
 RUN pip3 install alembic
 
-
+# Imagen para requirements
 FROM python-base as requirements-image
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
@@ -34,20 +32,17 @@ RUN poetry config virtualenvs.options.system-site-packages true
 
 WORKDIR /usr/src/app
 COPY pyproject.toml ./
-
 RUN poetry lock
-
 RUN poetry export --without-hashes --with dev --format=requirements.txt > requirements.txt
 
-
+# Imagen para compilar dependencias
 FROM python-base as compile-image
 WORKDIR /usr/src/app
 COPY --from=requirements-image /usr/src/app/requirements.txt /usr/src/app/requirements.txt
-# set environment varibles
+
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# install system dependencies
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     curl \
@@ -57,17 +52,27 @@ RUN apt-get update \
 ENV PATH="/home/venv/bin:$PATH"
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Imagen final de runtime
 FROM python:3.10 AS runtime-image
 ENV PYTHONUNBUFFERED TRUE
+
+# Crear usuario no root
+RUN groupadd -r appuser && useradd -m -r -g appuser appuser
+
 COPY --from=compile-image /home/venv /home/venv
 ENV PATH="/home/venv/bin:$PATH"
 WORKDIR /usr/src/app
-EXPOSE 8003
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-w", "1", "--bind=0.0.0.0:8003", "app.main:app"]
+
 COPY app/ ./app/
 COPY alembic/ ./alembic/
 COPY alembic.ini .
 COPY pyproject.toml .
-COPY requirements.txt .
+COPY --from=compile-image /usr/src/app/requirements.txt ./requirements.txt
 COPY app/main.py ./app/main.py
 COPY .env.prod .env.prod
+
+EXPOSE 8003
+
+USER appuser
+
+CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-w", "1", "--bind=0.0.0.0:8003", "app.main:app"]
