@@ -61,13 +61,7 @@ COPY --from=compile-image /home/venv /home/venv
 ENV PATH="/home/venv/bin:$PATH"
 WORKDIR /usr/src/app
 
-COPY app/ ./app/
-COPY alembic/ ./alembic/
-COPY alembic.ini .
-COPY pyproject.toml .
-COPY --from=compile-image /usr/src/app/requirements.txt ./requirements.txt
-COPY app/main.py ./app/main.py
-COPY ../.env.prod .env.prod
+COPY . .
 
 EXPOSE 8003
 
