@@ -1,6 +1,6 @@
 FROM python:3.10 as python-base
 
-# Configuración de entorno y Poetry
+# Environment configuration and Poetry
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=off \
