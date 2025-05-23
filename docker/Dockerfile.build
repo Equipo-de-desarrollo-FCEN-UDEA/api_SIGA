@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=off \
     PIP_DISABLE_PIP_VERSION_CHECK=on \
     PIP_DEFAULT_TIMEOUT=100 \
-    POETRY_VERSION=1.2.0 \
+    POETRY_VERSION=1.8.2 \
     POETRY_HOME="/opt/poetry" \
     POETRY_VIRTUALENVS_IN_PROJECT=true \
     POETRY_NO_INTERACTION=1 \
@@ -15,8 +15,8 @@ ENV PYTHONUNBUFFERED=1 \
 
 ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
-# Instalar Alembic
-RUN pip3 install alembic
+# Instalar Alembic y Poetry (versión fija)
+RUN pip install "alembic" "poetry==$POETRY_VERSION"
 
 # Imagen para requirements
 FROM python-base as requirements-image
@@ -24,8 +24,6 @@ RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     curl \
     build-essential
-
-RUN curl -sSL https://install.python-poetry.org | python
 
 WORKDIR $PYSETUP_PATH
 RUN poetry config virtualenvs.options.system-site-packages true
@@ -40,8 +38,8 @@ FROM python-base as compile-image
 WORKDIR /usr/src/app
 COPY --from=requirements-image /usr/src/app/requirements.txt /usr/src/app/requirements.txt
 
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
@@ -54,7 +52,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Imagen final de runtime
 FROM python:3.10 AS runtime-image
-ENV PYTHONUNBUFFERED TRUE
+ENV PYTHONUNBUFFERED=1
 
 # Crear usuario no root
 RUN groupadd -r appuser && useradd -m -r -g appuser appuser
