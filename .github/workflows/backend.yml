@@ -28,23 +28,23 @@ jobs:
         name: Build and push backend image
         uses: docker/build-push-action@v3
         with:
-          context: ./docker/
-          file: Dockerfile.build
+          context: .
+          file: docker/Dockerfile.build
           push: true
           tags: ${{ secrets.DOCKER_ID }}/siga-backend:1.0.0
       -
         name: Build and push celery_worker image
         uses: docker/build-push-action@v3
         with:
-          context: ./docker/
-          file: Dockerfile.build
+          context: .
+          file: docker/Dockerfile.build
           push: true
           tags: ${{ secrets.DOCKER_ID }}/siga-celery_worker:1.0.0
       -
         name: Build and push celery_beat image
         uses: docker/build-push-action@v3
         with:
-          context: ./docker/
-          file: Dockerfile.build
+          context: .
+          file: docker/Dockerfile.build
           push: true
           tags: ${{ secrets.DOCKER_ID }}/siga-celery_beat:1.0.0
