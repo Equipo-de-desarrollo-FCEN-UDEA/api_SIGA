@@ -51,16 +51,11 @@ class Settings(BaseSettings):
     redis_url: str
     redis_backend: str
 
-    # SMTP PRODUCTION
-    smtp_prod_user_email: str
-    smtp_prod_user_password: SecretStr
-    smtp_prod_host_email: str
-    smtp_prod_port_email: int
+    # SMTP
+    smtp_host_email: str
+    smtp_port_email: int
     smtp_from_email: str
-
-    # SMTP Local
-    smtp_local_host_email: str
-    smtp_local_port_email: int
+    smtp_password_email: SecretStr
 
     # URLs front
     URL_LAB: str
