@@ -64,4 +64,10 @@ ENV PATH="/home/venv/bin:$PATH"
 WORKDIR /usr/src/app
 EXPOSE 8003
 CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-w", "1", "--bind=0.0.0.0:8003", "app.main:app"]
-COPY . .
+COPY app/ ./app/
+COPY alembic/ ./alembic/
+COPY alembic.ini .
+COPY pyproject.toml .
+COPY requirements.txt .
+COPY app/main.py ./app/main.py
+COPY .env.prod .env.prod
