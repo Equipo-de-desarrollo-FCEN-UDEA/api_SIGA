@@ -69,11 +69,11 @@ class UserService(
         query = db.query(UserORM)
 
         if name:
-            query = query.filter(func.lower(UserORM.name) == name.strip().lower())
+            query = query.filter(UserORM.name.ilike(f"%{name.strip()}%"))
         if email:
-            query = query.filter(func.lower(UserORM.email) == email.strip().lower())
+            query = query.filter(UserORM.email.ilike(f"%{email.strip()}%"))
         if identification_number:
-            query = query.filter(UserORM.identification_number == identification_number.strip())
+            query = query.filter(UserORM.identification_number.ilike(f"%{identification_number.strip()}%"))
 
         total = query.count()
         users = query.offset(skip).limit(limit).all()
