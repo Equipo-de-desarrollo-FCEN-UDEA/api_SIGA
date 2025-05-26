@@ -19,7 +19,7 @@ def create_app() -> FastAPI:
     initialize_fastapi_server_debugger_if_needed()
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[settings.URL_LAB, settings.APP_DOMAIN],
+        allow_origins=['*'],  # Allow all origins for CORS
         allow_credentials=True,
         allow_methods=['*'],
         allow_headers=['*'],
@@ -41,7 +41,7 @@ def startup_event():
 @app.exception_handler(exceptions.ORMError)
 def orm_error_hanlder(request, exc: exceptions.ORMError):
     exc_message = str(exc)
-    content = {'detail': f"ORM Error: {exc_message}"}
+    content = {'detail': f'ORM Error: {exc_message}'}
     if 'violates unique constraint' in exc_message:
         message = (
             exc_message.split(':')[1]
@@ -52,7 +52,7 @@ def orm_error_hanlder(request, exc: exceptions.ORMError):
             .strip()
             .capitalize()
         )
-        content = {'detail': f"{message} please try with another one."}
+        content = {'detail': f'{message} please try with another one.'}
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
         content=content,
@@ -62,7 +62,7 @@ def orm_error_hanlder(request, exc: exceptions.ORMError):
 @app.exception_handler(exceptions.NoObserverRegister)
 def no_observer_register_handler(request, exc: exceptions.NoObserverRegister):
     return JSONResponse(
-        content={'detail': f"Service unavailable {exc.service}"},
+        content={'detail': f'Service unavailable {exc.service}'},
         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
     )
 
@@ -70,6 +70,6 @@ def no_observer_register_handler(request, exc: exceptions.NoObserverRegister):
 @app.exception_handler(exceptions.InvalidCredentials)
 def invalid_credentials_handler(request, exc: exceptions.InvalidCredentials):
     return JSONResponse(
-        content={'detail': f"Invalid credentials {exc.msg}"},
+        content={'detail': f'Invalid credentials {exc.msg}'},
         status_code=status.HTTP_403_FORBIDDEN,
     )
