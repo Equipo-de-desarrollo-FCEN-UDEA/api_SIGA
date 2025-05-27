@@ -6,7 +6,9 @@ from datetime import datetime
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 
+from app.core.constants import CREATED_STATUS_ID
 from app.core.constants import REJECTED_STATUS_ID
+from app.core.constants import SEND_BACK_STATUS_ID
 from app.infraestructure.db.models.application.application import Application
 from app.infraestructure.db.models.application.application_status import (
     ApplicationStatus,
@@ -51,13 +53,17 @@ class ApplicationFlow:
 
         return param_matches
 
-    def get_action(self, is_approved) -> str | None:
+    def get_action(self, is_approved, is_returned) -> str | None:
         """
         Obtiene el siguiente estado válido según la transición permitida.
         :param current_status: Estado actual de la aplicación.
         :param is_approved: Indica si la transición es aprobada.
+        :param is_returned: Indica si la transición es devuelta.
         :return: Nombre del siguiente estado.
         """
+
+        if is_returned:
+            return 'send_back'
 
         if not is_approved:
             return 'reject'
@@ -82,6 +88,7 @@ class ApplicationFlow:
 
         action = self.get_action(
             kwargs.get('is_approved'),
+            kwargs.get('is_returned'),
         )
 
         if action is None:
@@ -252,6 +259,51 @@ class ApplicationFlow:
         Finaliza la solicitud
         """
 
+    # Para solicitudes devueltas
+
+    async def first_status(self, **kwargs):
+        """
+        Función que envía cualquier solicitud al primer estado
+        """
+        user_application_status = UserApplicationStatusCreate(
+            user_application_id=self.user_application.id,
+            status_id=CREATED_STATUS_ID,
+            updated_by=kwargs.get('current_user').id,
+            observation=kwargs.get('observation'),
+        )
+
+        user_application_status_svc.create(
+            obj_in=user_application_status, db=kwargs.get('db_postgres'),
+        )
+
+        return JSONResponse(
+            status_code=200,
+            content={'message': 'Application sent to first status successfully'},
+        )
+
+    async def send_back(self, **kwargs):
+        """
+        Envía la solicitud de vuelta al usuario
+        """
+        user_application_status = UserApplicationStatusCreate(
+            user_application_id=self.user_application.id,
+            status_id=SEND_BACK_STATUS_ID,
+            updated_by=kwargs.get('current_user').id,
+            observation=kwargs.get('observation'),
+        )
+
+        user_application_status_svc.create(
+            obj_in=user_application_status, db=kwargs.get('db_postgres'),
+        )
+
+        await self.first_status(**kwargs)
+
+        return JSONResponse(
+            status_code=200,
+            content={'message': 'Application sent back successfully'},
+        )
+
+    # Para solicitudes rechazadas
     async def reject(self, **kwargs):
         user_application_status = UserApplicationStatusCreate(
             user_application_id=self.user_application.id,
