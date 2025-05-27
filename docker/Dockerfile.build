@@ -61,7 +61,13 @@ COPY --from=compile-image /home/venv /home/venv
 ENV PATH="/home/venv/bin:$PATH"
 WORKDIR /usr/src/app
 
-COPY . .
+COPY app/ ./app/
+COPY alembic/ ./alembic/
+COPY alembic.ini .
+COPY pyproject.toml .
+COPY --from=compile-image /usr/src/app/requirements.txt ./requirements.txt
+COPY app/main.py ./app/main.py
+
 EXPOSE 8003
 
 USER appuser
