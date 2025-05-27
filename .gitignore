@@ -1,6 +1,8 @@
 # Environments
 .env
 .venv
+.env.prod
+.env.dev
 
 # Python bytecode
 *.pyc

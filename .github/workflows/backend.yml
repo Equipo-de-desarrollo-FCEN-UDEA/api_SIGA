@@ -29,7 +29,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ./docker/Dockerfile.dev
+          file: ./docker/Dockerfile.build
           push: true
           tags: ${{ secrets.DOCKER_ID }}/siga-backend:1.0.0
       -
@@ -37,7 +37,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ./docker/Dockerfile.dev
+          file: ./docker/Dockerfile.build
           push: true
           tags: ${{ secrets.DOCKER_ID }}/siga-celery_worker:1.0.0
       -
@@ -45,6 +45,6 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ./docker/Dockerfile.dev
+          file: ./docker/Dockerfile.build
           push: true
           tags: ${{ secrets.DOCKER_ID }}/siga-celery_beat:1.0.0

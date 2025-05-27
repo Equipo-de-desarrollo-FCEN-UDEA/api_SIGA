@@ -19,7 +19,7 @@ env = Environment(
 )
 
 
-_my_email = settings.smtp_prod_user_email
+_my_email = settings.smtp_user_email
 
 
 @celery_app.task
@@ -46,8 +46,8 @@ def confirm_email(to_name: str, token: str, email):
     #     smtp.send_message(msg)
 
     with smtplib.SMTP(
-        settings.smtp_prod_host_email,
-        port=settings.smtp_prod_port_email,
+        settings.smtp_host_email,
+        port=settings.smtp_port_email,
     ) as smtp:
         smtp.send_message(
             msg=msg,
