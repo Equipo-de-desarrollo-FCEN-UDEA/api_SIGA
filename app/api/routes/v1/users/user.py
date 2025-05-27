@@ -7,6 +7,8 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Security
+from typing import Optional
+from fastapi import Query
 
 from app.api.middleware.bearer import get_current_active_user
 from app.api.middleware.scopes import has_scope
@@ -43,39 +45,32 @@ def create_user(
     )
     return user
 
-
-@router.get('', status_code=200)
-def get_all_user(
-    skip: int = 0,
-    limit: int = 10,
-    db: Session = Depends(get_db),
-    current_user: Annotated[User, Security(has_role, scopes=["admin"])] = None,
-):
-    total = user_svc.count(db)
-    users = user_svc.get_multi(skip=skip, limit=limit, db=db)
-
-    return {
-        "total": total,
-        "total_pages": (total + limit - 1) // limit,
-        "users": [UserInDB.model_validate(user).model_dump() for user in users],
-    }
-
-
 @router.get('', response_model=PaginatedUsers, status_code=200)
 def get_all_user(
     skip: int = 0,
     limit: int = 10,
+    name: Optional[str] = Query(None),
+    email: Optional[str] = Query(None),
+    identification_number: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     current_user: Annotated[User, Security(has_role, scopes=["admin"])] = None,
 ) -> PaginatedUsers:
-    total = user_svc.count(db)
-    users = user_svc.get_multi(skip=skip, limit=limit, db=db)
-
+    total, users = user_svc.get_filtered_users(
+        skip=skip, 
+        limit=limit, 
+        name=name, 
+        email=email, 
+        identification_number=identification_number, 
+        db=db
+    )
     return PaginatedUsers(
+        page=skip // limit + 1,
+        limit=limit,
         total=total,
-        total_pages=(total + limit - 1) // limit,
+        pages=(total + limit - 1) // limit,
         users=[UserInDB.model_validate(user) for user in users]
     )
+
 
 @router.patch('/{id}', response_model=None)
 def update_user(*, obj_in: UserUpdate, id: int) -> None:
