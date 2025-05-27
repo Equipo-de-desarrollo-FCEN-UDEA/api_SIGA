@@ -67,7 +67,6 @@ COPY alembic.ini .
 COPY pyproject.toml .
 COPY --from=compile-image /usr/src/app/requirements.txt ./requirements.txt
 COPY app/main.py ./app/main.py
-COPY .env.prod .env.prod
 
 EXPOSE 8003
 
