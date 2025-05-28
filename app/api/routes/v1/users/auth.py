@@ -190,7 +190,6 @@ def reset_password(
 
     hashed_password = crypt_svc.get_password_hash(new_password)
     user.hashed_password = hashed_password
-    user_update = UserUpdate.model_validate(user)
     db_postgres.add(user)
     db_postgres.commit()
 
