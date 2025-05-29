@@ -100,12 +100,8 @@ def activate_account(
             con ese correo electrónico no existe''',
         )
     user.is_active = True
-    user_update = UserUpdate.model_validate(user)
-    user_svc.update(
-        id=user.id,
-        obj_in=user_update,
-        db=db_postgres,
-    )
+    db_postgres.add(user)
+    db_postgres.commit()
     return {'msg': 'Cuenta activada correctamente'}
 
 # Route for recovery password with email or identification
@@ -194,11 +190,8 @@ def reset_password(
 
     hashed_password = crypt_svc.get_password_hash(new_password)
     user.hashed_password = hashed_password
-    user_update = UserUpdate.model_validate(user)
-    user_svc.update(
-        id=user.id,
-        obj_in=user_update, db=db_postgres,
-    )
+    db_postgres.add(user)
+    db_postgres.commit()
 
     return {'msg': 'Contraseña actualizada correctamente'}
 
