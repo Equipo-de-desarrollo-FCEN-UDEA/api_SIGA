@@ -86,7 +86,7 @@ async def create_commission(
     # Si el rango de fechas es mayor a 30 días, se manda a votación
 
     if (date_end - date_start) >= timedelta(days=30):
-        committee = user_rol_academic_unit_svc.get_student_committee(
+        committee = user_rol_academic_unit_svc.get_professor_council(
             user_id=current_user.id, db=db_postgres,
         )
         academic_unit_id = committee
