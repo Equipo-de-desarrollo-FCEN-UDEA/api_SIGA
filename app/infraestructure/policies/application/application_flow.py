@@ -247,6 +247,30 @@ class ApplicationFlow:
             content={'message': 'Voting created successfully'},
         )
 
+    async def send_to_school_voting(self, **kwargs):
+        db_postgres = kwargs.get('db_postgres')
+        academic_unit_id = kwargs.get('academic_unit_id')
+
+        user_application_academic_unit = UserApplicationAcademicUnitCreate(
+            user_application_id=self.user_application.id,
+            academic_unit_id=academic_unit_id,
+        )
+
+        user_application_academic_unit_svc.create(
+            obj_in=user_application_academic_unit,
+            db=db_postgres,
+        )
+
+        await self.create_voting(**kwargs)
+
+        return JSONResponse(
+            status_code=200,
+            content={
+                'message':
+                'Application sent to school and voting created successfully',
+            },
+        )
+
     async def close(self):
         """
         Finaliza la solicitud

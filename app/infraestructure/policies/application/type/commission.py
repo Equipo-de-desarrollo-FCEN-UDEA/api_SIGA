@@ -24,7 +24,11 @@ class CommissionFlow(ApplicationFlow):
             response = await self.create_voting(**kwargs)
 
         else:
-            response = await self.next_status(jump=3, **kwargs)
+            response = await self.send_to_academic_unit(
+                jump=3,
+                academic_unit_id='adb1ea44-189f-47a7-b763-e0aae6e7c07e',
+                **kwargs,
+            )
             '''
             jump 3, porque se salta la votación y el paso por instituto
             y decanatura, y va directo a aprobado
