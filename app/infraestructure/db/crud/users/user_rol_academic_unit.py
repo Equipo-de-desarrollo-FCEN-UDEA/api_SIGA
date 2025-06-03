@@ -63,6 +63,33 @@ class UserRolAcademicUnitCrud(
 
         raise HTTPException(404, 'No se encontró el comité del estudiante')
 
+    def get_professor_council(self, *, user_id: UUID, db: Session) -> UUID:
+        # UUIDs constantes
+        PROFESOR_ROL_ID = UUID('0c1875e9-50b8-4590-80d1-6afce3ea152b')
+        TYPE_CONSEJO_INSTITUTO = UUID('c4e1c617-9308-4d38-bc13-ae8db0858f31')
+
+        # Consulta el rol del profesor con las relaciones necesarias
+        user_rol = db.query(UserRolAcademicUnit).options(
+            joinedload(UserRolAcademicUnit.academic_unit).joinedload(
+                AcademicUnit.academic_unit,
+            ).joinedload(AcademicUnit.academic_units),
+        ).filter(
+            self.model.user_id == user_id,
+            self.model.rol_id == PROFESOR_ROL_ID,
+            self.model.is_active,
+        ).first()
+
+        if not user_rol:
+            raise HTTPException(404, 'No se encontró el rol del profesor')
+
+        # Lista de unidades académicas "hermanas"
+        lista = user_rol.academic_unit.academic_unit.academic_units
+        for academic_unit in lista:
+            if academic_unit.academic_unit_type_id == TYPE_CONSEJO_INSTITUTO:
+                return academic_unit.id
+
+        raise HTTPException(404, 'No se encontró el comité profesoral del usuario')
+
     def get_academic_units_by_user_id_and_rol_id(
             self,
             *,
