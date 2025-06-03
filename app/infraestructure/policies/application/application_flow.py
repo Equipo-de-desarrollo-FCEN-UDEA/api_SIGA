@@ -203,8 +203,10 @@ class ApplicationFlow:
         )
 
     async def create_voting(self, **kwargs):
-        user_app_acad_un = self.user_application.user_application_academic_units[0]
-        academic_unit_id = user_app_acad_un.academic_unit_id
+        academic_unit_id = kwargs.get('academic_unit_id')
+        if not academic_unit_id:
+            user_app_acad_un = self.user_application.user_application_academic_units[0]
+            academic_unit_id = user_app_acad_un.academic_unit_id
         db_postgres = kwargs.get('db_postgres')
         db_mongo = kwargs.get('db_mongo')
         jump = kwargs.get('jump', 0)
@@ -251,6 +253,8 @@ class ApplicationFlow:
         db_postgres = kwargs.get('db_postgres')
         academic_unit_id = kwargs.get('academic_unit_id')
 
+        academic_unit_id = kwargs.pop('academic_unit_id', None)
+
         user_application_academic_unit = UserApplicationAcademicUnitCreate(
             user_application_id=self.user_application.id,
             academic_unit_id=academic_unit_id,
@@ -261,7 +265,7 @@ class ApplicationFlow:
             db=db_postgres,
         )
 
-        await self.create_voting(**kwargs)
+        await self.create_voting(academic_unit_id=academic_unit_id, **kwargs)
 
         return JSONResponse(
             status_code=200,
