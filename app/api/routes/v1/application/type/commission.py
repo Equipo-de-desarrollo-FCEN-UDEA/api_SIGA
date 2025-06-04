@@ -24,6 +24,7 @@ from app.core.constants import PROFESSOR_ROL_ID
 from app.infraestructure.policies.application.type.commission import CommissionFlow
 from app.schemas.application.type.commission import Commission
 from app.schemas.application.type.commission import CommissionCreate
+from app.schemas.application.type.commission import Compliment
 from app.schemas.application.user_application import UserApplicationPublic
 from app.schemas.users.user import User
 from app.services.application.type.commission import commission_svc
@@ -155,6 +156,34 @@ async def advance_application_status(
         current_user=current_user,
         is_approved=is_approved,
         **request.model_dump(exclude_unset=True),
+    )
+
+    return response
+
+@router.post('/{user_application_id}/compliment', response_model=None)
+async def add_compliment(
+    user_application_id: str,
+    compliment: Compliment,
+    db_mongo=Depends(get_mongo_db),
+    db_postgres=Depends(get_db),
+    current_user=Depends(get_current_active_user),
+):
+    """
+    Endpoint para agregar un cumplido a una solicitud.
+    """
+    # Obtener la solicitud
+    user_application = user_application_svc.get(id=user_application_id, db=db_postgres)
+
+    # Instanciar el flujo de movilidad
+    application_flow = CommissionFlow(user_application)
+
+    # Ejecutar la transición para agregar el cumplido
+    response = await application_flow.next(
+        user_application_id=user_application_id,
+        db_mongo=db_mongo,
+        db_postgres=db_postgres,
+        current_user=current_user,
+        compliment=compliment,
     )
 
     return response

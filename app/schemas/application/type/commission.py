@@ -38,9 +38,6 @@ class CommissionUpdate(BaseModel):
 
 class Compliment(BaseModel):
     documents: list[Any] | None
-    emails: list[str] | None
-    observation: str = Field(max_length=300)
-
 
 class CommissionInDB(CommissionBase):
     resolution: str | None = None
