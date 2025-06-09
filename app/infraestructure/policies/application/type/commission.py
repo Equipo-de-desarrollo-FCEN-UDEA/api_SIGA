@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from datetime import timedelta
 
 from app.infraestructure.db.models.application.type.commission import Commission
@@ -24,14 +25,29 @@ class CommissionFlow(ApplicationFlow):
             response = await self.create_voting(**kwargs)
 
         else:
-            response = await self.send_to_academic_unit(
-                jump=3,
-                academic_unit_id='adb1ea44-189f-47a7-b763-e0aae6e7c07e',
+            response = await self.next_status(
+                jump=2,
                 **kwargs,
             )
             '''
-            jump 3, porque se salta la votación y el paso por instituto
-            y decanatura, y va directo a aprobado
+            jump 2, porque se salta las dos votaciones y pasa por instituto
             '''
 
         return response
+
+    async def compliment(self, **kwargs):
+        commission: Commission = await commission_svc.get(
+            id=self.user_application.id,
+            db=kwargs.get('db_mongo'),
+        )
+        await self.next_status(**kwargs)
+
+        is_approved = kwargs.get('is_approved')
+        if is_approved:
+            await self.refresh_user_application_state(**kwargs)
+
+            if commission.date_end < datetime.now():
+                response = await self.next_status(**kwargs)
+                return response
+
+        return None

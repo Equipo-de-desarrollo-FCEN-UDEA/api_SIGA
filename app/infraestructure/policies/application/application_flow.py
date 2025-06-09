@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from datetime import datetime
+from typing import TypeAlias
 
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
@@ -12,6 +13,9 @@ from app.infraestructure.db.models.application.application_status import (
     ApplicationStatus,
 )
 from app.infraestructure.db.models.application.user_application import UserApplication
+from app.infraestructure.db.models.application.user_application_status import (
+    UserApplicationStatus,
+)
 from app.infraestructure.db.models.voting.voting_info import VotingInfo
 from app.schemas.application.user_application_academic_unit import (
     UserApplicationAcademicUnitCreate,
@@ -21,6 +25,7 @@ from app.schemas.application.user_application_user import UserApplicationUserCre
 from app.schemas.voting.voting import VotingCreate
 from app.schemas.voting.voting_info import VotingInfoCreate
 from app.schemas.voting.voting_info import VotingStatus
+from app.services.application.user_application import user_application_svc
 from app.services.application.user_application_academic_unit import (
     user_application_academic_unit_svc,
 )
@@ -51,6 +56,14 @@ class ApplicationFlow:
 
         return param_matches
 
+    # Método para refrescar el estado en la base de datos
+    async def refresh_user_application_state(self, **kwargs):
+        db_postgres = kwargs.get('db_postgres')
+        self.user_application = user_application_svc.get(
+            id=self.user_application.id,
+            db=db_postgres,
+        )
+
     def get_action(self, is_approved) -> str | None:
         """
         Obtiene el siguiente estado válido según la transición permitida.
@@ -62,12 +75,17 @@ class ApplicationFlow:
         if not is_approved:
             return 'reject'
 
+        # Solo es para tipar más corto
+        UAS: TypeAlias = UserApplicationStatus
+
         application: Application = self.user_application.application
-        current_status: int = len(self.user_application.user_application_status)
+        current_status: UAS = self.user_application.user_application_status[0]
         application_status: list[ApplicationStatus] = application.application_status
+
         for app_status in application_status:
-            if app_status.step == current_status:
+            if app_status.status_id == current_status.status_id:
                 return app_status.action
+
         return None
 
     async def next(self, **kwargs):
@@ -108,12 +126,23 @@ class ApplicationFlow:
             observation,
             jump: int = 0,
     ) -> UserApplicationStatusCreate | None:
+
+        # Solo es para tipar más corto
+        UAS: TypeAlias = UserApplicationStatus
+
         application: Application = self.user_application.application
-        current_status: int = len(self.user_application.user_application_status)
+        current_status: UAS = self.user_application.user_application_status[0]
         application_status: list[ApplicationStatus] = application.application_status
+
         for app_status in application_status:
-            if app_status.step == current_status+1+jump:
+            if app_status.status_id == current_status.status_id:
+                current_step = app_status.step
+                break
+
+        for app_status in application_status:
+            if app_status.step == current_step + 1 + jump:
                 next_status = app_status.status
+                break
 
         return UserApplicationStatusCreate(
             user_application_id=self.user_application.id,

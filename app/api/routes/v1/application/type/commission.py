@@ -86,10 +86,10 @@ async def create_commission(
     # Si el rango de fechas es mayor a 30 días, se manda a votación
 
     if (date_end - date_start) >= timedelta(days=30):
-        committee = user_rol_academic_unit_svc.get_professor_council(
+        council = user_rol_academic_unit_svc.get_professor_council(
             user_id=current_user.id, db=db_postgres,
         )
-        academic_unit_id = committee
+        academic_unit_id = council
 
     # If the date range is less than 30 days, it is sent to the academic unit
 
@@ -113,6 +113,24 @@ async def create_commission(
         mongo_service=commission_svc,
         db_mongo=db_mongo,
     )
+
+    # Si su rango de feches es menor a 30 días, se cambia el estado al que le sigue
+    # a CREATE que es IN_INSTITUTE
+
+    if (date_end - date_start) < timedelta(days=30):
+        user_application = user_application_svc.get(
+            id=commission_create.id, db=db_postgres,
+        )
+        application_flow = CommissionFlow(user_application)
+
+        await application_flow.next(
+            user_application_id=str(user_application.id),
+            db_mongo=db_mongo,
+            db_postgres=db_postgres,
+            current_user=current_user,
+            is_approved=True,
+            academic_unit_id=academic_unit_id,
+        )
 
     user_application_svc.upload_files(
         user_application_id=commission_create.id,
