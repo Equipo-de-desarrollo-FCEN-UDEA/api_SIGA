@@ -25,7 +25,6 @@ from app.schemas.application.user_application_user import UserApplicationUserCre
 from app.schemas.voting.voting import VotingCreate
 from app.schemas.voting.voting_info import VotingInfoCreate
 from app.schemas.voting.voting_info import VotingStatus
-from app.services.application.user_application import user_application_svc
 from app.services.application.user_application_academic_unit import (
     user_application_academic_unit_svc,
 )
@@ -55,14 +54,6 @@ class ApplicationFlow:
                     param_matches.append((key, value))
 
         return param_matches
-
-    # Método para refrescar el estado en la base de datos
-    async def refresh_user_application_state(self, **kwargs):
-        db_postgres = kwargs.get('db_postgres')
-        self.user_application = user_application_svc.get(
-            id=self.user_application.id,
-            db=db_postgres,
-        )
 
     def get_action(self, is_approved) -> str | None:
         """

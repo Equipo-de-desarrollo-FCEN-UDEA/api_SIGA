@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
 from datetime import timedelta
 
 from app.infraestructure.db.models.application.type.commission import Commission
@@ -34,20 +33,3 @@ class CommissionFlow(ApplicationFlow):
             '''
 
         return response
-
-    async def compliment(self, **kwargs):
-        commission: Commission = await commission_svc.get(
-            id=self.user_application.id,
-            db=kwargs.get('db_mongo'),
-        )
-        await self.next_status(**kwargs)
-
-        is_approved = kwargs.get('is_approved')
-        if is_approved:
-            await self.refresh_user_application_state(**kwargs)
-
-            if commission.date_end < datetime.now():
-                response = await self.next_status(**kwargs)
-                return response
-
-        return None
