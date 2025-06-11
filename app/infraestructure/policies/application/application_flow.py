@@ -271,7 +271,6 @@ class ApplicationFlow:
 
     async def send_to_school_council(self, **kwargs):
         db_postgres = kwargs.get('db_postgres')
-        academic_unit_id = kwargs.get('academic_unit_id')
 
         academic_unit_id = kwargs.pop('academic_unit_id', None)
 
