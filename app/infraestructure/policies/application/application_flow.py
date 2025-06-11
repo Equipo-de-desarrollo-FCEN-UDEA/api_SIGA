@@ -153,7 +153,7 @@ class ApplicationFlow:
 
     async def next_status(self, **kwargs):
         db_postgres = kwargs.get('db_postgres')
-        jump = kwargs.get('jump', 0)
+        jump = int(kwargs.get('jump', 0))
 
         user_application_status = self.get_next_status(
             updated_by=kwargs.get('current_user').id,
@@ -175,7 +175,7 @@ class ApplicationFlow:
         user_application_id = self.user_application.id
         user_to_assign_id = kwargs.get('user_to_assign_id')
         db_postgres = kwargs.get('db_postgres')
-        jump = kwargs.get('jump', 0)
+        jump = int(kwargs.get('jump', 0))
 
         user_application_user = UserApplicationUserCreate(
             user_application_id=user_application_id,
@@ -204,7 +204,7 @@ class ApplicationFlow:
     async def send_to_academic_unit(self, **kwargs):
         db_postgres = kwargs.get('db_postgres')
         academic_unit_id = kwargs.get('academic_unit_id')
-        jump = kwargs.get('jump', 0)
+        jump = int(kwargs.get('jump', 0))
 
         user_application_academic_unit = UserApplicationAcademicUnitCreate(
             user_application_id=self.user_application.id,
@@ -238,7 +238,7 @@ class ApplicationFlow:
             academic_unit_id = user_app_acad_un.academic_unit_id
         db_postgres = kwargs.get('db_postgres')
         db_mongo = kwargs.get('db_mongo')
-        jump = kwargs.get('jump', 0)
+        jump = int(kwargs.get('jump', 0))
 
         obj_in: VotingCreate = VotingCreate(
             academic_unit_id=academic_unit_id,
@@ -278,7 +278,7 @@ class ApplicationFlow:
             content={'message': 'Voting created successfully'},
         )
 
-    async def send_to_school_voting(self, **kwargs):
+    async def send_to_school_council(self, **kwargs):
         db_postgres = kwargs.get('db_postgres')
         academic_unit_id = kwargs.get('academic_unit_id')
 
@@ -300,7 +300,7 @@ class ApplicationFlow:
             status_code=200,
             content={
                 'message':
-                'Application sent to school and voting created successfully',
+                'Application sent to school council created successfully',
             },
         )
 
