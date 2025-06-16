@@ -33,3 +33,13 @@ class CommissionFlow(ApplicationFlow):
             '''
 
         return response
+
+    async def upload_proof(self, **kwargs):
+
+        academic_unit_id = 'adb1ea44-189f-47a7-b763-e0aae6e7c07e'
+
+        kwargs.pop('academic_unit_id', None)
+        return await self.send_to_academic_unit_if_not_created_yet(
+            academic_unit_id=academic_unit_id,
+            **kwargs,
+        )

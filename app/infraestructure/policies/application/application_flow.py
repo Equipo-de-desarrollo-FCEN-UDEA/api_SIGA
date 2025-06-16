@@ -222,6 +222,26 @@ class ApplicationFlow:
             content={'message': 'Application sent to academic unit successfully'},
         )
 
+    async def send_to_academic_unit_if_not_created_yet(self, **kwargs):
+        """
+        Esta función verifica si una solicitud todavía ya ha sido
+        enviada a una unidad académica en particular. Si ya fue enviada,
+        entonces solamente pasa al siguiente estado. Si aún no fue enviada,
+        entonces la envía y pasa al siguiente estado.
+        """
+        academic_unit_id = kwargs.get('academic_unit_id')
+
+        already_sent = any(
+            unit.academic_unit_id == academic_unit_id
+            for unit in self.user_application.user_application_academic_units
+        )
+
+        if not already_sent:
+            return await self.send_to_academic_unit(
+                **kwargs,
+            )
+        return await self.next_status(**kwargs)
+
     async def create_voting(self, **kwargs):
         academic_unit_id = kwargs.get('academic_unit_id')
         if not academic_unit_id:
