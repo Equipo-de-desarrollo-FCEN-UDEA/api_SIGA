@@ -24,10 +24,12 @@ class CommissionFlow(ApplicationFlow):
             response = await self.create_voting(**kwargs)
 
         else:
-            response = await self.next_status(jump=3, **kwargs)
+            response = await self.next_status(
+                jump=2,
+                **kwargs,
+            )
             '''
-            jump 3, porque se salta la votación y el paso por instituto
-            y decanatura, y va directo a aprobado
+            jump 2, porque se salta las dos votaciones y pasa por instituto
             '''
 
         return response
