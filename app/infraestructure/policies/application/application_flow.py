@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from datetime import datetime
+from typing import TypeAlias
 
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
@@ -12,6 +13,9 @@ from app.infraestructure.db.models.application.application_status import (
     ApplicationStatus,
 )
 from app.infraestructure.db.models.application.user_application import UserApplication
+from app.infraestructure.db.models.application.user_application_status import (
+    UserApplicationStatus,
+)
 from app.infraestructure.db.models.voting.voting_info import VotingInfo
 from app.schemas.application.user_application_academic_unit import (
     UserApplicationAcademicUnitCreate,
@@ -62,12 +66,17 @@ class ApplicationFlow:
         if not is_approved:
             return 'reject'
 
+        # Solo es para tipar más corto
+        UAS: TypeAlias = UserApplicationStatus
+
         application: Application = self.user_application.application
-        current_status: int = len(self.user_application.user_application_status)
+        current_status: UAS = self.user_application.user_application_status[0]
         application_status: list[ApplicationStatus] = application.application_status
+
         for app_status in application_status:
-            if app_status.step == current_status:
+            if app_status.status_id == current_status.status_id:
                 return app_status.action
+
         return None
 
     async def next(self, **kwargs):
@@ -108,12 +117,23 @@ class ApplicationFlow:
             observation,
             jump: int = 0,
     ) -> UserApplicationStatusCreate | None:
+
+        # Solo es para tipar más corto
+        UAS: TypeAlias = UserApplicationStatus
+
         application: Application = self.user_application.application
-        current_status: int = len(self.user_application.user_application_status)
+        current_status: UAS = self.user_application.user_application_status[0]
         application_status: list[ApplicationStatus] = application.application_status
+
         for app_status in application_status:
-            if app_status.step == current_status+1+jump:
+            if app_status.status_id == current_status.status_id:
+                current_step = app_status.step
+                break
+
+        for app_status in application_status:
+            if app_status.step == current_step + 1 + jump:
                 next_status = app_status.status
+                break
 
         return UserApplicationStatusCreate(
             user_application_id=self.user_application.id,
@@ -124,7 +144,7 @@ class ApplicationFlow:
 
     async def next_status(self, **kwargs):
         db_postgres = kwargs.get('db_postgres')
-        jump = kwargs.get('jump', 0)
+        jump = int(kwargs.get('jump', 0))
 
         user_application_status = self.get_next_status(
             updated_by=kwargs.get('current_user').id,
@@ -146,7 +166,7 @@ class ApplicationFlow:
         user_application_id = self.user_application.id
         user_to_assign_id = kwargs.get('user_to_assign_id')
         db_postgres = kwargs.get('db_postgres')
-        jump = kwargs.get('jump', 0)
+        jump = int(kwargs.get('jump', 0))
 
         user_application_user = UserApplicationUserCreate(
             user_application_id=user_application_id,
@@ -175,7 +195,7 @@ class ApplicationFlow:
     async def send_to_academic_unit(self, **kwargs):
         db_postgres = kwargs.get('db_postgres')
         academic_unit_id = kwargs.get('academic_unit_id')
-        jump = kwargs.get('jump', 0)
+        jump = int(kwargs.get('jump', 0))
 
         user_application_academic_unit = UserApplicationAcademicUnitCreate(
             user_application_id=self.user_application.id,
@@ -203,11 +223,13 @@ class ApplicationFlow:
         )
 
     async def create_voting(self, **kwargs):
-        user_app_acad_un = self.user_application.user_application_academic_units[0]
-        academic_unit_id = user_app_acad_un.academic_unit_id
+        academic_unit_id = kwargs.get('academic_unit_id')
+        if not academic_unit_id:
+            user_app_acad_un = self.user_application.user_application_academic_units[0]
+            academic_unit_id = user_app_acad_un.academic_unit_id
         db_postgres = kwargs.get('db_postgres')
         db_mongo = kwargs.get('db_mongo')
-        jump = kwargs.get('jump', 0)
+        jump = int(kwargs.get('jump', 0))
 
         obj_in: VotingCreate = VotingCreate(
             academic_unit_id=academic_unit_id,
@@ -245,6 +267,31 @@ class ApplicationFlow:
         return JSONResponse(
             status_code=200,
             content={'message': 'Voting created successfully'},
+        )
+
+    async def send_to_school_council(self, **kwargs):
+        db_postgres = kwargs.get('db_postgres')
+
+        academic_unit_id = kwargs.pop('academic_unit_id', None)
+
+        user_application_academic_unit = UserApplicationAcademicUnitCreate(
+            user_application_id=self.user_application.id,
+            academic_unit_id=academic_unit_id,
+        )
+
+        user_application_academic_unit_svc.create(
+            obj_in=user_application_academic_unit,
+            db=db_postgres,
+        )
+
+        await self.create_voting(academic_unit_id=academic_unit_id, **kwargs)
+
+        return JSONResponse(
+            status_code=200,
+            content={
+                'message':
+                'Application sent to school council created successfully',
+            },
         )
 
     async def close(self):
