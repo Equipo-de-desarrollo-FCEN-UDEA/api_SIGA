@@ -229,10 +229,11 @@ class ApplicationFlow:
         entonces solamente pasa al siguiente estado. Si aún no fue enviada,
         entonces la envía y pasa al siguiente estado.
         """
+
         academic_unit_id = kwargs.get('academic_unit_id')
 
         already_sent = any(
-            unit.academic_unit_id == academic_unit_id
+            str(unit.academic_unit_id) == academic_unit_id
             for unit in self.user_application.user_application_academic_units
         )
 
