@@ -5,6 +5,7 @@ from uuid import UUID
 from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import Field
+from pydantic import validator
 
 from app.infraestructure.db.models.user.user import IdentificationType
 from app.schemas.users.user_rol_academic_unit import UserRolAcademicUnit
@@ -26,6 +27,10 @@ class UserCreate(UserBase):
 
     class Config:
         from_attributes = True
+# We force upper case for search engine optimization
+    @validator('name', 'last_name', 'identification_number', 'email')
+    def convert_upper(cls, value):
+        return value.upper()
 
 
 class UserUpdate(BaseModel):
