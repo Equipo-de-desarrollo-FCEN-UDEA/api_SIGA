@@ -8,7 +8,7 @@ from sqlalchemy import Enum
 from sqlalchemy import String
 from sqlalchemy.orm import relationship
 
-from app.infraestructure.db.utils.base_model import BaseModel
+from app.infraestructure.db.utils.base_model import BaseExposableModel
 
 # Definir el enum para identification_type
 
@@ -20,7 +20,7 @@ class IdentificationType(enum.Enum):
     CEDULA_EXTRANJERIA = 'cedula_extranjeria'
 
 
-class User(BaseModel):
+class User(BaseExposableModel):
     name = Column(String(100), nullable=False)
     last_name = Column(String(100), nullable=False)
     email = Column(String(100), unique=True)
