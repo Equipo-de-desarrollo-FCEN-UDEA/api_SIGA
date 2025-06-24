@@ -29,7 +29,7 @@ class UserCreate(UserBase):
         from_attributes = True
 # We force upper case for search engine optimization
     @validator('name', 'last_name', 'identification_number', 'email')
-    def convert_upper(cls, value):
+    def convert_upper(self, value):
         return value.upper()
 
 
