@@ -86,10 +86,7 @@ class UserRolAcademicUnitCrud(
         lista = user_rol.academic_unit.academic_units
 
         for academic_unit in lista:
-            if (
-                user_rol.rol_id == PROFESOR_ROL_ID and
-                academic_unit.academic_unit_type_id == TYPE_CONSEJO_INSTITUTO
-            ):
+            if academic_unit.academic_unit_type_id == TYPE_CONSEJO_INSTITUTO:
                 return academic_unit.id
 
         raise HTTPException(404, 'No se encontró el comité profesoral del usuario')
