@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from sqlalchemy import Column
 from sqlalchemy import ForeignKey
+from sqlalchemy import Integer
 from sqlalchemy import String
-from sqlalchemy import Uuid
 from sqlalchemy.orm import relationship
 
 from app.infraestructure.db.utils.base_model import BaseExposableModel
@@ -13,9 +13,9 @@ class AcademicUnit(BaseExposableModel):
     name = Column(String(100), unique=True, nullable=False)
     email = Column(String(100))
 
-    academic_unit_id = Column(Uuid, ForeignKey('academic_unit.id'), nullable=True)
+    academic_unit_id = Column(Integer, ForeignKey('academic_unit.id'), nullable=True)
     academic_unit_type_id = Column(
-        Uuid, ForeignKey(
+        Integer, ForeignKey(
             'academic_unit_type.id',
         ), nullable=True,
     )

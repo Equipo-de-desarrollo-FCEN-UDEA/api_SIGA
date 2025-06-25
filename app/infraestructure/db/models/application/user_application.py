@@ -4,15 +4,14 @@ from sqlalchemy import Column
 from sqlalchemy import ForeignKey
 from sqlalchemy import Identity
 from sqlalchemy import Integer
-from sqlalchemy import Uuid
 from sqlalchemy.orm import relationship
 
 from app.infraestructure.db.utils.base_model import BaseExposableModel
 
 
 class UserApplication(BaseExposableModel):
-    user_id = Column(Uuid, ForeignKey('user.id'), nullable=False)
-    application_id = Column(Uuid, ForeignKey('application.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    application_id = Column(Integer, ForeignKey('application.id'), nullable=False)
     consecutive = Column(Integer, Identity(start=5000, cycle=False), index=True)
 
     # relations

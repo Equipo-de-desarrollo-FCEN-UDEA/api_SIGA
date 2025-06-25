@@ -3,17 +3,17 @@ from __future__ import annotations
 from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import ForeignKey
-from sqlalchemy import Uuid
+from sqlalchemy import Integer
 from sqlalchemy.orm import relationship
 
 from app.infraestructure.db.utils.link_model import LinkModel
 
 
 class UserRolAcademicUnit(LinkModel):
-    user_id = Column(Uuid, ForeignKey('user.id'), primary_key=True)
-    rol_id = Column(Uuid, ForeignKey('rol.id'), primary_key=True)
+    user_id = Column(Integer, ForeignKey('user.id'), primary_key=True)
+    rol_id = Column(Integer, ForeignKey('rol.id'), primary_key=True)
     academic_unit_id = Column(
-        Uuid, ForeignKey(
+        Integer, ForeignKey(
             'academic_unit.id',
         ), primary_key=True,
     )

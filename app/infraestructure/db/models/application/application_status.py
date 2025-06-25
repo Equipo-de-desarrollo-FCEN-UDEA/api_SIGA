@@ -4,15 +4,14 @@ from sqlalchemy import Column
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy import String
-from sqlalchemy import Uuid
 from sqlalchemy.orm import relationship
 
 from app.infraestructure.db.utils.link_model import LinkModel
 
 
 class ApplicationStatus(LinkModel):
-    application_id = Column(Uuid, ForeignKey('application.id'), primary_key=True)
-    status_id = Column(Uuid, ForeignKey('status.id'), primary_key=True)
+    application_id = Column(Integer, ForeignKey('application.id'), primary_key=True)
+    status_id = Column(Integer, ForeignKey('status.id'), primary_key=True)
     step = Column(Integer, nullable=False)
     action = Column(String)
 
