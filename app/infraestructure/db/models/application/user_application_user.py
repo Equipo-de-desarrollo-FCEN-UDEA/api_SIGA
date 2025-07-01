@@ -3,7 +3,7 @@ from __future__ import annotations
 from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import ForeignKey
-from sqlalchemy import Uuid
+from sqlalchemy import Integer
 from sqlalchemy.orm import relationship
 
 from app.infraestructure.db.utils.link_model import LinkModel
@@ -11,11 +11,11 @@ from app.infraestructure.db.utils.link_model import LinkModel
 
 class UserApplicationUser(LinkModel):
     user_application_id = Column(
-        Uuid, ForeignKey(
+        Integer, ForeignKey(
             'user_application.id',
         ), nullable=False, primary_key=True,
     )
-    user_id = Column(Uuid, ForeignKey('user.id'), nullable=False, primary_key=True)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=False, primary_key=True)
     is_active = Column(Boolean, nullable=False, default=True)
 
     # relations
