@@ -5,6 +5,7 @@ from app.infraestructure.db.utils.base_model import BaseModel
 
 class AcademicUnit(BaseModel):
     name = Column(String(100), unique=True, nullable=False)
+    description = Column(String(255), nullable=True)
     email = Column(String(100))
 
     academic_unit_id = Column(Uuid, ForeignKey("academic_unit.id"), nullable=True)

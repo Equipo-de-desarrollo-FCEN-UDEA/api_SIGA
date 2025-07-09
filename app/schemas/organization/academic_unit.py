@@ -7,6 +7,7 @@ from app.schemas.organization.academic_unit_type import AcademicUnitTypeInDB, Ac
 class AcademicUnitBase(BaseModel):
     name:str
     email: str
+    description: str
     academic_unit_id: UUID | None = None
     academic_unit_type_id: UUID
     
