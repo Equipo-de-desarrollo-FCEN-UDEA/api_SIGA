@@ -13,8 +13,6 @@ class AcademicUnit(BaseModel):
     # relations    
     academic_unit = relationship("AcademicUnit", remote_side="AcademicUnit.id" ,back_populates="academic_units", lazy="joined")
     academic_unit_type = relationship("AcademicUnitType", back_populates="academic_units" , lazy="selectin")
-    
-    roles = relationship("Rol", back_populates="academic_unit")
 
     academic_units = relationship("AcademicUnit", back_populates="academic_unit", cascade="all, delete-orphan", lazy="joined")
 
