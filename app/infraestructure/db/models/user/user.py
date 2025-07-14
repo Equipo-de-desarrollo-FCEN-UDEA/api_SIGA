@@ -14,10 +14,10 @@ from app.infraestructure.db.utils.base_model import BaseModel
 
 
 class IdentificationType(enum.Enum):
-    PASAPORTE = 'PASAPORTE'
-    TARJETA_DE_IDENTIDAD = 'TARJETA_DE_IDENTIDAD'
-    CEDULA_CIUDADANIA = 'CEDULA_CIUDADANIA'
-    CEDULA_EXTRANJERIA = 'CEDULA_EXTRANJERIA'
+    PASAPORTE = 'pasaporte'
+    TARJETA_DE_IDENTIDAD = 'tarjeta_de_identidad'
+    CEDULA_CIUDADANIA = 'cedula_ciudadania'
+    CEDULA_EXTRANJERIA = 'cedula_extranjeria'
 
 
 class User(BaseModel):
