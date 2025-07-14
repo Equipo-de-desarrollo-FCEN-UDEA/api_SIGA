@@ -44,7 +44,6 @@ class UserRolAcademicUnitCrud(
 
         # Lista de unidades académicas "hijas" del instituto, como los comités
         lista = user_rol.academic_unit.academic_units
-        print(f'Lista de unidades académicas: {lista}')
         for academic_unit in lista:
             print(f'Comprobando unidad académica: {academic_unit.academic_unit_type_id}')
             # Verificamos el tipo de comité según el rol del usuario
