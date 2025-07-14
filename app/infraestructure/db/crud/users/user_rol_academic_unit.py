@@ -27,8 +27,7 @@ class UserRolAcademicUnitCrud(
         # UUIDs constantes
         ESTUDIANTE_PREGRADO_ROL_ID = UUID('939875b2-3e34-4a17-9f3c-76cabba73f52')
         ESTUDIANTE_POSGRADO_ROL_ID = UUID('1ca355db-8700-4ee7-883b-18b8bbed403b')
-        TYPE_COMITE_PREGRADO = UUID('f44c11ab-46f9-49e2-b98c-c1e139dc7c58')
-        TYPE_COMITE_POSGRADO = UUID('340e13c3-1dbe-47a0-b735-d72853c5ea78')
+        TYPE_COMITE = UUID('d1085905-eed1-4e3c-bae6-9f3b17295eca')
 
         # Realizamos una sola consulta para ambos roles
         user_rol = db.query(UserRolAcademicUnit).options(
@@ -43,20 +42,21 @@ class UserRolAcademicUnitCrud(
             ) & (self.model.is_active),
         ).first()
 
-        # Procesamos los resultados
-        # devuelve el listado de unidades academicas que pertenecen al instituto
-        # del cual hace parte el programa academico del estudiante de un estudiante
-        lista = user_rol.academic_unit.academic_unit.academic_units
+        # Lista de unidades académicas "hijas" del instituto, como los comités
+        lista = user_rol.academic_unit.academic_units
+        print(f'Lista de unidades académicas: {lista}')
+        for academic_unit in lista:
+            print(f'Comprobando unidad académica: {academic_unit.academic_unit_type_id}')
+            # Verificamos el tipo de comité según el rol del usuario
         for academic_unit in lista:
             if (
                 (
                     user_rol.rol_id == ESTUDIANTE_PREGRADO_ROL_ID and
-                    academic_unit.academic_unit_type_id == TYPE_COMITE_PREGRADO
+                    academic_unit.academic_unit_type_id == TYPE_COMITE
                 ) or
                 (
                     user_rol.rol_id == ESTUDIANTE_POSGRADO_ROL_ID and
-                    academic_unit.academic_unit_type_id ==
-                    TYPE_COMITE_POSGRADO
+                    academic_unit.academic_unit_type_id == TYPE_COMITE
                 )
             ):
                 return academic_unit.id
