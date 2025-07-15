@@ -5,7 +5,6 @@ from app.infraestructure.db.utils.base_model import BaseModel
 
 class AcademicUnit(BaseModel):
     name = Column(String(100), unique=True, nullable=False)
-    description = Column(String(255), nullable=True)
     email = Column(String(100))
 
     academic_unit_id = Column(Uuid, ForeignKey("academic_unit.id"), nullable=True)
@@ -14,6 +13,8 @@ class AcademicUnit(BaseModel):
     # relations    
     academic_unit = relationship("AcademicUnit", remote_side="AcademicUnit.id" ,back_populates="academic_units", lazy="joined")
     academic_unit_type = relationship("AcademicUnitType", back_populates="academic_units" , lazy="selectin")
+    
+    roles = relationship("Rol", back_populates="academic_unit")
 
     academic_units = relationship("AcademicUnit", back_populates="academic_unit", cascade="all, delete-orphan", lazy="joined")
 
