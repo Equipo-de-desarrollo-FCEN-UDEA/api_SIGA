@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from pydantic import EmailStr
 from pydantic import Field
 
@@ -26,6 +26,12 @@ class UserCreate(UserBase):
 
     class Config:
         from_attributes = True
+
+     # We force upper case for search engine optimization
+    @field_validator('name', 'last_name', 'identification_number')
+    def convert_upper(cls, value):
+        return value.upper()
+
 
 
 class UserUpdate(BaseModel):
