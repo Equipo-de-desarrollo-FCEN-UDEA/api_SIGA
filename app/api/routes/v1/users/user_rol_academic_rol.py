@@ -37,8 +37,7 @@ def get_all_rol(
     return [UserRolAcademicUnitInDB.model_validate(rol) for rol in response]
 
 
-@router.get(
-    '{academic_unit_id}',
+@router.get("/{academic_unit_id}",
     response_model=list[UserRolAcademicUnitPublic],
     status_code=200,
 )
