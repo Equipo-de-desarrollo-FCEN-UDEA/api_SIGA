@@ -38,7 +38,7 @@ def get_all_rol(
 
 
 @router.get(
-    '/{academic_unit_id}',
+    '{academic_unit_id}',
     response_model=list[UserRolAcademicUnitPublic],
     status_code=200,
 )
