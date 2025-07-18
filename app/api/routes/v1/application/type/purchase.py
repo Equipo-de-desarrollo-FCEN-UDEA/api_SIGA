@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 from app.api.middleware.bearer import get_current_active_user
 from app.api.middleware.mongo_db import get_mongo_db
 from app.api.middleware.postgres_db import get_db
+from app.api.middleware.scopes import has_role
 from app.core.config import settings
 from app.infraestructure.formats import formats_dir
 from app.infraestructure.policies.application.type.purchase import delete_file
@@ -66,6 +67,11 @@ async def create_purchase(
     db_mongo=Depends(get_mongo_db),
     db_postgres: Session = Depends(get_db),
     academic_unit_id: ApprovedAcademicsUnits,
+    permissions: Annotated[
+        bool, Security(
+            has_role, scopes=['profesor'],
+        ),
+    ] = False,
     current_user: Annotated[
         User, Security(
             get_current_active_user,

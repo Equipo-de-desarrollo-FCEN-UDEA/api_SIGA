@@ -25,9 +25,16 @@ from app.infraestructure.policies.application.type.commission import CommissionF
 from app.schemas.application.type.commission import Commission
 from app.schemas.application.type.commission import CommissionCreate
 from app.schemas.application.user_application import UserApplicationPublic
+from app.schemas.application.user_application_academic_unit import (
+    UserApplicationAcademicUnitCreate,
+)
 from app.schemas.users.user import User
 from app.services.application.type.commission import commission_svc
 from app.services.application.user_application import user_application_svc
+from app.services.application.user_application_academic_unit import (
+    user_application_academic_unit_svc,
+)
+from app.services.organization.academic_unit import academic_unit_svc
 from app.services.users.user_rol_academic_unit import user_rol_academic_unit_svc
 
 log = logging.getLogger(__name__)
@@ -84,14 +91,16 @@ async def create_commission(
     )
 
     # Si el rango de fechas es mayor a 30 días, se manda a votación
+    more_than_30_days = False
 
     if (date_end - date_start) >= timedelta(days=30):
         council = user_rol_academic_unit_svc.get_professor_council(
             user_id=current_user.id, db=db_postgres,
         )
         academic_unit_id = council
+        more_than_30_days = True
 
-    # If the date range is less than 30 days, it is sent to the academic unit
+    # If the date range is less than 30 days, it is sent to the institute
 
     else:
         get_units = user_rol_academic_unit_svc.get_academic_units_by_user_id_and_rol_id
@@ -114,7 +123,31 @@ async def create_commission(
         db_mongo=db_mongo,
     )
 
-    # Si su rango de feches es menor a 30 días, se cambia el estado al que le sigue
+    print(f'commission_create: {commission_create.id}')
+
+    if more_than_30_days:
+        institute_id = academic_unit_svc.get(
+            id=academic_unit_id, db=db_postgres,
+        ).academic_unit_id
+        faculty_id = academic_unit_svc.get(
+            id=institute_id, db=db_postgres,
+        ).academic_unit_id
+
+    else:
+        faculty_id = academic_unit_svc.get(
+            id=academic_unit_id, db=db_postgres,
+        ).academic_unit_id
+
+    user_application_academic_unit = UserApplicationAcademicUnitCreate(
+        user_application_id=commission_create.id,
+        academic_unit_id=faculty_id,
+    )
+    user_application_academic_unit_svc.create(
+        obj_in=user_application_academic_unit,
+        db=db_postgres,
+    )
+
+    # Si su rango de fechas es menor a 30 días, se cambia el estado al que le sigue
     # a CREATE que es IN_INSTITUTE
 
     if (date_end - date_start) < timedelta(days=30):
