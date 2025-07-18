@@ -123,8 +123,6 @@ async def create_commission(
         db_mongo=db_mongo,
     )
 
-    print(f'commission_create: {commission_create.id}')
-
     if more_than_30_days:
         institute_id = academic_unit_svc.get(
             id=academic_unit_id, db=db_postgres,

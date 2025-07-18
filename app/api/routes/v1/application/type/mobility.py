@@ -132,13 +132,14 @@ async def create_mobility(
         db_mongo=db_mongo,
     )
 
-    if committee:
-        institute_id = academic_unit_svc.get(
-            id=committee, db=db_postgres,
-        ).academic_unit_id
-        faculty_id = academic_unit_svc.get(
-            id=institute_id, db=db_postgres,
-        ).academic_unit_id
+    # Cálculo de del instituto/departamento y facultad
+
+    institute_id = academic_unit_svc.get(
+        id=committee, db=db_postgres,
+    ).academic_unit_id
+    faculty_id = academic_unit_svc.get(
+        id=institute_id, db=db_postgres,
+    ).academic_unit_id
 
     user_application_academic_unit = UserApplicationAcademicUnitCreate(
         user_application_id=mobility_create.id,

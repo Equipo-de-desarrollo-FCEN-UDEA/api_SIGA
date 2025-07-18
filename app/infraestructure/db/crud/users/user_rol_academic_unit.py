@@ -82,7 +82,6 @@ class UserRolAcademicUnitCrud(
         lista = user_rol.academic_unit.academic_units
 
         for academic_unit in lista:
-            print('===================================', academic_unit.name)
             if academic_unit.academic_unit_type_id == TYPE_CONSEJO_INSTITUTO:
                 return academic_unit.id
 
