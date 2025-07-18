@@ -35,9 +35,15 @@ from app.schemas.application.type.mobility import Mobility
 from app.schemas.application.type.mobility import MobilityCreate
 from app.schemas.application.type.mobility import Subject
 from app.schemas.application.user_application import UserApplicationPublic
+from app.schemas.application.user_application_academic_unit import (
+    UserApplicationAcademicUnitCreate,
+)
 from app.schemas.users.user import User
 from app.services.application.type.mobility import mobility_svc
 from app.services.application.user_application import user_application_svc
+from app.services.application.user_application_academic_unit import (
+    user_application_academic_unit_svc,
+)
 from app.services.organization.academic_unit import academic_unit_svc
 from app.services.users.user_rol_academic_unit import user_rol_academic_unit_svc
 
@@ -124,6 +130,29 @@ async def create_mobility(
         db_postgres=db_postgres,
         mongo_service=mobility_svc,
         db_mongo=db_mongo,
+    )
+
+    # Cálculo de del instituto/departamento y facultad
+
+    institute_id = academic_unit_svc.get(
+        id=committee, db=db_postgres,
+    ).academic_unit_id
+    faculty_id = academic_unit_svc.get(
+        id=institute_id, db=db_postgres,
+    ).academic_unit_id
+
+    if faculty_id is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Faculty ID could not be determined due to missing committee information.",
+        )
+    user_application_academic_unit = UserApplicationAcademicUnitCreate(
+        user_application_id=mobility_create.id,
+        academic_unit_id=faculty_id,
+    )
+    user_application_academic_unit_svc.create(
+        obj_in=user_application_academic_unit,
+        db=db_postgres,
     )
 
     user_application_svc.upload_files(
