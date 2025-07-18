@@ -141,6 +141,11 @@ async def create_mobility(
         id=institute_id, db=db_postgres,
     ).academic_unit_id
 
+    if faculty_id is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Faculty ID could not be determined due to missing committee information.",
+        )
     user_application_academic_unit = UserApplicationAcademicUnitCreate(
         user_application_id=mobility_create.id,
         academic_unit_id=faculty_id,
