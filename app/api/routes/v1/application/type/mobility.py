@@ -122,16 +122,6 @@ async def create_mobility(
         user_id=current_user.id, db=db_postgres,
     )
 
-    mobility_create = await user_application_svc.create_user_application(
-        obj_in=obj_in,
-        current_user_id=current_user.id,
-        application_id=constants.MOBILITY_ID,
-        academic_unit_id=committee,
-        db_postgres=db_postgres,
-        mongo_service=mobility_svc,
-        db_mongo=db_mongo,
-    )
-
     # Cálculo de del instituto/departamento y facultad
 
     institute_id = academic_unit_svc.get(
@@ -144,11 +134,23 @@ async def create_mobility(
     if faculty_id is None:
         raise HTTPException(
             status_code=400,
-            detail="Faculty ID could not be determined due to missing committee information.",
+            detail='''Faculty ID could not be determined
+            due to missing committee information.''',
         )
+
+    mobility_create = await user_application_svc.create_user_application(
+        obj_in=obj_in,
+        current_user_id=current_user.id,
+        application_id=constants.MOBILITY_ID,
+        academic_unit_id=faculty_id,
+        db_postgres=db_postgres,
+        mongo_service=mobility_svc,
+        db_mongo=db_mongo,
+    )
+
     user_application_academic_unit = UserApplicationAcademicUnitCreate(
         user_application_id=mobility_create.id,
-        academic_unit_id=faculty_id,
+        academic_unit_id=committee,
     )
     user_application_academic_unit_svc.create(
         obj_in=user_application_academic_unit,

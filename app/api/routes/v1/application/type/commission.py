@@ -90,16 +90,20 @@ async def create_commission(
         documents=[f'documento-{i+1}' for i in range(len(documents))],
     )
 
-    # Si el rango de fechas es mayor a 30 días, se manda a votación
-    more_than_30_days = False
+    # Si el rango de fechas es mayor a 30 días, se manda a votacións
 
     if (date_end - date_start) >= timedelta(days=30):
         council = user_rol_academic_unit_svc.get_professor_council(
             user_id=current_user.id, db=db_postgres,
         )
-        academic_unit_id = council
-        more_than_30_days = True
+        institute_id = academic_unit_svc.get(
+            id=council, db=db_postgres,
+        ).academic_unit_id
+        faculty_id = academic_unit_svc.get(
+            id=institute_id, db=db_postgres,
+        ).academic_unit_id
 
+        council_or_institute = council
     # If the date range is less than 30 days, it is sent to the institute
 
     else:
@@ -111,34 +115,27 @@ async def create_commission(
             db=db_postgres,
         )
 
-        academic_unit_id = academic_unit_id[0].id
+        institute_id = academic_unit_id[0].id
+
+        faculty_id = academic_unit_svc.get(
+            id=institute_id, db=db_postgres,
+        ).academic_unit_id
+
+        council_or_institute = institute_id
 
     commission_create = await user_application_svc.create_user_application(
         obj_in=obj_in,
         current_user_id=current_user.id,
         application_id=UUID(COMMISSION_ID),
-        academic_unit_id=academic_unit_id,
+        academic_unit_id=faculty_id,
         db_postgres=db_postgres,
         mongo_service=commission_svc,
         db_mongo=db_mongo,
     )
 
-    if more_than_30_days:
-        institute_id = academic_unit_svc.get(
-            id=academic_unit_id, db=db_postgres,
-        ).academic_unit_id
-        faculty_id = academic_unit_svc.get(
-            id=institute_id, db=db_postgres,
-        ).academic_unit_id
-
-    else:
-        faculty_id = academic_unit_svc.get(
-            id=academic_unit_id, db=db_postgres,
-        ).academic_unit_id
-
     user_application_academic_unit = UserApplicationAcademicUnitCreate(
         user_application_id=commission_create.id,
-        academic_unit_id=faculty_id,
+        academic_unit_id=council_or_institute,
     )
     user_application_academic_unit_svc.create(
         obj_in=user_application_academic_unit,
