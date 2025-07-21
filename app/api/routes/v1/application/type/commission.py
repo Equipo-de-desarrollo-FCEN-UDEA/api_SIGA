@@ -104,7 +104,6 @@ async def create_commission(
         ).academic_unit_id
 
         council_or_institute = council
-
     # If the date range is less than 30 days, it is sent to the institute
 
     else:
