@@ -46,29 +46,6 @@ class UserRolAcademicUnitCrud(
 
         # Lista de unidades académicas "hijas" del instituto, como los comités
         lista = user_rol.academic_unit.academic_units
-        # committees_list = [
-        #     academic_unit for academic_unit in lista
-        #     if academic_unit.academic_unit_type_id == TYPE_COMITE
-        # ]
-        # for academic_unit in committees_list:
-        #     print('====================', academic_unit.id,
-        #           academic_unit.academic_unit_type_id,
-        #           academic_unit.name)
-        # for academic_unit in lista:
-        # print('====================AFUERAAAAA=====================',
-        #       user_rol.rol_id)
-        # if (
-        #     user_rol.rol_id == ESTUDIANTE_PREGRADO_ROL_ID and
-        #     academic_unit.academic_unit_type_id == TYPE_COMITE_PREGRADO
-        #     ):
-        #     print('====================', user_rol.rol_id, academic_unit.name)
-        # if (
-        #     user_rol.rol_id == ESTUDIANTE_POSGRADO_ROL_ID and
-        #     academic_unit.academic_unit_type_id == TYPE_COMITE_POSGRADO
-        #     ):
-        #     print('==========', user_rol.rol_id, academic_unit.name)
-        # else :
-        #     print('====================', user_rol.rol_id, academic_unit.name)
         for academic_unit in lista:
             if (
                 user_rol.rol_id == ESTUDIANTE_PREGRADO_ROL_ID and
