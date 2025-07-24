@@ -28,6 +28,8 @@ class UserRolAcademicUnitCrud(
         ESTUDIANTE_PREGRADO_ROL_ID = UUID('939875b2-3e34-4a17-9f3c-76cabba73f52')
         ESTUDIANTE_POSGRADO_ROL_ID = UUID('1ca355db-8700-4ee7-883b-18b8bbed403b')
         TYPE_COMITE = UUID('d1085905-eed1-4e3c-bae6-9f3b17295eca')
+        TYPE_COMITE_PREGRADO = UUID('8e544f64-0cb5-4287-847a-23478a4edd79')
+        TYPE_COMITE_POSGRADO = UUID('0ccdafbb-32e8-41be-9ac8-78470762d7ae')
 
         # Realizamos una sola consulta para ambos roles
         user_rol = db.query(UserRolAcademicUnit).options(
@@ -44,17 +46,41 @@ class UserRolAcademicUnitCrud(
 
         # Lista de unidades académicas "hijas" del instituto, como los comités
         lista = user_rol.academic_unit.academic_units
+        # committees_list = [
+        #     academic_unit for academic_unit in lista
+        #     if academic_unit.academic_unit_type_id == TYPE_COMITE
+        # ]
+        # for academic_unit in committees_list:
+        #     print('====================', academic_unit.id,
+        #           academic_unit.academic_unit_type_id,
+        #           academic_unit.name)
+        # for academic_unit in lista:
+        # print('====================AFUERAAAAA=====================',
+        #       user_rol.rol_id)
+        # if (
+        #     user_rol.rol_id == ESTUDIANTE_PREGRADO_ROL_ID and
+        #     academic_unit.academic_unit_type_id == TYPE_COMITE_PREGRADO
+        #     ):
+        #     print('====================', user_rol.rol_id, academic_unit.name)
+        # if (
+        #     user_rol.rol_id == ESTUDIANTE_POSGRADO_ROL_ID and
+        #     academic_unit.academic_unit_type_id == TYPE_COMITE_POSGRADO
+        #     ):
+        #     print('==========', user_rol.rol_id, academic_unit.name)
+        # else :
+        #     print('====================', user_rol.rol_id, academic_unit.name)
         for academic_unit in lista:
             if (
-                (
-                    user_rol.rol_id == ESTUDIANTE_PREGRADO_ROL_ID and
-                    academic_unit.academic_unit_type_id == TYPE_COMITE
-                ) or
-                (
-                    user_rol.rol_id == ESTUDIANTE_POSGRADO_ROL_ID and
-                    academic_unit.academic_unit_type_id == TYPE_COMITE
-                )
+                user_rol.rol_id == ESTUDIANTE_PREGRADO_ROL_ID and
+                academic_unit.academic_unit_type_id == TYPE_COMITE_PREGRADO
             ):
+                return academic_unit.id
+            if (
+                user_rol.rol_id == ESTUDIANTE_POSGRADO_ROL_ID and
+                academic_unit.academic_unit_type_id == TYPE_COMITE_POSGRADO
+            ):
+                return academic_unit.id
+            elif academic_unit.academic_unit_type_id == TYPE_COMITE:
                 return academic_unit.id
 
         raise HTTPException(404, 'No se encontró el comité del estudiante')
@@ -81,7 +107,12 @@ class UserRolAcademicUnitCrud(
 
         # Lista de unidades académicas "hijas" del instituto
         lista = user_rol.academic_unit.academic_units
-
+        for academic_unit in lista:
+            print(
+                '====================', academic_unit.id,
+                academic_unit.academic_unit_type_id,
+                academic_unit.name,
+            )
         for academic_unit in lista:
             if academic_unit.academic_unit_type_id == TYPE_CONSEJO:
                 return academic_unit.id
