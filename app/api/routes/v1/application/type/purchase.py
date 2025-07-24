@@ -116,6 +116,7 @@ class ApplicationRequest(BaseModel):
 
 
 @router.post('/{user_application_id}/next', response_model=None)
+@router.post('/{user_application_id}/next/', response_model=None)
 async def advance_application_status(
     user_application_id: str,
     request: ApplicationRequest,
