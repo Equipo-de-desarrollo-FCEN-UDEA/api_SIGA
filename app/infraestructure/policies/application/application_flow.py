@@ -224,14 +224,11 @@ class ApplicationFlow:
         )
 
     async def create_voting(self, **kwargs):
-        # academic_unit_id = kwargs.get('academic_unit_id')
         db_postgres = kwargs.get('db_postgres')
         db_mongo = kwargs.get('db_mongo')
         jump = int(kwargs.get('jump', 0))
 
         user_id = self.user_application.user.id
-        # user_app_acad_un = self.user_application.user_application_academic_units[0]
-        # academic_unit_id = user_app_acad_un.academic_unit_id
         committee = user_rol_academic_unit_svc.get_student_committee(
             user_id=user_id, db=db_postgres,
         )
