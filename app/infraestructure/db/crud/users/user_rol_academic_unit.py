@@ -48,7 +48,6 @@ class UserRolAcademicUnitCrud(
         # Lista de unidades académicas "hijas" del instituto, como los comités
         lista = user_rol.academic_unit.academic_units
         for academic_unit in lista:
-
             # Si la facultad solo tiene comité
             if (
                 (

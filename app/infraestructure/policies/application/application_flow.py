@@ -264,8 +264,9 @@ class ApplicationFlow:
                     user_id=user_id,
                     db=db_postgres,
                 )
+                
         obj_in: VotingCreate = VotingCreate(
-            academic_unit_id=academic_unit_id,
+            academic_unit_id=committee,
             user_application_id=self.user_application.id,
         )
 
