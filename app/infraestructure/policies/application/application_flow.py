@@ -215,9 +215,7 @@ class ApplicationFlow:
             )
         except ORMError as e:
             db_postgres.rollback()
-            if 'already exists' in str(e):
-                pass
-            else:
+            if 'already exists' not in str(e):
                 raise e
 
         user_application_status = self.get_next_status(
