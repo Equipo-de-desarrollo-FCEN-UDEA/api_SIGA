@@ -216,7 +216,7 @@ class ApplicationFlow:
         except ORMError as e:
             db_postgres.rollback()
             if 'already exists' in str(e):
-                pass  # O log, o un return si no quieres continuar
+                pass
             else:
                 raise e
 
@@ -258,15 +258,15 @@ class ApplicationFlow:
                     user_id=user_id, db=db_postgres,
                 )
             elif rol_id == UUID(PROFESOR_ROL_ID):
-                get = user_rol_academic_unit_svc.get_professor_institute_council
 
-                academic_unit_id = get(
-                    user_id=user_id,
-                    db=db_postgres,
+                academic_unit_id = (
+                    user_rol_academic_unit_svc.get_professor_institute_council(
+                        user_id=user_id,
+                        db=db_postgres,
+                    )
                 )
-                
         obj_in: VotingCreate = VotingCreate(
-            academic_unit_id=committee,
+            academic_unit_id=academic_unit_id,
             user_application_id=self.user_application.id,
         )
 
