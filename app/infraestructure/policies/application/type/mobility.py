@@ -36,9 +36,9 @@ class MobilityFlow(ApplicationFlow):
 
         dependencies = academic_unit.academic_units
 
-        for daugther in dependencies:
-            if daugther.academic_unit_type.id == UUID(TYPE_INTERNATIONAL_RELATIONS):
-                international_relations_id = daugther.id
+        for daughter in dependencies:
+            if daughter.academic_unit_type.id == UUID(TYPE_INTERNATIONAL_RELATIONS):
+                international_relations_id = daughter.id
                 break
 
         response = await self.send_to_academic_unit(
