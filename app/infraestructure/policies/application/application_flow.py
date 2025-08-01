@@ -263,6 +263,13 @@ class ApplicationFlow:
                         db=db_postgres,
                     )
                 )
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail="""Invalid user role for voting creation:
+                    cannot determine academic_unit_id.""",
+                )
+
         obj_in: VotingCreate = VotingCreate(
             academic_unit_id=academic_unit_id,
             user_application_id=self.user_application.id,
