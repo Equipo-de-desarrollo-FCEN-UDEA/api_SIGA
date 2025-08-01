@@ -6,6 +6,13 @@ from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import Session
 
+from app.core.constants import ESTUDIANTE_POSGRADO_ROL_ID
+from app.core.constants import ESTUDIANTE_PREGRADO_ROL_ID
+from app.core.constants import PROFESOR_ROL_ID
+from app.core.constants import TYPE_COMITE
+from app.core.constants import TYPE_COMITE_POSGRADO
+from app.core.constants import TYPE_COMITE_PREGRADO
+from app.core.constants import TYPE_CONSEJO
 from app.infraestructure.db.crud.base import CRUDBase
 from app.infraestructure.db.models.organization.academic_unit import AcademicUnit
 from app.infraestructure.db.models.user.rol import Rol
@@ -24,12 +31,6 @@ class UserRolAcademicUnitCrud(
         ).filter(self.model.user_id == user_id).all()
 
     def get_student_committee(self, *, user_id: UUID, db: Session) -> UUID:
-        # UUIDs constantes
-        ESTUDIANTE_PREGRADO_ROL_ID = UUID('939875b2-3e34-4a17-9f3c-76cabba73f52')
-        ESTUDIANTE_POSGRADO_ROL_ID = UUID('1ca355db-8700-4ee7-883b-18b8bbed403b')
-        TYPE_COMITE = UUID('d1085905-eed1-4e3c-bae6-9f3b17295eca')
-        TYPE_COMITE_PREGRADO = UUID('8e544f64-0cb5-4287-847a-23478a4edd79')
-        TYPE_COMITE_POSGRADO = UUID('0ccdafbb-32e8-41be-9ac8-78470762d7ae')
 
         # Realizamos una sola consulta para ambos roles
         user_rol = db.query(UserRolAcademicUnit).options(
@@ -39,34 +40,40 @@ class UserRolAcademicUnitCrud(
         ).filter(
             (self.model.user_id == user_id) &
             (
-                (self.model.rol_id == ESTUDIANTE_PREGRADO_ROL_ID) |
-                (self.model.rol_id == ESTUDIANTE_POSGRADO_ROL_ID)
+                (self.model.rol_id == UUID(ESTUDIANTE_PREGRADO_ROL_ID)) |
+                (self.model.rol_id == UUID(ESTUDIANTE_POSGRADO_ROL_ID))
             ) & (self.model.is_active),
         ).first()
 
         # Lista de unidades académicas "hijas" del instituto, como los comités
         lista = user_rol.academic_unit.academic_units
         for academic_unit in lista:
-            if academic_unit.academic_unit_type_id == TYPE_COMITE:
-                return academic_unit.id
+
+            # Si la facultad solo tiene comité
             if (
-                user_rol.rol_id == ESTUDIANTE_PREGRADO_ROL_ID and
-                academic_unit.academic_unit_type_id == TYPE_COMITE_PREGRADO
+                (
+                    user_rol.rol_id == UUID(ESTUDIANTE_PREGRADO_ROL_ID) or
+                    user_rol.rol_id == UUID(ESTUDIANTE_POSGRADO_ROL_ID)
+                ) and
+                academic_unit.academic_unit_type_id == UUID(TYPE_COMITE)
+            ):
+                return academic_unit.id
+
+            # Si la facultad tiene comité de pregrado y/o posgrado
+            if (
+                user_rol.rol_id == UUID(ESTUDIANTE_PREGRADO_ROL_ID) and
+                academic_unit.academic_unit_type_id == UUID(TYPE_COMITE_PREGRADO)
             ):
                 return academic_unit.id
             if (
-                user_rol.rol_id == ESTUDIANTE_POSGRADO_ROL_ID and
-                academic_unit.academic_unit_type_id == TYPE_COMITE_POSGRADO
+                user_rol.rol_id == UUID(ESTUDIANTE_POSGRADO_ROL_ID) and
+                academic_unit.academic_unit_type_id == UUID(TYPE_COMITE_POSGRADO)
             ):
                 return academic_unit.id
 
         raise HTTPException(404, 'No se encontró el comité del estudiante')
 
-    def get_professor_council(self, *, user_id: UUID, db: Session) -> UUID:
-        # UUIDs constantes
-        PROFESOR_ROL_ID = UUID('0c1875e9-50b8-4590-80d1-6afce3ea152b')
-        TYPE_CONSEJO = UUID('b38ce30e-44a1-4efe-9766-fe79563e75a6')
-        TYPE_COMITE = UUID('d1085905-eed1-4e3c-bae6-9f3b17295eca')
+    def get_professor_institute_council(self, *, user_id: UUID, db: Session) -> UUID:
 
         # Consulta el rol del profesor con las relaciones necesarias
         user_rol = db.query(UserRolAcademicUnit).options(
@@ -75,25 +82,49 @@ class UserRolAcademicUnitCrud(
             ).joinedload(AcademicUnit.academic_units),
         ).filter(
             self.model.user_id == user_id,
-            self.model.rol_id == PROFESOR_ROL_ID,
+            self.model.rol_id == UUID(PROFESOR_ROL_ID),
             self.model.is_active,
         ).first()
 
         if not user_rol:
             raise HTTPException(404, 'No se encontró el rol del profesor')
 
-        # Lista de unidades académicas "hijas" del instituto
+        # Lista de unidades académicas "hijas" del instituto, como los consejos
+        # o comités
         lista = user_rol.academic_unit.academic_units
         for academic_unit in lista:
-            print(
-                '====================', academic_unit.id,
-                academic_unit.academic_unit_type_id,
-                academic_unit.name,
-            )
-        for academic_unit in lista:
-            if academic_unit.academic_unit_type_id == TYPE_CONSEJO:
+            # Si la facultad tiene consejos de instituto
+            if academic_unit.academic_unit_type_id == UUID(TYPE_CONSEJO):
                 return academic_unit.id
-            if academic_unit.academic_unit_type_id == TYPE_COMITE:
+
+            # Si la facultad tiene comités de departamento
+            if academic_unit.academic_unit_type_id == UUID(TYPE_COMITE):
+                return academic_unit.id
+
+        raise HTTPException(404, 'No se encontró el comité profesoral del usuario')
+
+    def get_professor_faculty_council(self, *, user_id: UUID, db: Session) -> UUID:
+
+        # Consulta el rol del profesor con las relaciones necesarias
+        user_rol = db.query(UserRolAcademicUnit).options(
+            joinedload(UserRolAcademicUnit.academic_unit).joinedload(
+                AcademicUnit.academic_unit,
+            ).joinedload(AcademicUnit.academic_units),
+        ).filter(
+            self.model.user_id == user_id,
+            self.model.rol_id == UUID(PROFESOR_ROL_ID),
+            self.model.is_active,
+        ).first()
+
+        if not user_rol:
+            raise HTTPException(404, 'No se encontró el rol del profesor')
+
+        # Lista de unidades académicas "hijas" del instituto, como los consejos
+        # o comités
+        lista = user_rol.academic_unit.academic_unit.academic_units
+        for academic_unit in lista:
+            # Si la facultad tiene consejo de facultad
+            if academic_unit.academic_unit_type_id == UUID(TYPE_CONSEJO):
                 return academic_unit.id
 
         raise HTTPException(404, 'No se encontró el comité profesoral del usuario')

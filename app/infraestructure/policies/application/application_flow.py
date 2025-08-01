@@ -3,11 +3,16 @@ from __future__ import annotations
 import re
 from datetime import datetime
 from typing import TypeAlias
+from uuid import UUID
 
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 
+from app.core.constants import ESTUDIANTE_POSGRADO_ROL_ID
+from app.core.constants import ESTUDIANTE_PREGRADO_ROL_ID
+from app.core.constants import PROFESOR_ROL_ID
 from app.core.constants import REJECTED_STATUS_ID
+from app.core.exceptions import ORMError
 from app.infraestructure.db.models.application.application import Application
 from app.infraestructure.db.models.application.application_status import (
     ApplicationStatus,
@@ -203,10 +208,17 @@ class ApplicationFlow:
             academic_unit_id=academic_unit_id,
         )
 
-        user_application_academic_unit_svc.create(
-            obj_in=user_application_academic_unit,
-            db=db_postgres,
-        )
+        try:
+            user_application_academic_unit_svc.create(
+                obj_in=user_application_academic_unit,
+                db=db_postgres,
+            )
+        except ORMError as e:
+            db_postgres.rollback()
+            if 'already exists' in str(e):
+                pass  # O log, o un return si no quieres continuar
+            else:
+                raise e
 
         user_application_status = self.get_next_status(
             updated_by=kwargs.get('current_user').id,
@@ -227,14 +239,33 @@ class ApplicationFlow:
         db_postgres = kwargs.get('db_postgres')
         db_mongo = kwargs.get('db_mongo')
         jump = int(kwargs.get('jump', 0))
+        to_faculty = kwargs.get('faculty', False)
 
         user_id = self.user_application.user.id
-        committee = user_rol_academic_unit_svc.get_student_committee(
-            user_id=user_id, db=db_postgres,
-        )
+        rol_id = self.user_application.user.user_roles_academic_units[0].rol.id
 
+        if to_faculty:
+            academic_unit_id = user_rol_academic_unit_svc.get_professor_faculty_council(
+                user_id=user_id, db=db_postgres,
+            )
+
+        else:
+            if (
+                rol_id == UUID(ESTUDIANTE_PREGRADO_ROL_ID) or
+                rol_id == UUID(ESTUDIANTE_POSGRADO_ROL_ID)
+            ):
+                academic_unit_id = user_rol_academic_unit_svc.get_student_committee(
+                    user_id=user_id, db=db_postgres,
+                )
+            elif rol_id == UUID(PROFESOR_ROL_ID):
+                get = user_rol_academic_unit_svc.get_professor_institute_council
+
+                academic_unit_id = get(
+                    user_id=user_id,
+                    db=db_postgres,
+                )
         obj_in: VotingCreate = VotingCreate(
-            academic_unit_id=committee,
+            academic_unit_id=academic_unit_id,
             user_application_id=self.user_application.id,
         )
 
@@ -269,31 +300,6 @@ class ApplicationFlow:
         return JSONResponse(
             status_code=200,
             content={'message': 'Voting created successfully'},
-        )
-
-    async def send_to_school_council(self, **kwargs):
-        db_postgres = kwargs.get('db_postgres')
-
-        academic_unit_id = kwargs.pop('academic_unit_id', None)
-
-        user_application_academic_unit = UserApplicationAcademicUnitCreate(
-            user_application_id=self.user_application.id,
-            academic_unit_id=academic_unit_id,
-        )
-
-        user_application_academic_unit_svc.create(
-            obj_in=user_application_academic_unit,
-            db=db_postgres,
-        )
-
-        await self.create_voting(academic_unit_id=academic_unit_id, **kwargs)
-
-        return JSONResponse(
-            status_code=200,
-            content={
-                'message':
-                'Application sent to school council created successfully',
-            },
         )
 
     async def close(self):

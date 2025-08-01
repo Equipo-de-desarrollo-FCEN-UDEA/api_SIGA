@@ -27,7 +27,11 @@ class CRUDUserRolAcademicUnitProtocol(
         pass
 
     @abstractmethod
-    def get_professor_council(self, *, user_id: UUID, db: Session) -> UUID:
+    def get_professor_institute_council(self, *, user_id: UUID, db: Session) -> UUID:
+        pass
+
+    @abstractmethod
+    def get_professor_faculty_council(self, *, user_id: UUID, db: Session) -> UUID:
         pass
 
     @abstractmethod

@@ -2,16 +2,51 @@ from __future__ import annotations
 
 import os
 from tempfile import NamedTemporaryFile
+from uuid import UUID
 
 from docx import Document
 from fastapi import HTTPException
 
+from app.core.constants import TYPE_INTERNATIONAL_RELATIONS
 from app.infraestructure.policies.application.application_flow import ApplicationFlow
+from app.services.organization.academic_unit import academic_unit_svc
 
 
 class MobilityFlow(ApplicationFlow):
     def __init__(self, user_application):
         super().__init__(user_application)
+
+    async def send_to_international_relations(self, **kwargs):
+        db_postgres = kwargs.get('db_postgres')
+
+        # -------------------------------------------------------------
+        # Cálculo de la facultad a la que se envía la movilidad:
+        # En el endpoint de create_mobility primero se crea en el comité al que va
+        # dirigido, y luego a la facultad. Por eso se toma el elemento 1 de la lista
+        # de unidades académicas en donde existe la solicitud.
+
+        faculty_id = (
+            self.user_application.user_application_academic_units[1]
+            .academic_unit_id
+        )
+        academic_unit = academic_unit_svc.get(
+            id=faculty_id,
+            db=db_postgres,
+        )
+
+        dependencies = academic_unit.academic_units
+
+        for daugther in dependencies:
+            if daugther.academic_unit_type.id == UUID(TYPE_INTERNATIONAL_RELATIONS):
+                international_relations_id = daugther.id
+                break
+
+        response = await self.send_to_academic_unit(
+            academic_unit_id=international_relations_id,
+            **kwargs,
+        )
+
+        return response
 
 
 def generate_format(mobility_dict: dict, path: str):
