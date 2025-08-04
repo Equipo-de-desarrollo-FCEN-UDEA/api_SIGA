@@ -20,7 +20,7 @@ from app.api.middleware.mongo_db import get_mongo_db
 from app.api.middleware.postgres_db import get_db
 from app.api.middleware.scopes import has_role
 from app.core.constants import COMMISSION_ID
-from app.core.constants import PROFESSOR_ROL_ID
+from app.core.constants import PROFESOR_ROL_ID
 from app.infraestructure.policies.application.type.commission import CommissionFlow
 from app.schemas.application.type.commission import Commission
 from app.schemas.application.type.commission import CommissionCreate
@@ -93,7 +93,7 @@ async def create_commission(
     # Si el rango de fechas es mayor a 30 días, se manda a votacións
 
     if (date_end - date_start) >= timedelta(days=30):
-        council = user_rol_academic_unit_svc.get_professor_council(
+        council = user_rol_academic_unit_svc.get_professor_institute_council(
             user_id=current_user.id, db=db_postgres,
         )
         institute_id = academic_unit_svc.get(
@@ -111,7 +111,7 @@ async def create_commission(
 
         academic_unit_id = get_units(
             user_id=current_user.id,
-            rol_id=UUID(PROFESSOR_ROL_ID),
+            rol_id=UUID(PROFESOR_ROL_ID),
             db=db_postgres,
         )
 
