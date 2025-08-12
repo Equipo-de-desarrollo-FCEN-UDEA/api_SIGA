@@ -62,6 +62,7 @@ services:
             - "8003"
         ports:
             - "8003:8003"
+            - "10001:10001"  # Puerto para el depurador remoto
         env_file:
             - ../.env.dev
         networks:

@@ -1,4 +1,5 @@
 {
+    "version": "0.2.0",
     "configurations": [
         {
             "name": "Python: Remote Attach",
@@ -10,10 +11,11 @@
             },
             "pathMappings": [
                 {
-                    "localRoot": "${workspaceFolder}/app",
+                    "localRoot": "${workspaceFolder}",
                     "remoteRoot": "/usr/src/app"
                 }
-            ]
+            ],
+            "justMyCode": false
         }
     ]
 }
