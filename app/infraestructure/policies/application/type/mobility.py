@@ -36,11 +36,17 @@ class MobilityFlow(ApplicationFlow):
 
         dependencies = academic_unit.academic_units
 
+        international_relations_id = None
         for daughter in dependencies:
             if daughter.academic_unit_type.id == UUID(TYPE_INTERNATIONAL_RELATIONS):
                 international_relations_id = daughter.id
                 break
 
+        if international_relations_id is None:
+            raise HTTPException(
+                status_code=404,
+                detail="International Relations academic unit not found."
+            )
         response = await self.send_to_academic_unit(
             academic_unit_id=international_relations_id,
             **kwargs,

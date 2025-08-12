@@ -202,21 +202,23 @@ class ApplicationFlow:
         db_postgres = kwargs.get('db_postgres')
         academic_unit_id = kwargs.get('academic_unit_id')
         jump = int(kwargs.get('jump', 0))
+        to_faculty = kwargs.get('to_faculty', False)
 
-        user_application_academic_unit = UserApplicationAcademicUnitCreate(
-            user_application_id=self.user_application.id,
-            academic_unit_id=academic_unit_id,
-        )
-
-        try:
-            user_application_academic_unit_svc.create(
-                obj_in=user_application_academic_unit,
-                db=db_postgres,
+        if not to_faculty:
+            user_application_academic_unit = UserApplicationAcademicUnitCreate(
+                user_application_id=self.user_application.id,
+                academic_unit_id=academic_unit_id,
             )
-        except ORMError as e:
-            db_postgres.rollback()
-            if 'already exists' not in str(e):
-                raise e
+
+            try:
+                user_application_academic_unit_svc.create(
+                    obj_in=user_application_academic_unit,
+                    db=db_postgres,
+                )
+            except ORMError as e:
+                db_postgres.rollback()
+                if 'already exists' not in str(e):
+                    raise e
 
         user_application_status = self.get_next_status(
             updated_by=kwargs.get('current_user').id,
