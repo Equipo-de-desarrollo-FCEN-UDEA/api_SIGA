@@ -6,9 +6,11 @@ from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import Session
 
+from app.core.constants import EMPLEADO_ROL_ID
 from app.core.constants import ESTUDIANTE_POSGRADO_ROL_ID
 from app.core.constants import ESTUDIANTE_PREGRADO_ROL_ID
 from app.core.constants import PROFESOR_ROL_ID
+from app.core.constants import TYPE_CENTRO
 from app.core.constants import TYPE_COMITE
 from app.core.constants import TYPE_COMITE_POSGRADO
 from app.core.constants import TYPE_COMITE_PREGRADO
@@ -127,6 +129,30 @@ class UserRolAcademicUnitCrud(
                 return academic_unit.id
 
         raise HTTPException(404, 'No se encontró el comité profesoral del usuario')
+
+    def get_center(self, *, user_id: UUID, db: Session) -> list[UUID]:
+
+        user_rol = db.query(UserRolAcademicUnit).options(
+            joinedload(UserRolAcademicUnit.academic_unit).joinedload(
+                AcademicUnit.academic_unit,
+            ).joinedload(AcademicUnit.academic_units),
+        ).filter(
+            self.model.user_id == user_id,
+            self.model.rol_id.in_([UUID(PROFESOR_ROL_ID), UUID(EMPLEADO_ROL_ID)]),
+            self.model.is_active,
+        ).first()
+
+        if not user_rol:
+            raise HTTPException(404, 'No se encontró el rol del usuario')
+
+        lista = user_rol.academic_unit.academic_unit.academic_units
+        centers = []
+        for academic_unit in lista:
+            # Si la facultad tiene consejo de facultad
+            if academic_unit.academic_unit_type_id == UUID(TYPE_CENTRO):
+                centers.append(academic_unit.id)
+
+        return centers
 
     def get_academic_units_by_user_id_and_rol_id(
             self,
