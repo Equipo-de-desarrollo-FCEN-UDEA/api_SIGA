@@ -35,6 +35,10 @@ class CRUDUserRolAcademicUnitProtocol(
         pass
 
     @abstractmethod
+    def get_center(self, *, user_id: UUID, db: Session) -> list[UUID]:
+        pass
+
+    @abstractmethod
     def get_academic_units_by_user_id_and_rol_id(
         self,
         *, user_id: UUID, rol_id: UUID, db: Session,
