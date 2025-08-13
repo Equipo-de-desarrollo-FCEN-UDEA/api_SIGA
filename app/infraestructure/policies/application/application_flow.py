@@ -239,7 +239,7 @@ class ApplicationFlow:
         db_postgres = kwargs.get('db_postgres')
         db_mongo = kwargs.get('db_mongo')
         jump = int(kwargs.get('jump', 0))
-        to_faculty = kwargs.get('faculty', False)
+        to_faculty = kwargs.get('to_faculty', False)
 
         user_id = self.user_application.user.id
         rol_id = self.user_application.user.user_roles_academic_units[0].rol.id
