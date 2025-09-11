@@ -13,6 +13,7 @@ from app.api.middleware.bearer import get_current_active_user
 from app.api.middleware.mongo_db import get_mongo_db
 from app.api.middleware.postgres_db import get_db
 from app.api.middleware.scopes import has_role
+from app.core.constants import VOTANTE_ROL_ID
 from app.infraestructure.policies.voting.voting import (
     get_application_in_mongo,
 )
@@ -46,10 +47,9 @@ def get_user_votings(
     has_permission=Security(has_role, scopes=['representante']),
     current_user: Annotated[User, Security(get_current_active_user)],
 ) -> list[VotingResponse]:
-    VOTANTE_ROL_ID = UUID('20bd57a2-b2e2-4918-b131-8736e43f4582')
     # buscar unidades academicas donde puede votar el usuario
     academic_units = us_rol_svc.get_academic_units_by_user_id_and_rol_id(
-        user_id=current_user.id, rol_id=VOTANTE_ROL_ID, db=db_postgres,
+        user_id=current_user.id, rol_id=UUID(VOTANTE_ROL_ID), db=db_postgres,
     )
     academic_unit_ids = [academic_unit.id for academic_unit in academic_units]
     votings = voting_svc.get_votings_by_academic_units(
