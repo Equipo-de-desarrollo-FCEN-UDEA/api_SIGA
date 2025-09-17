@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from app.infraestructure.db.models.voting.voting import Voting
-from app.infraestructure.policies.application.application_flow import ApplicationFlow
+from app.infraestructure.policies.application.type.commission import CommissionFlow
+from app.infraestructure.policies.application.type.mobility import MobilityFlow
+from app.infraestructure.policies.application.type.purchase import PurchaseFlow
 from app.infraestructure.policies.voting.vote import vote_count
 from app.protocols.db.models.voting.voting_info import VotingResult
 from app.schemas.voting.vote import Vote
@@ -56,7 +58,13 @@ async def update_application_status(
         result,
 ):
     user_application = voting.user_application
-    application_flow = ApplicationFlow(user_application)
+
+    if user_application.application.name == 'MOVILIDAD':
+        application_flow = MobilityFlow(user_application)
+    elif user_application.application.name == 'COMISION':
+        application_flow = CommissionFlow(user_application)
+    elif user_application.application.name == 'COMPRA':
+        application_flow = PurchaseFlow(user_application)
 
     await application_flow.next(
         is_approved=result == VotingResult.APPROVED,
